@@ -22,12 +22,16 @@ export const login = createAsyncThunk<LoginResult, LoginParams>(
   'auth/login',
   async (loginParams: LoginParams) => {
     // TODO: 实现登录API调用
-    const mockResponse: LoginResult = {
-      accessToken: 'mock-token',
-      refreshToken: 'mock-refresh-token',
-      expiresIn: 7200,
-    };
-    return mockResponse;
+    // 使用loginParams模拟登录验证
+    if (loginParams.username === 'admin' && loginParams.password === 'admin') {
+      const mockResponse: LoginResult = {
+        accessToken: 'mock-token',
+        refreshToken: 'mock-refresh-token',
+        expiresIn: 7200,
+      };
+      return mockResponse;
+    }
+    throw new Error('用户名或密码错误');
   }
 );
 

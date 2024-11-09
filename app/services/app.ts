@@ -1,8 +1,7 @@
 import { get, post } from '../utils/http';
 import type { 
   AppInfo, 
-  AppTemplate, 
-  PaginatedData 
+  AppTemplate
 } from '../types/api';
 
 /**
