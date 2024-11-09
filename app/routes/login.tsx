@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Form, Input, Button, Card, message } from 'antd';
+import { Form, Input, Button, Card, App } from 'antd';
 import { UserOutlined, LockOutlined, SafetyCertificateOutlined } from '@ant-design/icons';
 import { useNavigate } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
@@ -25,7 +25,8 @@ export default function LoginPage() {
       const result = await AuthService.getCaptcha();
       setCaptcha(result);
     } catch (err) {
-      message.error('获取验证码失败');
+      // 使用App.message替代message
+      App.useApp().message.error('获取验证码失败');
     }
   };
 
@@ -37,7 +38,7 @@ export default function LoginPage() {
   // 处理登录错误
   useEffect(() => {
     if (error) {
-      message.error(error);
+      App.useApp().message.error(error);
     }
   }, [error]);
 
@@ -78,6 +79,7 @@ export default function LoginPage() {
               prefix={<UserOutlined />}
               placeholder="用户名"
               size="large"
+              autoComplete="username"
             />
           </Form.Item>
 
@@ -89,6 +91,7 @@ export default function LoginPage() {
               prefix={<LockOutlined />}
               placeholder="密码"
               size="large"
+              autoComplete="current-password"
             />
           </Form.Item>
 
@@ -104,6 +107,7 @@ export default function LoginPage() {
                   placeholder="验证码"
                   size="large"
                   style={{ flex: 1 }}
+                  autoComplete="off"
                 />
               </Form.Item>
               <Button
@@ -111,8 +115,15 @@ export default function LoginPage() {
                 onClick={refreshCaptcha}
                 style={{ padding: 0, height: 'auto' }}
                 aria-label="刷新验证码"
-                dangerouslySetInnerHTML={{ __html: captcha.captchaImg }}
-              />
+              >
+                {captcha.captchaImg && (
+                  <img 
+                    src={`data:image/svg+xml;base64,${captcha.captchaImg}`} 
+                    alt="验证码" 
+                    style={{ height: '32px' }}
+                  />
+                )}
+              </Button>
             </div>
           </Form.Item>
 

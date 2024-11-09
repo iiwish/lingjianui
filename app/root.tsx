@@ -1,6 +1,5 @@
 import { 
   Links, 
-  LiveReload, 
   Meta, 
   Outlet, 
   Scripts, 
@@ -8,13 +7,19 @@ import {
   isRouteErrorResponse,
   useRouteError,
 } from '@remix-run/react';
+import type { LinksFunction } from '@remix-run/node';
 import { Provider } from 'react-redux';
-import { store } from './stores';
-import { ConfigProvider, Result, Button } from 'antd';
-import zhCN from 'antd/locale/zh_CN';
+import { PersistGate } from 'redux-persist/integration/react';
+import { store, persistor } from './stores';
+import AntdProvider from './components/AntdProvider';
+import ClientOnly from './components/ClientOnly';
 
-// 导入antd样式
-import 'antd/dist/reset.css';
+export const links: LinksFunction = () => [
+  {
+    rel: "stylesheet",
+    href: "https://cdnjs.cloudflare.com/ajax/libs/antd/5.11.1/reset.css"
+  }
+];
 
 export default function App() {
   return (
@@ -26,14 +31,17 @@ export default function App() {
         <Links />
       </head>
       <body>
-        <Provider store={store}>
-          <ConfigProvider locale={zhCN}>
-            <Outlet />
-          </ConfigProvider>
-        </Provider>
+        <ClientOnly>
+          <Provider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+              <AntdProvider>
+                <Outlet />
+              </AntdProvider>
+            </PersistGate>
+          </Provider>
+        </ClientOnly>
         <ScrollRestoration />
         <Scripts />
-        <LiveReload />
       </body>
     </html>
   );
@@ -53,26 +61,29 @@ export function ErrorBoundary() {
           <Links />
         </head>
         <body>
-          <Provider store={store}>
-            <ConfigProvider locale={zhCN}>
-              <Result
-                status="404"
-                title="404"
-                subTitle="抱歉，您访问的页面不存在"
-                extra={
-                  <Button type="primary" href="/">
-                    返回首页
-                  </Button>
-                }
-                style={{
-                  height: '100vh',
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'center',
-                }}
-              />
-            </ConfigProvider>
-          </Provider>
+          <ClientOnly>
+            <Provider store={store}>
+              <PersistGate loading={null} persistor={persistor}>
+                <AntdProvider>
+                  <div
+                    style={{
+                      height: '100vh',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      justifyContent: 'center',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <h1>404</h1>
+                    <p>抱歉，您访问的页面不存在</p>
+                    <a href="/" style={{ color: '#1890ff' }}>
+                      返回首页
+                    </a>
+                  </div>
+                </AntdProvider>
+              </PersistGate>
+            </Provider>
+          </ClientOnly>
           <Scripts />
         </body>
       </html>
@@ -88,26 +99,29 @@ export function ErrorBoundary() {
         <Links />
       </head>
       <body>
-        <Provider store={store}>
-          <ConfigProvider locale={zhCN}>
-            <Result
-              status="error"
-              title="系统错误"
-              subTitle={error instanceof Error ? error.message : '发生了未知错误'}
-              extra={
-                <Button type="primary" href="/">
-                  返回首页
-                </Button>
-              }
-              style={{
-                height: '100vh',
-                display: 'flex',
-                flexDirection: 'column',
-                justifyContent: 'center',
-              }}
-            />
-          </ConfigProvider>
-        </Provider>
+        <ClientOnly>
+          <Provider store={store}>
+            <PersistGate loading={null} persistor={persistor}>
+              <AntdProvider>
+                <div
+                  style={{
+                    height: '100vh',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'center',
+                    alignItems: 'center',
+                  }}
+                >
+                  <h1>系统错误</h1>
+                  <p>{error instanceof Error ? error.message : '发生了未知错误'}</p>
+                  <a href="/" style={{ color: '#1890ff' }}>
+                    返回首页
+                  </a>
+                </div>
+              </AntdProvider>
+            </PersistGate>
+          </Provider>
+        </ClientOnly>
         <Scripts />
       </body>
     </html>
