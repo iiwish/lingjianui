@@ -10,9 +10,8 @@ import {
 } from '@remix-run/react';
 import { Provider } from 'react-redux';
 import { store } from './stores';
-import { ConfigProvider } from 'antd';
+import { ConfigProvider, Result, Button } from 'antd';
 import zhCN from 'antd/locale/zh_CN';
-import { Result, Button } from 'antd';
 
 // 导入antd样式
 import 'antd/dist/reset.css';
