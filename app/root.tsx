@@ -1,30 +1,25 @@
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
+import { 
+  Links, 
+  LiveReload, 
+  Meta, 
+  Outlet, 
+  Scripts, 
   ScrollRestoration,
-} from "@remix-run/react";
-import type { LinksFunction } from "@remix-run/node";
+  isRouteErrorResponse,
+  useRouteError,
+} from '@remix-run/react';
+import { Provider } from 'react-redux';
+import { store } from './stores';
+import { ConfigProvider } from 'antd';
+import zhCN from 'antd/locale/zh_CN';
+import { Result, Button } from 'antd';
 
-import "./tailwind.css";
+// 导入antd样式
+import 'antd/dist/reset.css';
 
-export const links: LinksFunction = () => [
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
-  {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
-  },
-  {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
-  },
-];
-
-export function Layout({ children }: { children: React.ReactNode }) {
+export default function App() {
   return (
-    <html lang="en">
+    <html lang="zh-CN">
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -32,14 +27,90 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
       </head>
       <body>
-        {children}
+        <Provider store={store}>
+          <ConfigProvider locale={zhCN}>
+            <Outlet />
+          </ConfigProvider>
+        </Provider>
         <ScrollRestoration />
         <Scripts />
+        <LiveReload />
       </body>
     </html>
   );
 }
 
-export default function App() {
-  return <Outlet />;
+// 错误边界
+export function ErrorBoundary() {
+  const error = useRouteError();
+
+  // 处理404错误
+  if (isRouteErrorResponse(error) && error.status === 404) {
+    return (
+      <html lang="zh-CN">
+        <head>
+          <title>页面未找到</title>
+          <Meta />
+          <Links />
+        </head>
+        <body>
+          <Provider store={store}>
+            <ConfigProvider locale={zhCN}>
+              <Result
+                status="404"
+                title="404"
+                subTitle="抱歉，您访问的页面不存在"
+                extra={
+                  <Button type="primary" href="/">
+                    返回首页
+                  </Button>
+                }
+                style={{
+                  height: '100vh',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'center',
+                }}
+              />
+            </ConfigProvider>
+          </Provider>
+          <Scripts />
+        </body>
+      </html>
+    );
+  }
+
+  // 处理其他错误
+  return (
+    <html lang="zh-CN">
+      <head>
+        <title>系统错误</title>
+        <Meta />
+        <Links />
+      </head>
+      <body>
+        <Provider store={store}>
+          <ConfigProvider locale={zhCN}>
+            <Result
+              status="error"
+              title="系统错误"
+              subTitle={error instanceof Error ? error.message : '发生了未知错误'}
+              extra={
+                <Button type="primary" href="/">
+                  返回首页
+                </Button>
+              }
+              style={{
+                height: '100vh',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+              }}
+            />
+          </ConfigProvider>
+        </Provider>
+        <Scripts />
+      </body>
+    </html>
+  );
 }

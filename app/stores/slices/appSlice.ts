@@ -1,5 +1,6 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { AppInfo, AppTemplate, PaginatedData } from '../../types/api';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import type { AppInfo, AppTemplate } from '../../types/api';
+import { AppService } from '../../services';
 
 interface AppState {
   currentApp: AppInfo | null;
@@ -20,60 +21,29 @@ const initialState: AppState = {
 };
 
 // 获取应用列表
-export const fetchAppList = createAsyncThunk<PaginatedData<AppInfo>>(
+export const fetchAppList = createAsyncThunk(
   'app/fetchList',
-  async () => {
-    // TODO: 实现获取应用列表API调用
-    const mockResponse: PaginatedData<AppInfo> = {
-      list: [
-        {
-          id: 1,
-          code: 'app1',
-          name: '示例应用1',
-          description: '这是一个示例应用',
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        },
-      ],
-      total: 1,
-      page: 1,
-      pageSize: 10,
-    };
-    return mockResponse;
+  async (userId: number) => {
+    const response = await AppService.getUserApps(userId);
+    return response;
   }
 );
 
 // 获取应用模板列表
-export const fetchTemplates = createAsyncThunk<AppTemplate[]>(
+export const fetchTemplates = createAsyncThunk(
   'app/fetchTemplates',
   async () => {
-    // TODO: 实现获取应用模板列表API调用
-    const mockResponse: AppTemplate[] = [
-      {
-        id: 1,
-        name: '空白模板',
-        description: '从零开始创建应用',
-        configuration: '{}',
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
-    ];
-    return mockResponse;
+    const response = await AppService.getTemplates();
+    return response;
   }
 );
 
 // 创建新应用
-export const createApp = createAsyncThunk<AppInfo, { name: string; code: string; description?: string }>(
+export const createApp = createAsyncThunk(
   'app/create',
-  async (appData) => {
-    // TODO: 实现创建应用API调用
-    const mockResponse: AppInfo = {
-      id: Date.now(),
-      ...appData,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
-    };
-    return mockResponse;
+  async (data: { name: string; code: string; description?: string }) => {
+    const response = await AppService.createApp(data);
+    return response;
   }
 );
 
@@ -81,7 +51,7 @@ const appSlice = createSlice({
   name: 'app',
   initialState,
   reducers: {
-    setCurrentApp: (state, action: PayloadAction<AppInfo>) => {
+    setCurrentApp: (state, action) => {
       state.currentApp = action.payload;
     },
     clearCurrentApp: (state) => {
@@ -100,8 +70,7 @@ const appSlice = createSlice({
       })
       .addCase(fetchAppList.fulfilled, (state, action) => {
         state.loading = false;
-        state.appList = action.payload.list;
-        state.total = action.payload.total;
+        state.appList = action.payload;
       })
       .addCase(fetchAppList.rejected, (state, action) => {
         state.loading = false;

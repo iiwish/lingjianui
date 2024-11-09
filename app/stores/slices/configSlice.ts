@@ -1,12 +1,18 @@
-import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import type {
   TableConfig,
   DimensionConfig,
   DataModelConfig,
   FormConfig,
   MenuConfig,
-  PaginatedData,
 } from '../../types/api';
+import { 
+  TableConfigService,
+  DimensionConfigService,
+  ModelConfigService,
+  FormConfigService,
+  MenuConfigService
+} from '../../services';
 
 interface ConfigState {
   tables: TableConfig[];
@@ -42,78 +48,48 @@ const initialState: ConfigState = {
   error: null,
 };
 
+// 获取菜单配置列表
+export const fetchMenus = createAsyncThunk(
+  'config/fetchMenus',
+  async (appId: number) => {
+    const response = await MenuConfigService.getList({ appId });
+    return response;
+  }
+);
+
 // 获取数据表配置列表
-export const fetchTables = createAsyncThunk<PaginatedData<TableConfig>, number>(
+export const fetchTables = createAsyncThunk(
   'config/fetchTables',
-  async (appId) => {
-    // TODO: 实现获取数据表配置列表API调用
-    const mockResponse: PaginatedData<TableConfig> = {
-      list: [],
-      total: 0,
-      page: 1,
-      pageSize: 10,
-    };
-    return mockResponse;
+  async (appId: number) => {
+    const response = await TableConfigService.getList({ appId });
+    return response;
   }
 );
 
 // 获取维度配置列表
-export const fetchDimensions = createAsyncThunk<PaginatedData<DimensionConfig>, number>(
+export const fetchDimensions = createAsyncThunk(
   'config/fetchDimensions',
-  async (appId) => {
-    // TODO: 实现获取维度配置列表API调用
-    const mockResponse: PaginatedData<DimensionConfig> = {
-      list: [],
-      total: 0,
-      page: 1,
-      pageSize: 10,
-    };
-    return mockResponse;
+  async (appId: number) => {
+    const response = await DimensionConfigService.getList({ appId });
+    return response;
   }
 );
 
 // 获取数据模型配置列表
-export const fetchModels = createAsyncThunk<PaginatedData<DataModelConfig>, number>(
+export const fetchModels = createAsyncThunk(
   'config/fetchModels',
-  async (appId) => {
-    // TODO: 实现获取数据模型配置列表API调用
-    const mockResponse: PaginatedData<DataModelConfig> = {
-      list: [],
-      total: 0,
-      page: 1,
-      pageSize: 10,
-    };
-    return mockResponse;
+  async (appId: number) => {
+    const response = await ModelConfigService.getList({ appId });
+    return response;
   }
 );
 
 // 获取表单配置列表
-export const fetchForms = createAsyncThunk<PaginatedData<FormConfig>, number>(
+export const fetchForms = createAsyncThunk(
   'config/fetchForms',
-  async (appId) => {
-    // TODO: 实现获取表单配置列表API调用
-    const mockResponse: PaginatedData<FormConfig> = {
-      list: [],
-      total: 0,
-      page: 1,
-      pageSize: 10,
-    };
-    return mockResponse;
-  }
-);
-
-// 获取菜单配置列表
-export const fetchMenus = createAsyncThunk<PaginatedData<MenuConfig>, number>(
-  'config/fetchMenus',
-  async (appId) => {
-    // TODO: 实现获取菜单配置列表API调用
-    const mockResponse: PaginatedData<MenuConfig> = {
-      list: [],
-      total: 0,
-      page: 1,
-      pageSize: 10,
-    };
-    return mockResponse;
+  async (appId: number) => {
+    const response = await FormConfigService.getList({ appId });
+    return response;
   }
 );
 
@@ -121,19 +97,19 @@ const configSlice = createSlice({
   name: 'config',
   initialState,
   reducers: {
-    setCurrentTable: (state, action: PayloadAction<TableConfig>) => {
+    setCurrentTable: (state, action) => {
       state.currentConfig.table = action.payload;
     },
-    setCurrentDimension: (state, action: PayloadAction<DimensionConfig>) => {
+    setCurrentDimension: (state, action) => {
       state.currentConfig.dimension = action.payload;
     },
-    setCurrentModel: (state, action: PayloadAction<DataModelConfig>) => {
+    setCurrentModel: (state, action) => {
       state.currentConfig.model = action.payload;
     },
-    setCurrentForm: (state, action: PayloadAction<FormConfig>) => {
+    setCurrentForm: (state, action) => {
       state.currentConfig.form = action.payload;
     },
-    setCurrentMenu: (state, action: PayloadAction<MenuConfig>) => {
+    setCurrentMenu: (state, action) => {
       state.currentConfig.menu = action.payload;
     },
     clearCurrentConfig: (state) => {
@@ -151,6 +127,19 @@ const configSlice = createSlice({
   },
   extraReducers: (builder) => {
     builder
+      // 获取菜单配置列表
+      .addCase(fetchMenus.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
+      .addCase(fetchMenus.fulfilled, (state, action) => {
+        state.loading = false;
+        state.menus = action.payload.list;
+      })
+      .addCase(fetchMenus.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.error.message || '获取菜单配置列表失败';
+      })
       // 获取数据表配置列表
       .addCase(fetchTables.pending, (state) => {
         state.loading = true;
@@ -202,19 +191,6 @@ const configSlice = createSlice({
       .addCase(fetchForms.rejected, (state, action) => {
         state.loading = false;
         state.error = action.error.message || '获取表单配置列表失败';
-      })
-      // 获取菜单配置列表
-      .addCase(fetchMenus.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchMenus.fulfilled, (state, action) => {
-        state.loading = false;
-        state.menus = action.payload.list;
-      })
-      .addCase(fetchMenus.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || '获取菜单配置列表失败';
       });
   },
 });
