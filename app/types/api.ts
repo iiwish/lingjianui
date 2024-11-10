@@ -1,6 +1,6 @@
-// API响应类型定义
+// 更新API响应类型定义
 export interface ApiResponse<T = unknown> {
-  code: number;
+  code: number;  // 修改为数字类型，值为200表示成功
   message: string;
   data: T;
 }
@@ -36,8 +36,8 @@ export interface LoginResult {
 
 // 验证码响应数据
 export interface CaptchaResult {
-  captchaId: string;
-  captchaImg: string;
+  captcha_id: string;
+  captcha_img: string;
 }
 
 // 用户信息

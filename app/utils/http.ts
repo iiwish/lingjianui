@@ -41,10 +41,11 @@ http.interceptors.response.use(
     const { code, message } = response.data;
     
     // 处理业务错误
-    if (code !== 0) {
+    if (code !== 200) {
       return Promise.reject(new Error(message || '请求失败'));
     }
     
+    // 直接返回数据部分
     return response;
   },
   async (error: AxiosError<ApiResponse<unknown>>) => {
@@ -72,7 +73,7 @@ export const get = async <T>(
   config?: Omit<AxiosRequestConfig, 'params'>
 ): Promise<T> => {
   const response = await http.get<ApiResponse<T>>(url, { ...config, params });
-  return response.data.data as T;
+  return response.data.data;
 };
 
 // 封装POST请求
@@ -82,7 +83,7 @@ export const post = async <T>(
   config?: AxiosRequestConfig
 ): Promise<T> => {
   const response = await http.post<ApiResponse<T>>(url, data, config);
-  return response.data.data as T;
+  return response.data.data;
 };
 
 // 封装PUT请求
@@ -92,7 +93,7 @@ export const put = async <T>(
   config?: AxiosRequestConfig
 ): Promise<T> => {
   const response = await http.put<ApiResponse<T>>(url, data, config);
-  return response.data.data as T;
+  return response.data.data;
 };
 
 // 封装DELETE请求
@@ -101,7 +102,7 @@ export const del = async <T>(
   config?: AxiosRequestConfig
 ): Promise<T> => {
   const response = await http.delete<ApiResponse<T>>(url, config);
-  return response.data.data as T;
+  return response.data.data;
 };
 
 // 导出实例
