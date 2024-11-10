@@ -23,7 +23,6 @@ export const AuthService = {
    * @param params 登录参数
    */
   login(params: LoginParams): Promise<ApiResponse<LoginResult>> {
-    // 直接返回原始响应，让上层处理业务状态码
     return post<LoginResult>('/auth/login', params);
   },
 

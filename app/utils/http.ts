@@ -8,6 +8,7 @@ import axios, {
 import { store } from '../stores';
 import { logout } from '../stores/slices/authSlice';
 import type { ApiResponse } from '../types/api';
+import { c } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
 
 // 创建axios实例
 const http: AxiosInstance = axios.create({
@@ -38,23 +39,25 @@ http.interceptors.request.use(
 // 响应拦截器
 http.interceptors.response.use(
   (response: AxiosResponse<ApiResponse<unknown>>) => {
-    const { data } = response;
-    if (data.code !== 200) {
-      return Promise.reject(new Error(data.message || '请求失败'));
-    }
     return response;
   },
   (error: AxiosError<ApiResponse<unknown>>) => {
     const { response } = error;
     
+    // 处理401未授权的情况
     if (response?.status === 401) {
       store.dispatch(logout());
       window.location.href = '/login';
       return Promise.reject(new Error('登录已过期，请重新登录'));
     }
     
-    const errorMessage = response?.data?.message || error.message || '网络请求失败';
-    return Promise.reject(new Error(errorMessage));
+    // 如果有后端返回的错误信息，直接抛出
+    if (response?.data) {
+      throw response.data;  // 直接抛出整个响应数据对象
+    }
+    
+    // 网络错误等其他情况
+    return Promise.reject(new Error('网络请求失败'));
   }
 );
 

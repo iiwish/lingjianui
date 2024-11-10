@@ -44,9 +44,9 @@ export default function LoginPage() {
       await dispatch(fetchUserInfo()).unwrap();
       navigate('/');
     } catch (err) {
-      console.error('Login error:', err); // 添加错误日志
-      const errorMessage = err instanceof Error ? err.message : '登录失败';
-      message.error(errorMessage); // 使用组件级别的 message
+      console.error('Login error:', err);
+      // 直接使用错误信息字符串
+      message.error(err as string);
       refreshCaptcha();
       form.setFieldValue('captcha_val', '');
     }
@@ -78,7 +78,20 @@ export default function LoginPage() {
         position: 'relative',
       }}>
         <Card
-          title={<div style={{ textAlign: 'center', fontSize: '24px', color: '#1a1a1a' }}>灵简低代码平台</div>}
+          title={
+            <div style={{ 
+              textAlign: 'center', 
+              fontSize: '24px', 
+              color: '#1a1a1a',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              gap: '12px'
+            }}>
+              <img src="/logo256.png" alt="Logo" style={{ height: '32px' }} />
+              灵简低代码平台
+            </div>
+          }
           style={{
             width: 400,
             boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
@@ -121,14 +134,17 @@ export default function LoginPage() {
             <Form.Item>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <Form.Item
-                  name="captcha_val"  // 修改字段名
+                  name="captcha_val"
                   noStyle
                   rules={[{ required: true, message: '请输入验证码' }]}
                 >
                   <Input
                     prefix={<SafetyCertificateOutlined />}
                     placeholder="验证码"
-                    style={{ flex: 1 }}
+                    style={{ 
+                      flex: 1,
+                      height: '40px' // 调整输入框高度
+                    }}
                   />
                 </Form.Item>
                 <div 
@@ -138,18 +154,23 @@ export default function LoginPage() {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '0 8px',
+                    padding: '0',
                     border: '1px solid #d9d9d9',
                     borderRadius: 4,
-                    minWidth: '100px', // 添加最小宽度
-                    height: '32px',    // 确保高度固定
+                    width: '120px', // 固定宽度
+                    height: '40px',  // 调整容器高度
+                    overflow: 'hidden' // 确保图片不会溢出
                   }}
                 >
                   {captcha?.captcha_img ? (
                     <img 
                       src={captcha.captcha_img}
                       alt="验证码"
-                      style={{ height: '100%' }}
+                      style={{ 
+                        height: '100%',
+                        width: '100%',
+                        objectFit: 'cover' // 确保图片填充整个容器
+                      }}
                     />
                   ) : (
                     <span>加载中...</span>

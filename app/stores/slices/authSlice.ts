@@ -29,10 +29,11 @@ export const login = createAsyncThunk<LoginResult, LoginParams>(
       }
       return response.data;
     } catch (error) {
-      if (error instanceof Error) {
-        throw error;
+      // 处理 ApiResponse 类型的错误
+      if (error && typeof error === 'object' && 'code' in error && 'message' in error) {
+        return rejectWithValue(error.message);
       }
-      throw new Error('登录失败');
+      throw new Error('网络请求失败');
     }
   }
 );
@@ -86,8 +87,6 @@ const authSlice = createSlice({
         state.loading = false;
         // 使用错误信息或默认消息
         state.error = action.error.message || '登录失败';
-        // 确保错误消息被设置
-        console.error('Login error:', action.error);
       })
       // 获取用户信息
       .addCase(fetchUserInfo.pending, (state: AuthState) => {
