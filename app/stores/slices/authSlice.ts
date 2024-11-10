@@ -1,5 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction, ActionReducerMapBuilder } from '@reduxjs/toolkit';
 import type { UserInfo, LoginParams, LoginResult } from '../../types/api';
+import { AuthService } from '../../services/auth';
 
 interface AuthState {
   user: UserInfo | null;
@@ -21,17 +22,7 @@ const initialState: AuthState = {
 export const login = createAsyncThunk<LoginResult, LoginParams>(
   'auth/login',
   async (loginParams: LoginParams) => {
-    // TODO: 实现登录API调用
-    // 使用loginParams模拟登录验证
-    if (loginParams.username === 'admin' && loginParams.password === 'admin') {
-      const mockResponse: LoginResult = {
-        accessToken: 'mock-token',
-        refreshToken: 'mock-refresh-token',
-        expiresIn: 7200,
-      };
-      return mockResponse;
-    }
-    throw new Error('用户名或密码错误');
+    return await AuthService.login(loginParams);
   }
 );
 
@@ -39,14 +30,7 @@ export const login = createAsyncThunk<LoginResult, LoginParams>(
 export const fetchUserInfo = createAsyncThunk<UserInfo>(
   'auth/fetchUserInfo',
   async () => {
-    // TODO: 实现获取用户信息API调用
-    const mockResponse: UserInfo = {
-      id: 1,
-      username: 'admin',
-      roles: ['admin'],
-      permissions: ['*'],
-    };
-    return mockResponse;
+    return await AuthService.getCurrentUser();
   }
 );
 
@@ -55,6 +39,9 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state: AuthState) => {
+      // 调用登出API
+      void AuthService.logout();
+      // 清除状态
       state.user = null;
       state.token = null;
       state.refreshToken = null;

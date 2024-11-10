@@ -24,14 +24,14 @@ export default function LoginPage() {
       console.log('验证码数据:', result); // 添加调试日志
       setCaptcha(result);
       // 自动设置 captchaId
-      form.setFieldValue('captchaId', result.captcha_id);
+      form.setFieldValue('captcha_id', result.captcha_id);
     } catch (err) {
       console.error('获取验证码失败:', err); // 添加错误日志
       App.useApp().message.error('获取验证码失败');
     }
   };
 
-  // 初始化获取验证码
+  // ��始化获取验证码
   useEffect(() => {
     refreshCaptcha();
   }, []);
@@ -125,7 +125,7 @@ export default function LoginPage() {
             <Form.Item>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <Form.Item
-                  name="captchaVal"
+                  name="captcha_val"  // 修改字段名
                   noStyle
                   rules={[{ required: true, message: '请输入验证码' }]}
                 >
@@ -163,7 +163,7 @@ export default function LoginPage() {
             </Form.Item>
 
             <Form.Item
-              name="captchaId"
+              name="captcha_id"  // 修改字段名
               initialValue={captcha?.captcha_id || ''}
               hidden
             >

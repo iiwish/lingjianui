@@ -23,8 +23,8 @@ export interface PaginatedData<T> {
 export interface LoginParams {
   username: string;
   password: string;
-  captchaId: string;
-  captchaVal: string;
+  captcha_id: string;  // 修改为下划线命名
+  captcha_val: string; // 修改为下划线命名
 }
 
 // 登录响应数据
