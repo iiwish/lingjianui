@@ -21,8 +21,19 @@ const initialState: AuthState = {
 // 异步登录action
 export const login = createAsyncThunk<LoginResult, LoginParams>(
   'auth/login',
-  async (loginParams: LoginParams) => {
-    return await AuthService.login(loginParams);
+  async (loginParams: LoginParams, { rejectWithValue }) => {
+    try {
+      const response = await AuthService.login(loginParams);
+      if (response.code !== 200) {
+        return rejectWithValue(response.message);
+      }
+      return response.data;
+    } catch (error) {
+      if (error instanceof Error) {
+        throw error;
+      }
+      throw new Error('登录失败');
+    }
   }
 );
 
@@ -30,7 +41,11 @@ export const login = createAsyncThunk<LoginResult, LoginParams>(
 export const fetchUserInfo = createAsyncThunk<UserInfo>(
   'auth/fetchUserInfo',
   async () => {
-    return await AuthService.getCurrentUser();
+    const response = await AuthService.getCurrentUser();
+    if (response.code !== 200) {
+      throw new Error(response.message);
+    }
+    return response.data;
   }
 );
 
@@ -67,9 +82,12 @@ const authSlice = createSlice({
         state.token = action.payload.accessToken;
         state.refreshToken = action.payload.refreshToken;
       })
-      .addCase(login.rejected, (state: AuthState, action: { error: { message?: string } }) => {
+      .addCase(login.rejected, (state: AuthState, action) => {
         state.loading = false;
+        // 使用错误信息或默认消息
         state.error = action.error.message || '登录失败';
+        // 确保错误消息被设置
+        console.error('Login error:', action.error);
       })
       // 获取用户信息
       .addCase(fetchUserInfo.pending, (state: AuthState) => {

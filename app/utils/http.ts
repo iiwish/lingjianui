@@ -38,30 +38,22 @@ http.interceptors.request.use(
 // 响应拦截器
 http.interceptors.response.use(
   (response: AxiosResponse<ApiResponse<unknown>>) => {
-    const { code, message } = response.data;
-    
-    // 处理业务错误
-    if (code !== 200) {
-      return Promise.reject(new Error(message || '请求失败'));
+    const { data } = response;
+    if (data.code !== 200) {
+      return Promise.reject(new Error(data.message || '请求失败'));
     }
-    
-    // 直接返回数据部分
     return response;
   },
-  async (error: AxiosError<ApiResponse<unknown>>) => {
+  (error: AxiosError<ApiResponse<unknown>>) => {
     const { response } = error;
     
-    // 处理401错误
     if (response?.status === 401) {
-      // 清除登录状态
       store.dispatch(logout());
-      // 跳转到登录页
       window.location.href = '/login';
       return Promise.reject(new Error('登录已过期，请重新登录'));
     }
     
-    // 处理其他错误
-    const errorMessage = response?.data?.message || error.message || '请求失败';
+    const errorMessage = response?.data?.message || error.message || '网络请求失败';
     return Promise.reject(new Error(errorMessage));
   }
 );
@@ -71,9 +63,9 @@ export const get = async <T>(
   url: string, 
   params?: Record<string, unknown>,
   config?: Omit<AxiosRequestConfig, 'params'>
-): Promise<T> => {
+): Promise<ApiResponse<T>> => {  // 修改返回类型
   const response = await http.get<ApiResponse<T>>(url, { ...config, params });
-  return response.data.data;
+  return response.data;  // 返回完整响应
 };
 
 // 封装POST请求
@@ -81,9 +73,9 @@ export const post = async <T>(
   url: string, 
   data?: unknown,
   config?: AxiosRequestConfig
-): Promise<T> => {
+): Promise<ApiResponse<T>> => {
   const response = await http.post<ApiResponse<T>>(url, data, config);
-  return response.data.data;
+  return response.data; // 返回完整的响应数据
 };
 
 // 封装PUT请求

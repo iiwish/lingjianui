@@ -13,6 +13,7 @@ import { PersistGate } from 'redux-persist/integration/react';
 import { store, persistor } from './stores';
 import AntdProvider from './components/AntdProvider';
 import ClientOnly from './components/ClientOnly';
+import { App as AntdApp } from 'antd';
 
 export const links: LinksFunction = () => [
   {
@@ -35,7 +36,9 @@ export default function App() {
           <Provider store={store}>
             <PersistGate loading={null} persistor={persistor}>
               <AntdProvider>
-                <Outlet />
+                <AntdApp>
+                  <Outlet />
+                </AntdApp>
               </AntdProvider>
             </PersistGate>
           </Provider>

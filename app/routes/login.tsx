@@ -8,6 +8,7 @@ import type { LoginParams, CaptchaResult } from '~/types/api';
 import { AuthService } from '~/services';
 
 export default function LoginPage() {
+  const { message } = App.useApp(); // 移到组件顶部
   const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -22,39 +23,32 @@ export default function LoginPage() {
     try {
       const result = await AuthService.getCaptcha();
       console.log('验证码数据:', result); // 添加调试日志
-      setCaptcha(result);
+      setCaptcha(result.data);  // 修改这里，从 response 中获取 data
       // 自动设置 captchaId
-      form.setFieldValue('captcha_id', result.captcha_id);
+      form.setFieldValue('captcha_id', result.data.captcha_id);
     } catch (err) {
       console.error('获取验证码失败:', err); // 添加错误日志
-      App.useApp().message.error('获取验证码失败');
+      message.error('获取验证码失败');
     }
   };
 
-  // ��始化获取验证码
+  // 初始化获取验证码
   useEffect(() => {
     refreshCaptcha();
   }, []);
 
-  // 处理登录错误
-  useEffect(() => {
-    if (error) {
-      App.useApp().message.error(error);
-    }
-  }, [error]);
-
   // 处理表单提交
   const handleSubmit = async (values: LoginParams) => {
     try {
-      // 登录
       await dispatch(login(values)).unwrap();
-      // 获取用户信息
       await dispatch(fetchUserInfo()).unwrap();
-      // 跳转到首页
       navigate('/');
     } catch (err) {
-      // 登录失败刷新验证码
+      console.error('Login error:', err); // 添加错误日志
+      const errorMessage = err instanceof Error ? err.message : '登录失败';
+      message.error(errorMessage); // 使用组件级别的 message
       refreshCaptcha();
+      form.setFieldValue('captcha_val', '');
     }
   };
 
@@ -90,7 +84,9 @@ export default function LoginPage() {
             boxShadow: '0 4px 12px rgba(0,0,0,0.1)',
             border: 'none',
           }}
-          bodyStyle={{ padding: '24px' }}
+          styles={{
+            body: { padding: '24px' }  // 使用新的 styles.body 替代 bodyStyle
+          }}
         >
           <Form
             form={form}
