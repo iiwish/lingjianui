@@ -81,8 +81,19 @@ export default function MainLayout({ children }: MainLayoutProps) {
   ];
 
   return (
-    <Layout style={{ minHeight: '100vh' }}>
-      <Sider trigger={null} collapsible collapsed={collapsed}>
+    <Layout style={{ minHeight: '100vh', height: '100vh' }}>
+      <Sider 
+        trigger={null} 
+        collapsible 
+        collapsed={collapsed}
+        style={{
+          height: '100vh',
+          position: 'fixed',
+          left: 0,
+          top: 0,
+          bottom: 0,
+        }}
+      >
         <div style={{ 
           height: '64px', 
           padding: '16px', 
@@ -90,31 +101,50 @@ export default function MainLayout({ children }: MainLayoutProps) {
           textAlign: 'center',
           overflow: 'hidden',
           whiteSpace: 'nowrap',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
+          background: '#001529'
         }}>
-          {currentApp?.name || '灵简平台'}
+          {collapsed ? '灵简' : '灵简低代码平台'}
         </div>
         <div style={{ 
           display: 'flex', 
           flexDirection: 'column', 
-          height: 'calc(100vh - 64px)' 
+          height: 'calc(100vh - 64px)',
+          position: 'relative'
         }}>
-          <Menu
-            theme="dark"
-            mode="inline"
-            selectedKeys={[location.pathname]}
-            items={sideMenuItems}
-            style={{ flex: 1 }}
-          />
-          <SidebarFooter />
+          <div style={{ 
+            flex: 1, 
+            overflow: 'auto'
+          }}>
+            <Menu
+              theme="dark"
+              mode="inline"
+              selectedKeys={[location.pathname]}
+              items={sideMenuItems}
+            />
+          </div>
+          <div style={{
+            position: 'sticky',
+            bottom: 0,
+            background: '#001529',
+            zIndex: 1
+          }}>
+            <SidebarFooter />
+          </div>
         </div>
       </Sider>
-      <Layout>
+      <Layout style={{ marginLeft: collapsed ? 80 : 200, transition: 'margin-left 0.2s' }}>
         <Header style={{ 
           padding: 0, 
           background: '#fff',
           display: 'flex',
           justifyContent: 'space-between',
           alignItems: 'center',
+          position: 'sticky',
+          top: 0,
+          zIndex: 1,
         }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Button
@@ -148,6 +178,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
           background: '#fff',
           minHeight: 280,
           borderRadius: '8px',
+          overflow: 'auto',
+          height: 'calc(100vh - 112px)', // 减去 header 高度和 margin
         }}>
           {children}
         </Content>

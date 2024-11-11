@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { GithubOutlined } from '@ant-design/icons';
+import { GithubOutlined, BilibiliOutlined } from '@ant-design/icons';
 
 export default function SidebarFooter() {
   return (
@@ -16,9 +16,17 @@ export default function SidebarFooter() {
           href="https://github.com/iiwish/lingjian" 
           target="_blank" 
           rel="noopener noreferrer"
-          style={{ color: 'rgba(255, 255, 255, 0.45)' }}
+          style={{ color: 'rgba(255, 255, 255, 0.45)', marginRight: '12px' }}
         >
           <GithubOutlined />
+        </a>
+        <a 
+          href="https://space.bilibili.com/11618958/" 
+          target="_blank" 
+          rel="noopener noreferrer"
+          style={{ color: 'rgba(255, 255, 255, 0.45)' }}
+        >
+          <BilibiliOutlined />
         </a>
       </div>
       <div style={{ marginTop: '4px' }}>

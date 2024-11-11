@@ -1,5 +1,5 @@
 import React from 'react';
-import { GithubOutlined } from '@ant-design/icons';
+import { GithubOutlined, BilibiliOutlined } from '@ant-design/icons';
 
 interface AppFooterProps {
   className?: string;
@@ -29,10 +29,10 @@ export default function AppFooter({ className, style }: AppFooterProps) {
           rel="noopener noreferrer"
           style={{ color: '#666', margin: '0 12px' }}
         >
-          <span style={{ fontWeight: 'bold' }}>B</span> BiliBili
+          <BilibiliOutlined /> BiliBili
         </a>
       </div>
-      <div>Copyright © Beijing Wish Technology Co., Ltd</div>
+      <div>Copyright © 北京未生科技有限公司</div>
     </div>
   );
 }
