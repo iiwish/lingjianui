@@ -34,6 +34,9 @@ export const login = createAsyncThunk<LoginResult, LoginParams>(
       refreshToken: result.refresh_token
     }));
     
+    // 立即获取用户信息
+    await dispatch(fetchUserInfo()).unwrap();
+    
     return result;
   }
 );
@@ -45,15 +48,20 @@ export const fetchUserInfo = createAsyncThunk<UserInfo>(
     try {
       const state = getState() as { auth: AuthState };
       if (!state.auth.token) {
+        console.error('No token available'); // 添加调试日志
         return rejectWithValue('No token available');
       }
 
+      console.log('Fetching user info with token:', state.auth.token); // 添加调试日志
       const response = await AuthService.getCurrentUser();
+      console.log('User info response:', response); // 添加调试日志
+
       if (response.code !== 200) {
-        throw new Error(response.message);
+        return rejectWithValue(response.message);
       }
       return response.data;
     } catch (error) {
+      console.error('fetchUserInfo error:', error); // 添加错误日志
       throw error;
     }
   }
@@ -75,6 +83,7 @@ const authSlice = createSlice({
     setToken: (state: AuthState, action: PayloadAction<{ token: string; refreshToken: string }>) => {
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;
+      console.log('Token updated in Redux:', action.payload.token); // 添加调试日志
     },
     clearError: (state: AuthState) => {
       state.error = null;

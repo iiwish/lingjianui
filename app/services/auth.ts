@@ -50,10 +50,11 @@ export const AuthService = {
    */
   getCurrentUser(): Promise<ApiResponse<UserInfo>> {  // 修改返回类型
     return get<UserInfo>('/auth/userinfo').then(response => {
-      if (response.code !== 200) {
-        throw new Error(response.message);
-      }
+      console.log('getCurrentUser response:', response); // 添加调试日志
       return response;
+    }).catch(error => {
+      console.error('getCurrentUser error:', error); // 添加错误日志
+      throw error;
     });
   }
 };
