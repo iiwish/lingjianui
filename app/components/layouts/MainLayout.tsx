@@ -91,7 +91,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           fontSize: '20px',
           fontWeight: 'bold',
         }}>
-          {collapsed ? 'LJ' : 'LingJian'}
+          {collapsed ? '灵简' : '灵简低代码平台'}
         </div>
         <Menu
           theme="dark"

@@ -40,7 +40,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   // 加载菜单数据
   useEffect(() => {
     if (currentApp?.id) {
-      void dispatch(fetchMenus(currentApp.id));
+      void dispatch(fetchMenus(Number(currentApp.id)));
     }
   }, [dispatch, currentApp?.id]);
 

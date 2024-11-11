@@ -82,7 +82,7 @@ export default function Dashboard() {
           alignItems: 'center', 
           height: '100%' 
         }}>
-          <Spin size="large" tip="加载中..." />
+          <Spin size="large" fullscreen tip="加载中..." />
         </div>
       </MainLayout>
     );
@@ -109,7 +109,7 @@ export default function Dashboard() {
                     hoverable
                     style={{ height: '100%' }}
                     onClick={() => handleAppClick(app.id)}
-                    bodyStyle={{ height: '100%' }}
+                    styles={{ body: { height: '100%' } }}
                   >
                     <div style={{ 
                       display: 'flex', 
@@ -164,12 +164,14 @@ export default function Dashboard() {
                 border: '1px dashed #d9d9d9',
                 background: '#fafafa'
               }}
-              bodyStyle={{
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
+              styles={{
+                body: {
+                  width: '100%',
+                  height: '100%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center'
+                }
               }}
               onClick={() => setCreateModalVisible(true)}
             >
