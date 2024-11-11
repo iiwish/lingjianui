@@ -1,110 +1,64 @@
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import type { AppInfo, AppTemplate } from '../../types/api';
-import { AppService } from '../../services';
-
-interface AppState {
-  currentApp: AppInfo | null;
-  appList: AppInfo[];
-  templates: AppTemplate[];
-  loading: boolean;
-  error: string | null;
-  total: number;
-}
+import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import type { App, AppState } from '~/types/app';
 
 const initialState: AppState = {
+  apps: [],
   currentApp: null,
-  appList: [],
-  templates: [],
   loading: false,
   error: null,
-  total: 0,
 };
-
-// 获取应用列表
-export const fetchAppList = createAsyncThunk(
-  'app/fetchList',
-  async (userId: number) => {
-    const response = await AppService.getUserApps(userId);
-    return response;
-  }
-);
-
-// 获取应用模板列表
-export const fetchTemplates = createAsyncThunk(
-  'app/fetchTemplates',
-  async () => {
-    const response = await AppService.getTemplates();
-    return response;
-  }
-);
-
-// 创建新应用
-export const createApp = createAsyncThunk(
-  'app/create',
-  async (data: { name: string; code: string; description?: string }) => {
-    const response = await AppService.createApp(data);
-    return response;
-  }
-);
 
 const appSlice = createSlice({
   name: 'app',
   initialState,
   reducers: {
-    setCurrentApp: (state, action) => {
+    setApps: (state, action: PayloadAction<App[]>) => {
+      state.apps = action.payload;
+      state.error = null;
+    },
+    setCurrentApp: (state, action: PayloadAction<App | null>) => {
       state.currentApp = action.payload;
+      state.error = null;
     },
-    clearCurrentApp: (state) => {
-      state.currentApp = null;
+    setLoading: (state, action: PayloadAction<boolean>) => {
+      state.loading = action.payload;
     },
-    clearError: (state) => {
+    setError: (state, action: PayloadAction<string | null>) => {
+      state.error = action.payload;
+      state.loading = false;
+    },
+    addApp: (state, action: PayloadAction<App>) => {
+      state.apps.push(action.payload);
+      state.error = null;
+    },
+    updateApp: (state, action: PayloadAction<App>) => {
+      const index = state.apps.findIndex(app => app.id === action.payload.id);
+      if (index !== -1) {
+        state.apps[index] = action.payload;
+      }
+      if (state.currentApp?.id === action.payload.id) {
+        state.currentApp = action.payload;
+      }
+      state.error = null;
+    },
+    removeApp: (state, action: PayloadAction<string>) => {
+      state.apps = state.apps.filter(app => app.id !== action.payload);
+      if (state.currentApp?.id === action.payload) {
+        state.currentApp = null;
+      }
       state.error = null;
     },
   },
-  extraReducers: (builder) => {
-    builder
-      // 获取应用列表
-      .addCase(fetchAppList.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchAppList.fulfilled, (state, action) => {
-        state.loading = false;
-        state.appList = action.payload;
-      })
-      .addCase(fetchAppList.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || '获取应用列表失败';
-      })
-      // 获取模板列表
-      .addCase(fetchTemplates.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(fetchTemplates.fulfilled, (state, action) => {
-        state.loading = false;
-        state.templates = action.payload;
-      })
-      .addCase(fetchTemplates.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || '获取模板列表失败';
-      })
-      // 创建应用
-      .addCase(createApp.pending, (state) => {
-        state.loading = true;
-        state.error = null;
-      })
-      .addCase(createApp.fulfilled, (state, action) => {
-        state.loading = false;
-        state.appList = [...state.appList, action.payload];
-        state.total += 1;
-      })
-      .addCase(createApp.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.error.message || '创建应用失败';
-      });
-  },
 });
 
-export const { setCurrentApp, clearCurrentApp, clearError } = appSlice.actions;
+export const {
+  setApps,
+  setCurrentApp,
+  setLoading,
+  setError,
+  addApp,
+  updateApp,
+  removeApp,
+} = appSlice.actions;
+
 export default appSlice.reducer;

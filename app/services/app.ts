@@ -1,91 +1,62 @@
-import { get, post } from '../utils/http';
-import type { 
-  AppInfo, 
-  AppTemplate
-} from '../types/api';
+import type { App, CreateAppDto, UpdateAppDto, AppResponse, AppsResponse } from '~/types/app';
+import { get, post, put, del } from '~/utils/http';
 
-/**
- * 应用相关API服务
- */
-export const AppService = {
+const BASE_URL = '/apps';
+
+export const appService = {
   /**
-   * 获取用户的应用列表
-   * @param userId 用户ID
+   * 获取应用列表
    */
-  getUserApps(userId: number): Promise<AppInfo[]> {
-    return get<AppInfo[]>(`/apps/users/${userId}`);
+  getApps: async () => {
+    const response = await get<AppsResponse>(BASE_URL);
+    return response.data;
   },
 
   /**
-   * 获取用户的默认应用
-   * @param userId 用户ID
+   * 获取应用详情
    */
-  getUserDefaultApp(userId: number): Promise<AppInfo> {
-    return get<AppInfo>(`/apps/users/${userId}/default`);
+  getApp: async (id: string) => {
+    const response = await get<AppResponse>(`${BASE_URL}/${id}`);
+    return response.data;
   },
 
   /**
-   * 创建新应用
-   * @param data 应用信息
+   * 创建应用
    */
-  createApp(data: {
-    name: string;
-    code: string;
-    description?: string;
-  }): Promise<AppInfo> {
-    return post<AppInfo>('/apps', data);
+  createApp: async (data: CreateAppDto) => {
+    const response = await post<AppResponse>(BASE_URL, data);
+    return response.data;
   },
 
   /**
-   * 为用户分配应用
-   * @param appId 应用ID
-   * @param userId 用户ID
-   * @param isDefault 是否设为默认应用
+   * 更新应用
    */
-  assignAppToUser(appId: number, userId: number, isDefault: boolean): Promise<void> {
-    return post<void>(`/apps/${appId}/users/${userId}`, { isDefault });
+  updateApp: async (id: string, data: UpdateAppDto) => {
+    const response = await put<AppResponse>(`${BASE_URL}/${id}`, data);
+    return response.data;
   },
 
   /**
-   * 获取应用模板列表
+   * 删除应用
    */
-  getTemplates(): Promise<AppTemplate[]> {
-    return get<AppTemplate[]>('/apps/templates');
+  deleteApp: async (id: string) => {
+    const response = await del<AppResponse>(`${BASE_URL}/${id}`);
+    return response.data;
   },
 
   /**
-   * 创建应用模板
-   * @param data 模板信息
+   * 设置默认应用
    */
-  createTemplate(data: {
-    name: string;
-    description?: string;
-    configuration: string;
-    price?: number;
-  }): Promise<AppTemplate> {
-    return post<AppTemplate>('/apps/templates', data);
+  setDefaultApp: async (id: string) => {
+    const response = await post<AppResponse>(`${BASE_URL}/${id}/default`);
+    return response.data;
   },
 
   /**
-   * 发布应用模板
-   * @param templateId 模板ID
+   * 获取默认应用
    */
-  publishTemplate(templateId: number): Promise<void> {
-    return post<void>(`/apps/templates/${templateId}/publish`);
+  getDefaultApp: async () => {
+    const response = await get<AppResponse>(`${BASE_URL}/default`);
+    return response.data;
   },
-
-  /**
-   * 基于模板创建应用
-   * @param templateId 模板ID
-   * @param data 应用信息
-   */
-  createFromTemplate(
-    templateId: number,
-    data: {
-      name: string;
-      code: string;
-    }
-  ): Promise<AppInfo> {
-    return post<AppInfo>(`/apps/templates/${templateId}/create`, data);
-  }
 };
