@@ -23,10 +23,28 @@ const http: AxiosInstance = axios.create({
 http.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const state = store.getState();
-    const token = state.auth.token;
+    let token = state.auth.token;
+    
+    // 如果 Redux store 中没有 token，尝试从 localStorage 获取
+    if (!token && typeof window !== 'undefined') {
+      const persistedString = localStorage.getItem('persist:auth');
+      if (persistedString) {
+        try {
+          const persistedAuth = JSON.parse(persistedString);
+          token = JSON.parse(persistedAuth.token);
+        } catch (e) {
+          console.error('Failed to parse persisted auth:', e);
+        }
+      }
+    }
     
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      // 添加调试日志
+      console.log('Request headers:', config.headers);
+      console.log('Token being used:', token);
+    } else {
+      console.warn('No token available for request');
     }
     
     return config;
@@ -36,7 +54,7 @@ http.interceptors.request.use(
   }
 );
 
-// 响应拦截器
+// 响应拦截��
 http.interceptors.response.use(
   (response: AxiosResponse<ApiResponse<unknown>>) => {
     return response;

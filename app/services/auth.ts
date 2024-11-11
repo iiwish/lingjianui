@@ -49,6 +49,11 @@ export const AuthService = {
    * 获取当前用户信息
    */
   getCurrentUser(): Promise<ApiResponse<UserInfo>> {  // 修改返回类型
-    return get<UserInfo>('/auth/current-user');
+    return get<UserInfo>('/auth/userinfo').then(response => {
+      if (response.code !== 200) {
+        throw new Error(response.message);
+      }
+      return response;
+    });
   }
 };

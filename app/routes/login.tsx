@@ -40,13 +40,27 @@ export default function LoginPage() {
   // 处理表单提交
   const handleSubmit = async (values: LoginParams) => {
     try {
-      await dispatch(login(values)).unwrap();
-      await dispatch(fetchUserInfo()).unwrap();
-      navigate('/');
+      // 登录
+      const loginResult = await dispatch(login(values)).unwrap();
+      console.log('Login success, token:', loginResult.access_token);
+      
+      // 确保 token 已被设置
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // 获取用户信息
+      const userInfo = await dispatch(fetchUserInfo()).unwrap();
+      
+      if (userInfo) {
+        message.success('登录成功');
+        // 使用 replace 而不是 navigate，防止用户返回到登录页
+        navigate('/', { replace: true });
+      } else {
+        message.error('获取用户信息失败');
+        refreshCaptcha();
+      }
     } catch (err) {
       console.error('Login error:', err);
-      // 直接使用错误信息字符串
-      message.error(err as string);
+      message.error(err instanceof Error ? err.message : '登录失败');
       refreshCaptcha();
       form.setFieldValue('captcha_val', '');
     }
@@ -143,7 +157,7 @@ export default function LoginPage() {
                     placeholder="验证码"
                     style={{ 
                       flex: 1,
-                      height: '40px' // 调整输入框高度
+                      height: '40px' // ��整输入框高度
                     }}
                   />
                 </Form.Item>

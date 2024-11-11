@@ -29,9 +29,9 @@ export interface LoginParams {
 
 // 登录响应数据
 export interface LoginResult {
-  accessToken: string;
-  refreshToken: string;
-  expiresIn: number;
+  access_token: string;  // 改为下划线命名
+  refresh_token: string; // 改为下划线命名
+  expires_in: number;    // 改为下划线命名
 }
 
 // 验证码响应数据
