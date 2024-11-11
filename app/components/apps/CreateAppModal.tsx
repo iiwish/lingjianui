@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Form, Input, message } from 'antd';
 import { useAppDispatch } from '~/stores';
-import { appService } from '~/services/app';
+import { AppService } from '~/services/app';
 import { addApp } from '~/stores/slices/appSlice';
 import type { CreateAppDto } from '~/types/app';
 
@@ -26,7 +26,7 @@ export default function CreateAppModal({ visible, onClose }: CreateAppModalProps
         icon,
       };
       
-      const response = await appService.createApp(data);
+      const response = await AppService.createApp(data);
       dispatch(addApp(response.data));
       message.success('应用创建成功');
       form.resetFields();

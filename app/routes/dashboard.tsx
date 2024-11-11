@@ -6,7 +6,7 @@ import MainLayout from '~/components/layouts/MainLayout';
 import CreateAppModal from '~/components/apps/CreateAppModal';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { setApps, setLoading, setError } from '~/stores/slices/appSlice';
-import { appService } from '~/services/app';
+import { AppService } from '~/services/app';  // 更新导入名称
 
 const { Title, Paragraph } = Typography;
 
@@ -21,7 +21,7 @@ export default function Dashboard() {
   const fetchApps = async () => {
     try {
       dispatch(setLoading(true));
-      const response = await appService.getApps();
+      const response = await AppService.getApps();
       dispatch(setApps(response.data.list));
     } catch (err) {
       if (err instanceof Error) {

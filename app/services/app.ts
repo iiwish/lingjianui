@@ -1,14 +1,14 @@
 import type { App, CreateAppDto, UpdateAppDto, AppResponse, AppsResponse } from '~/types/app';
-import { get, post, put, del } from '~/utils/http';
+import http from '~/utils/http';
 
 const BASE_URL = '/apps';
 
-export const appService = {
+export const AppService = {
   /**
    * 获取应用列表
    */
   getApps: async () => {
-    const response = await get<AppsResponse>(BASE_URL);
+    const response = await http.get<AppsResponse>(BASE_URL);
     return response.data;
   },
 
@@ -16,7 +16,7 @@ export const appService = {
    * 获取应用详情
    */
   getApp: async (id: string) => {
-    const response = await get<AppResponse>(`${BASE_URL}/${id}`);
+    const response = await http.get<AppResponse>(`${BASE_URL}/${id}`);
     return response.data;
   },
 
@@ -24,7 +24,7 @@ export const appService = {
    * 创建应用
    */
   createApp: async (data: CreateAppDto) => {
-    const response = await post<AppResponse>(BASE_URL, data);
+    const response = await http.post<AppResponse>(BASE_URL, data);
     return response.data;
   },
 
@@ -32,7 +32,7 @@ export const appService = {
    * 更新应用
    */
   updateApp: async (id: string, data: UpdateAppDto) => {
-    const response = await put<AppResponse>(`${BASE_URL}/${id}`, data);
+    const response = await http.put<AppResponse>(`${BASE_URL}/${id}`, data);
     return response.data;
   },
 
@@ -40,7 +40,7 @@ export const appService = {
    * 删除应用
    */
   deleteApp: async (id: string) => {
-    const response = await del<AppResponse>(`${BASE_URL}/${id}`);
+    const response = await http.delete<AppResponse>(`${BASE_URL}/${id}`);
     return response.data;
   },
 
@@ -48,7 +48,7 @@ export const appService = {
    * 设置默认应用
    */
   setDefaultApp: async (id: string) => {
-    const response = await post<AppResponse>(`${BASE_URL}/${id}/default`);
+    const response = await http.post<AppResponse>(`${BASE_URL}/${id}/default`);
     return response.data;
   },
 
@@ -56,7 +56,7 @@ export const appService = {
    * 获取默认应用
    */
   getDefaultApp: async () => {
-    const response = await get<AppResponse>(`${BASE_URL}/default`);
+    const response = await http.get<AppResponse>(`${BASE_URL}/default`);
     return response.data;
   },
 };

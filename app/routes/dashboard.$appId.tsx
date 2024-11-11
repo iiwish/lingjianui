@@ -5,7 +5,7 @@ import type { TabsProps } from 'antd';
 import MainLayout from '~/components/layouts/MainLayout';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { setCurrentApp, setLoading, setError } from '~/stores/slices/appSlice';
-import { appService } from '~/services/app';
+import { AppService } from '~/services/app';
 
 const items: TabsProps['items'] = [
   {
@@ -36,7 +36,7 @@ const items: TabsProps['items'] = [
   {
     key: 'roles',
     label: '角色权限',
-    children: '角色权限配置（待开发）',
+    children: '角色权限配置（待开���）',
   },
   {
     key: 'tasks',
@@ -60,7 +60,7 @@ export default function AppDetail() {
     
     try {
       dispatch(setLoading(true));
-      const response = await appService.getApp(appId);
+      const response = await AppService.getApp(appId);
       dispatch(setCurrentApp(response.data));
     } catch (err) {
       if (err instanceof Error) {
