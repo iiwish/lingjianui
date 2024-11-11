@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
 import {
   MenuFoldOutlined,
@@ -12,6 +12,7 @@ import {
 import { useNavigate, useLocation } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
+import SidebarFooter from '~/components/common/SidebarFooter';
 
 const { Header, Sider, Content } = Layout;
 
@@ -84,21 +85,28 @@ export default function MainLayout({ children }: MainLayoutProps) {
       <Sider trigger={null} collapsible collapsed={collapsed}>
         <div style={{ 
           height: '64px', 
-          display: 'flex', 
-          alignItems: 'center',
-          justifyContent: 'center',
+          padding: '16px', 
           color: '#fff',
-          fontSize: '20px',
-          fontWeight: 'bold',
+          textAlign: 'center',
+          overflow: 'hidden',
+          whiteSpace: 'nowrap',
         }}>
-          {collapsed ? '灵简' : '灵简低代码平台'}
+          {currentApp?.name || '灵简平台'}
         </div>
-        <Menu
-          theme="dark"
-          mode="inline"
-          defaultSelectedKeys={['apps']}
-          items={sideMenuItems}
-        />
+        <div style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          height: 'calc(100vh - 64px)' 
+        }}>
+          <Menu
+            theme="dark"
+            mode="inline"
+            selectedKeys={[location.pathname]}
+            items={sideMenuItems}
+            style={{ flex: 1 }}
+          />
+          <SidebarFooter />
+        </div>
       </Sider>
       <Layout>
         <Header style={{ 

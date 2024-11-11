@@ -90,7 +90,11 @@ export default function Dashboard() {
 
   return (
     <MainLayout>
-      <div style={{ maxWidth: 1200, margin: '0 auto' }}>
+      <div style={{ 
+        maxWidth: 1200, 
+        margin: '0 auto',
+        minHeight: 'calc(100vh - 120px)' // 减去头部和页脚的高度
+      }}>
         <div style={{ marginBottom: 32 }}>
           <Title level={2} style={{ marginBottom: 8 }}>
             欢迎, {user?.nickname || user?.username}
@@ -146,7 +150,7 @@ export default function Dashboard() {
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
                   <span>
-                    {error || '暂无应用，点击下方按钮创建您的第一个应用'}
+                    {error || '暂无应用，点击下方按钮创建您的第��个应用'}
                   </span>
                 }
               />

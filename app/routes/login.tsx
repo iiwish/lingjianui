@@ -6,6 +6,7 @@ import { useAppDispatch, useAppSelector } from '~/stores';
 import { login, fetchUserInfo } from '~/stores/slices/authSlice';
 import type { LoginParams, CaptchaResult } from '~/types/api';
 import { AuthService } from '~/services';
+import AppFooter from '~/components/common/AppFooter';
 
 export default function LoginPage() {
   const { message } = App.useApp(); // 移到组件顶部
@@ -218,30 +219,9 @@ export default function LoginPage() {
 
         <div style={{
           position: 'absolute',
-          bottom: '24px',
-          textAlign: 'center',
-          color: '#666',
-          fontSize: '14px'
+          bottom: '24px'
         }}>
-          <div style={{ marginBottom: '8px' }}>
-            <a 
-              href="https://github.com/iiwish/lingjian" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ color: '#666', margin: '0 12px' }}
-            >
-              <GithubOutlined /> GitHub
-            </a>
-            <a 
-              href="https://space.bilibili.com/11618958/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              style={{ color: '#666', margin: '0 12px' }}
-            >
-              <span style={{ fontWeight: 'bold' }}>B</span> BiliBili
-            </a>
-          </div>
-          <div>Copyright © Beijing Wish Technology Co., Ltd</div>
+          <AppFooter />
         </div>
       </div>
     </ConfigProvider>
