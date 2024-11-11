@@ -6,9 +6,10 @@ import axios, {
   AxiosRequestConfig 
 } from 'axios';
 import { store } from '../stores';
-import { logout } from '../stores/slices/authSlice';
+import { logout, setToken } from '../stores/slices/authSlice';
 import type { ApiResponse } from '../types/api';
-import { c } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
+import { AuthService } from '../services/auth';
+import { message } from 'antd';
 
 // 创建axios实例
 const http: AxiosInstance = axios.create({
@@ -19,32 +20,27 @@ const http: AxiosInstance = axios.create({
   },
 });
 
+// 是否正在刷新token
+let isRefreshing = false;
+// 等待token刷新的请求队列
+let requests: Array<(token: string) => void> = [];
+
+// 清理所有状态并跳转到登录页
+const handleLogout = () => {
+  isRefreshing = false;
+  requests = [];
+  store.dispatch(logout());
+  window.location.replace('/login');
+};
+
 // 请求拦截器
 http.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const state = store.getState();
     let token = state.auth.token;
     
-    // 如果 Redux store 中没有 token，尝试从 localStorage 获取
-    if (!token && typeof window !== 'undefined') {
-      const persistedString = localStorage.getItem('persist:auth');
-      if (persistedString) {
-        try {
-          const persistedAuth = JSON.parse(persistedString);
-          token = JSON.parse(persistedAuth.token);
-        } catch (e) {
-          console.error('Failed to parse persisted auth:', e);
-        }
-      }
-    }
-    
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
-      // 添加调试日志
-      console.log('Request headers:', config.headers);
-      console.log('Token being used:', token);
-    } else {
-      console.warn('No token available for request');
     }
     
     return config;
@@ -54,24 +50,83 @@ http.interceptors.request.use(
   }
 );
 
-// 响应拦截��
+// 响应拦截器
 http.interceptors.response.use(
   (response: AxiosResponse<ApiResponse<unknown>>) => {
     return response;
   },
-  (error: AxiosError<ApiResponse<unknown>>) => {
-    const { response } = error;
+  async (error: AxiosError<ApiResponse<unknown>>) => {
+    const { response, config } = error;
     
-    // 处理401未授权的情况
-    if (response?.status === 401) {
-      store.dispatch(logout());
-      window.location.href = '/login';
-      return Promise.reject(new Error('登录已过期，请重新登录'));
+    // 处理403无权限错误
+    if (response?.status === 403) {
+      message.error(response.data?.message || '无权限访问');
+      return Promise.reject(error);
+    }
+
+    // 处理401未登录错误
+    if (response?.status === 401 && config) {
+      // 如果已经在刷新token，加入等待队列
+      if (isRefreshing) {
+        return new Promise((resolve, reject) => {
+          requests.push((token: string) => {
+            config.headers.Authorization = `Bearer ${token}`;
+            resolve(http(config));
+          });
+
+          // 设置超时，避免请求一直等待
+          setTimeout(() => {
+            reject(new Error('刷新token超时'));
+            handleLogout();
+          }, 5000);
+        });
+      }
+
+      const state = store.getState();
+      const refreshToken = state.auth.refreshToken;
+
+      if (!refreshToken) {
+        handleLogout();
+        return Promise.reject(new Error('登录已过期，请重新登录'));
+      }
+
+      isRefreshing = true;
+
+      try {
+        const refreshResponse = await AuthService.refreshToken(refreshToken);
+        
+        if (refreshResponse.code === 200) {
+          const { access_token, refresh_token } = refreshResponse.data;
+          
+          // 更新store中的token
+          store.dispatch(setToken({
+            token: access_token,
+            refreshToken: refresh_token
+          }));
+
+          // 重试队列中的请求
+          requests.forEach(cb => cb(access_token));
+          requests = [];
+          isRefreshing = false;
+
+          // 重试当前请求
+          config.headers.Authorization = `Bearer ${access_token}`;
+          return http(config);
+        } else {
+          handleLogout();
+          return Promise.reject(new Error('登录已过期，请重新登录'));
+        }
+      } catch (refreshError) {
+        handleLogout();
+        return Promise.reject(new Error('登录已过期，请重新登录'));
+      } finally {
+        isRefreshing = false;
+      }
     }
     
     // 如果有后端返回的错误信息，直接抛出
     if (response?.data) {
-      throw response.data;  // 直接抛出整个响应数据对象
+      throw response.data;
     }
     
     // 网络错误等其他情况
@@ -84,9 +139,9 @@ export const get = async <T>(
   url: string, 
   params?: Record<string, unknown>,
   config?: Omit<AxiosRequestConfig, 'params'>
-): Promise<ApiResponse<T>> => {  // 修改返回类型
+): Promise<ApiResponse<T>> => {
   const response = await http.get<ApiResponse<T>>(url, { ...config, params });
-  return response.data;  // 返回完整响应
+  return response.data;
 };
 
 // 封装POST请求
@@ -96,7 +151,7 @@ export const post = async <T>(
   config?: AxiosRequestConfig
 ): Promise<ApiResponse<T>> => {
   const response = await http.post<ApiResponse<T>>(url, data, config);
-  return response.data; // 返回完整的响应数据
+  return response.data;
 };
 
 // 封装PUT请求

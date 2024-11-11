@@ -6,7 +6,8 @@ import MainLayout from '~/components/layouts/MainLayout';
 import CreateAppModal from '~/components/apps/CreateAppModal';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { setApps, setLoading, setError } from '~/stores/slices/appSlice';
-import { AppService } from '~/services/app';  // 更新导入名称
+import { AppService } from '~/services/app';
+import { logout } from '~/stores/slices/authSlice';
 
 const { Title, Paragraph } = Typography;
 
@@ -22,14 +23,18 @@ export default function Dashboard() {
     try {
       dispatch(setLoading(true));
       const response = await AppService.getApps();
-      dispatch(setApps(response.data.list));
-    } catch (err) {
-      if (err instanceof Error) {
-        dispatch(setError(err.message));
-        message.error(err.message);
-      } else {
-        dispatch(setError('获取应用列表失败'));
-        message.error('获取应用列表失败');
+      
+      // 只处理成功的响应
+      if (response.code === 200) {
+        dispatch(setApps(response.data.list));
+      }
+      // 401错误由http拦截器统一处理
+    } catch (err: any) {
+      // 只处理非401错误
+      if (err?.code !== 401) {
+        const errorMessage = err?.message || '获取应用列表失败';
+        dispatch(setError(errorMessage));
+        message.error(errorMessage);
       }
     } finally {
       dispatch(setLoading(false));
@@ -37,7 +42,31 @@ export default function Dashboard() {
   };
 
   useEffect(() => {
-    fetchApps();
+    let mounted = true;
+    let retryTimeout: NodeJS.Timeout;
+
+    const loadApps = async () => {
+      try {
+        if (mounted) {
+          await fetchApps();
+        }
+      } catch (error) {
+        // 如果不是401错误，5秒后重试
+        if ((error as any)?.code !== 401 && mounted) {
+          retryTimeout = setTimeout(loadApps, 5000);
+        }
+      }
+    };
+
+    loadApps();
+
+    // 清理函数
+    return () => {
+      mounted = false;
+      if (retryTimeout) {
+        clearTimeout(retryTimeout);
+      }
+    };
   }, []);
 
   const handleAppClick = (appId: string) => {
