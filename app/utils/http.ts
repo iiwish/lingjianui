@@ -38,9 +38,11 @@ http.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const state = store.getState();
     let token = state.auth.token;
+    let appId = state.app.currentApp?.id || '0';
     
     if (token && config.headers) {
       config.headers.Authorization = `Bearer ${token}`;
+      config.headers['App-ID'] = appId;
     }
     
     return config;

@@ -11,6 +11,7 @@ export interface CreateAppDto {
   name: string;
   description: string;
   icon: string;
+  code: string; // 添加 code 属性
 }
 
 export interface UpdateAppDto {
