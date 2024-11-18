@@ -37,7 +37,7 @@ export interface AppResponse {
 export interface AppsResponse {
   code: number;
   data: {
-    list: App[];
+    items: App[];
     total: number;
   };
   message: string;

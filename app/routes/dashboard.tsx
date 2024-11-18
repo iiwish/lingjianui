@@ -26,7 +26,7 @@ export default function Dashboard() {
       
       // 只处理成功的响应
       if (response.code === 200) {
-        dispatch(setApps(response.data.list));
+        dispatch(setApps(response.data.items || []));
       }
       // 401错误由http拦截器统一处理
     } catch (err: any) {
@@ -150,7 +150,7 @@ export default function Dashboard() {
                 image={Empty.PRESENTED_IMAGE_SIMPLE}
                 description={
                   <span>
-                    {error || '暂无应用，点击下方按钮创建您的第��个应用'}
+                    {error || '暂无应用，点击下方按钮创建您的第一个应用'}
                   </span>
                 }
               />

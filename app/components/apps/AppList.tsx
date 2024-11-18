@@ -38,7 +38,7 @@ const AppList: FC = () => {
       dispatch(setLoading(true));
       const response = await AppService.getApps();
       if (response.code === 200) {
-        dispatch(setApps(response.data.list));
+        dispatch(setApps(response.data.items || []));
       } else {
         message.error(response.message || '获取应用列表失败');
       }
