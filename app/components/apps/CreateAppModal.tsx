@@ -1,57 +1,28 @@
 import React from 'react';
-import { Modal, Form, Input, message } from 'antd';
-import { useAppDispatch } from '~/stores';
-import { AppService } from '~/services/app';
-import { addApp } from '~/stores/slices/appSlice';
-import type { CreateAppDto } from '~/types/app';
+import { Modal, Form, Input } from 'antd';
 
 interface CreateAppModalProps {
   visible: boolean;
   onClose: () => void;
+  onSubmit: (values: any) => void;
 }
 
-const EMOJI_LIST = ['📊', '📈', '📱', '💼', '👥', '📦', '🔧', '📝', '📅', '📚'];
-
-export default function CreateAppModal({ visible, onClose }: CreateAppModalProps) {
+export default function CreateAppModal({ visible, onClose, onSubmit }: CreateAppModalProps) {
   const [form] = Form.useForm();
-  const dispatch = useAppDispatch();
-
-  const handleSubmit = async () => {
-    try {
-      const values = await form.validateFields();
-      // 随机选择一个emoji作为图标
-      const icon = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)];
-      const data: CreateAppDto = {
-        ...values,
-        icon,
-      };
-      
-      const response = await AppService.createApp(data);
-      dispatch(addApp(response.data));
-      message.success('应用创建成功');
-      form.resetFields();
-      onClose();
-    } catch (error) {
-      if (error instanceof Error) {
-        message.error(error.message);
-      } else {
-        message.error('创建应用失败');
-      }
-    }
-  };
 
   return (
     <Modal
       title="创建新应用"
       open={visible}
       onCancel={onClose}
-      onOk={handleSubmit}
+      onOk={() => form.submit()}
       destroyOnClose
     >
       <Form
         form={form}
         layout="vertical"
         preserve={false}
+        onFinish={onSubmit}
       >
         <Form.Item
           name="name"
@@ -63,6 +34,18 @@ export default function CreateAppModal({ visible, onClose }: CreateAppModalProps
         >
           <Input placeholder="请输入应用名称" />
         </Form.Item>
+
+        <Form.Item
+          name="code"
+            label="应用编码"
+            rules={[
+              { required: true, message: '请输入应用编码' },
+              { max: 50, message: '应用编码不能超过50个字符' }
+            ]}
+            >
+            <Input placeholder="请输入应用编码" />
+            </Form.Item>
+            
 
         <Form.Item
           name="description"

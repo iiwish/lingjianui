@@ -22,6 +22,9 @@ import { AppService } from '~/services/app';
 import { setApps, setLoading } from '~/stores/slices/appSlice';
 import type { App, CreateAppDto } from '~/types/app';
 import styles from './AppList.module.css';
+import CreateAppModal from './CreateAppModal';
+
+const EMOJI_LIST = ['📊', '📈', '📱', '💼', '👥', '📦', '🔧', '📝', '📅', '📚'];
 
 const AppList: FC = () => {
   const [form] = Form.useForm();
@@ -56,7 +59,14 @@ const AppList: FC = () => {
   // 创建新应用
   const handleCreate = async (values: CreateAppDto) => {
     try {
-      const response = await AppService.createApp(values);
+      // 随机选择一个emoji作为图标
+      const icon = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)];
+      const data: CreateAppDto = {
+        ...values,
+        icon,
+      };
+
+      const response = await AppService.createApp(data);
       if (response.code === 200) {
         message.success('创建成功');
         setCreateModalVisible(false);
@@ -130,37 +140,11 @@ const AppList: FC = () => {
         </Spin>
       </div>
 
-      {/* 创建应用模态框 */}
-      <Modal
-        title="创建应用"
-        open={createModalVisible}
-        onOk={() => form.submit()}
-        onCancel={() => {
-          setCreateModalVisible(false);
-          form.resetFields();
-        }}
-      >
-        <Form
-          form={form}
-          onFinish={handleCreate}
-          layout="vertical"
-          className={styles.modalForm}
-        >
-          <Form.Item
-            name="name"
-            label="应用名称"
-            rules={[{ required: true, message: '请输入应用名称' }]}
-          >
-            <Input placeholder="请输入应用名称" />
-          </Form.Item>
-          <Form.Item
-            name="description"
-            label="应用描述"
-          >
-            <Input.TextArea placeholder="请输入应用描述" />
-          </Form.Item>
-        </Form>
-      </Modal>
+      <CreateAppModal
+        visible={createModalVisible}
+        onClose={() => setCreateModalVisible(false)}
+        onSubmit={handleCreate}
+      />
     </div>
   );
 };

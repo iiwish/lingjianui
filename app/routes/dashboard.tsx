@@ -204,6 +204,10 @@ export default function Dashboard() {
       <CreateAppModal
         visible={createModalVisible}
         onClose={() => setCreateModalVisible(false)}
+        onSubmit={(values) => {
+          // handle submit logic here
+          console.log('Submitted values:', values);
+        }}
       />
     </MainLayout>
   );

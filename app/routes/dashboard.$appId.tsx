@@ -6,54 +6,55 @@ import MainLayout from '~/components/layouts/MainLayout';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { setCurrentApp, setLoading, setError } from '~/stores/slices/appSlice';
 import { AppService } from '~/services/app';
-
-const items: TabsProps['items'] = [
-  {
-    key: 'overview',
-    label: '概览',
-    children: '应用概览（待开发）',
-  },
-  {
-    key: 'tables',
-    label: '数据表',
-    children: '数据表配置（待开发）',
-  },
-  {
-    key: 'models',
-    label: '数据模型',
-    children: '数据模型配置（待开发）',
-  },
-  {
-    key: 'forms',
-    label: '表单配置',
-    children: '表单配置（待开发）',
-  },
-  {
-    key: 'menus',
-    label: '菜单配置',
-    children: '菜单配置（待开发）',
-  },
-  {
-    key: 'roles',
-    label: '角色权限',
-    children: '角色权限配置（待开���）',
-  },
-  {
-    key: 'tasks',
-    label: '定时任务',
-    children: '定时任务配置（待开发）',
-  },
-  {
-    key: 'settings',
-    label: '应用设置',
-    children: '应用设置（待开发）',
-  },
-];
+import RBACManager from '~/components/rbac/RBACManager';
 
 export default function AppDetail() {
   const { appId } = useParams();
   const dispatch = useAppDispatch();
   const { currentApp, loading, error } = useAppSelector((state) => state.app);
+
+  const items: TabsProps['items'] = [
+    {
+      key: 'overview',
+      label: '概览',
+      children: '应用概览（待开发）',
+    },
+    {
+      key: 'tables',
+      label: '数据表',
+      children: '数据表配置（待开发）',
+    },
+    {
+      key: 'models',
+      label: '数据模型',
+      children: '数据模型配置（待开发）',
+    },
+    {
+      key: 'forms',
+      label: '表单配置',
+      children: '表单配置（待开发）',
+    },
+    {
+      key: 'menus',
+      label: '菜单配置',
+      children: '菜单配置（待开发）',
+    },
+    {
+      key: 'roles',
+      label: '角色权限',
+      children: appId ? <RBACManager appId={appId} /> : null,
+    },
+    {
+      key: 'tasks',
+      label: '定时任务',
+      children: '定时任务配置（待开发）',
+    },
+    {
+      key: 'settings',
+      label: '应用设置',
+      children: '应用设置（待开发）',
+    },
+  ];
 
   const fetchAppDetail = async () => {
     if (!appId) return;
