@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, Avatar, Dropdown } from 'antd';
+import { Layout, Menu, Button, Avatar, Dropdown, Tabs, Radio } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -9,11 +9,13 @@ import {
   LogoutOutlined,
   ArrowLeftOutlined,
 } from '@ant-design/icons';
-import { useNavigate, useLocation } from '@remix-run/react';
+import { useNavigate, useLocation, Outlet } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
+import { addTab, removeTab, setActiveTab } from '~/stores/slices/tabSlice';
 import { MenuService } from '~/services/menu';
 import type { Menu as AppMenu } from '~/types/menu';
+import type { Tab } from '~/types/tab';
 import SidebarFooter from '~/components/common/SidebarFooter';
 
 const { Header, Sider, Content } = Layout;
@@ -25,11 +27,13 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [appMenus, setAppMenus] = useState<AppMenu[]>([]);
+  const [menuType, setMenuType] = useState<'system' | 'app'>('system');
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
   const { user } = useAppSelector((state) => state.auth);
   const { currentApp } = useAppSelector((state) => state.app);
+  const { tabs, activeKey } = useAppSelector((state) => state.tab);
 
   const isAppDetailPage = location.pathname.match(/^\/dashboard\/[\w-]+$/);
   const appId = isAppDetailPage ? location.pathname.split('/').pop() : null;
@@ -41,6 +45,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
         .then(response => {
           if (response.code === 200) {
             setAppMenus(response.data.items || []);
+            setMenuType('app');
+            // 打开应用tab
+            dispatch(addTab({
+              key: `/dashboard/${appId}`,
+              title: currentApp.name || '应用详情',
+              closable: true
+            }));
           }
         })
         .catch(err => {
@@ -74,7 +85,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
       key: 'apps',
       icon: <AppstoreOutlined />,
       label: '应用列表',
-      onClick: () => navigate('/dashboard'),
+      onClick: () => {
+        navigate('/dashboard');
+        dispatch(addTab({
+          key: '/dashboard',
+          title: '应用列表',
+          closable: false
+        }));
+      },
     },
     {
       key: 'settings',
@@ -84,17 +102,38 @@ export default function MainLayout({ children }: MainLayoutProps) {
         {
           key: 'users',
           label: '用户管理',
-          onClick: () => navigate('/dashboard/settings/users'),
+          onClick: () => {
+            navigate('/dashboard/settings/users');
+            dispatch(addTab({
+              key: '/dashboard/settings/users',
+              title: '用户管理',
+              closable: true
+            }));
+          },
         },
         {
           key: 'roles',
           label: '角色管理',
-          onClick: () => navigate('/dashboard/settings/roles'),
+          onClick: () => {
+            navigate('/dashboard/settings/roles');
+            dispatch(addTab({
+              key: '/dashboard/settings/roles',
+              title: '角色管理',
+              closable: true
+            }));
+          },
         },
         {
           key: 'permissions',
           label: '权限管理',
-          onClick: () => navigate('/dashboard/settings/permissions'),
+          onClick: () => {
+            navigate('/dashboard/settings/permissions');
+            dispatch(addTab({
+              key: '/dashboard/settings/permissions',
+              title: '权限管理',
+              closable: true
+            }));
+          },
         },
       ],
     },
@@ -105,11 +144,33 @@ export default function MainLayout({ children }: MainLayoutProps) {
     key: menu.menuCode,
     icon: menu.icon ? <span>{menu.icon}</span> : null,
     label: menu.menuName,
-    onClick: () => menu.path && navigate(menu.path),
+    onClick: () => {
+      if (menu.path) {
+        navigate(menu.path);
+        dispatch(addTab({
+          key: menu.path,
+          title: menu.menuName,
+          closable: true
+        }));
+      }
+    },
   }));
 
-  // 根据当前页面选择显示的菜单
-  const menuItems = isAppDetailPage ? appMenuItems : systemMenuItems;
+  // 根据当前选择显示的菜单
+  const menuItems = menuType === 'app' ? appMenuItems : systemMenuItems;
+
+  // 处理tab切换
+  const handleTabChange = (key: string) => {
+    dispatch(setActiveTab(key));
+    navigate(key);
+  };
+
+  // 处理tab关闭
+  const handleTabEdit = (targetKey: React.MouseEvent | React.KeyboardEvent | string, action: 'add' | 'remove') => {
+    if (action === 'remove' && typeof targetKey === 'string') {
+      dispatch(removeTab(targetKey));
+    }
+  };
 
   return (
     <Layout style={{ minHeight: '100vh', height: '100vh' }}>
@@ -145,6 +206,20 @@ export default function MainLayout({ children }: MainLayoutProps) {
           height: 'calc(100vh - 64px)',
           position: 'relative'
         }}>
+          {isAppDetailPage && (
+            <div style={{ padding: '8px', textAlign: 'center' }}>
+              <Radio.Group 
+                value={menuType}
+                onChange={e => setMenuType(e.target.value)}
+                size="small"
+                buttonStyle="solid"
+                style={{ width: '100%' }}
+              >
+                <Radio.Button value="app" style={{ width: '50%' }}>应用菜单</Radio.Button>
+                <Radio.Button value="system" style={{ width: '50%' }}>系统菜单</Radio.Button>
+              </Radio.Group>
+            </div>
+          )}
           <div style={{ 
             flex: 1, 
             overflow: 'auto'
@@ -204,15 +279,34 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </div>
         </Header>
         <Content style={{ 
-          margin: '24px 16px',
-          padding: 24,
+          margin: '0',
           background: '#fff',
           minHeight: 280,
-          borderRadius: '8px',
           overflow: 'auto',
-          height: 'calc(100vh - 112px)', // 减去 header 高度和 margin
+          height: 'calc(100vh - 64px)', // 减去 header 高度
         }}>
-          {children}
+          {tabs.length > 0 ? (
+            <Tabs
+              activeKey={activeKey}
+              type="editable-card"
+              onChange={handleTabChange}
+              onEdit={handleTabEdit}
+              items={tabs.map((tab) => ({
+                key: tab.key,
+                label: tab.title,
+                closable: tab.closable,
+                children: tab.key === activeKey ? <Outlet /> : null
+              }))}
+              style={{ height: '100%' }}
+              tabBarStyle={{
+                margin: 0,
+                background: '#fafafa',
+                padding: '4px 4px 0',
+                borderBottom: '1px solid #f0f0f0'
+              }}
+              size="small"
+            />
+          ) : children}
         </Content>
       </Layout>
     </Layout>
