@@ -27,7 +27,6 @@ import CreateAppModal from './CreateAppModal';
 const EMOJI_LIST = ['📊', '📈', '📱', '💼', '👥', '📦', '🔧', '📝', '📅', '📚'];
 
 const AppList: FC = () => {
-  const [form] = Form.useForm();
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { apps, loading } = useAppSelector((state) => state.app);
@@ -59,23 +58,25 @@ const AppList: FC = () => {
   // 创建新应用
   const handleCreate = async (values: CreateAppDto) => {
     try {
+      console.log('Creating app with values:', values);
       // 随机选择一个emoji作为图标
       const icon = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)];
-      const data: CreateAppDto = {
+      const data = {
         ...values,
         icon,
       };
 
+      console.log('Sending data to server:', data);
       const response = await AppService.createApp(data);
       if (response.code === 200) {
         message.success('创建成功');
         setCreateModalVisible(false);
-        form.resetFields();
         loadApps();
       } else {
         message.error(response.message || '创建失败');
       }
     } catch (err) {
+      console.error('Create app error:', err);
       message.error('创建失败');
     }
   };

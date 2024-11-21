@@ -11,6 +11,8 @@ import { logout } from '~/stores/slices/authSlice';
 
 const { Title, Paragraph } = Typography;
 
+const EMOJI_LIST = ['📊', '📈', '📱', '💼', '👥', '📦', '🔧', '📝', '📅', '📚'];
+
 export default function Dashboard() {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
@@ -71,6 +73,31 @@ export default function Dashboard() {
 
   const handleAppClick = (appId: string) => {
     navigate(`/dashboard/${appId}`);
+  };
+
+  // 创建新应用
+  const handleCreate = async (values: any) => {
+    try {
+      // 随机选择一个emoji作为图标
+      const icon = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)];
+      const data = {
+        ...values,
+        icon,
+      };
+
+      console.log('Creating app with data:', data);
+      const response = await AppService.createApp(data);
+      if (response.code === 200) {
+        message.success('创建成功');
+        setCreateModalVisible(false);
+        fetchApps(); // 刷新应用列表
+      } else {
+        message.error(response.message || '创建失败');
+      }
+    } catch (err) {
+      console.error('Create app error:', err);
+      message.error('创建失败');
+    }
   };
 
   if (loading) {
@@ -204,10 +231,7 @@ export default function Dashboard() {
       <CreateAppModal
         visible={createModalVisible}
         onClose={() => setCreateModalVisible(false)}
-        onSubmit={(values) => {
-          // handle submit logic here
-          console.log('Submitted values:', values);
-        }}
+        onSubmit={handleCreate}
       />
     </MainLayout>
   );
