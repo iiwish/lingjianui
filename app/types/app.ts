@@ -1,23 +1,29 @@
 export interface App {
-  id: string;
+  id: number;
   name: string;
+  code: string;
   description: string;
-  icon: string;
-  createdAt?: string;
-  updatedAt?: string;
+  status: number;
+  created_at: string;
+  creator_id: number;
+  updated_at: string;
+  updater_id: number;
+  icon?: string;
 }
 
 export interface CreateAppDto {
   name: string;
   description: string;
-  icon: string;
-  code: string; // 添加 code 属性
+  icon?: string;
+  code: string;
 }
 
 export interface UpdateAppDto {
   name?: string;
   description?: string;
   icon?: string;
+  code?: string;
+  status?: number;
 }
 
 export interface AppState {

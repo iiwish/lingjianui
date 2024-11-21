@@ -7,9 +7,9 @@ import {
   SettingOutlined,
   UserOutlined,
   LogoutOutlined,
-  ArrowLeftOutlined,
+  HomeOutlined,
 } from '@ant-design/icons';
-import { useNavigate, useLocation, Outlet } from '@remix-run/react';
+import { useNavigate, useLocation } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
 import { addTab, removeTab, setActiveTab } from '~/stores/slices/tabSlice';
@@ -46,12 +46,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
           if (response.code === 200) {
             setAppMenus(response.data.items || []);
             setMenuType('app');
-            // 打开应用tab
-            dispatch(addTab({
-              key: `/dashboard/${appId}`,
-              title: currentApp.name || '应用详情',
-              closable: true
-            }));
           }
         })
         .catch(err => {
@@ -92,6 +86,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           title: '应用列表',
           closable: false
         }));
+        dispatch(setActiveTab('/dashboard'));
       },
     },
     {
@@ -109,6 +104,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               title: '用户管理',
               closable: true
             }));
+            dispatch(setActiveTab('/dashboard/settings/users'));
           },
         },
         {
@@ -121,6 +117,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               title: '角色管理',
               closable: true
             }));
+            dispatch(setActiveTab('/dashboard/settings/roles'));
           },
         },
         {
@@ -133,6 +130,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               title: '权限管理',
               closable: true
             }));
+            dispatch(setActiveTab('/dashboard/settings/permissions'));
           },
         },
       ],
@@ -152,6 +150,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           title: menu.menuName,
           closable: true
         }));
+        dispatch(setActiveTab(menu.path));
       }
     },
   }));
@@ -169,6 +168,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const handleTabEdit = (targetKey: React.MouseEvent | React.KeyboardEvent | string, action: 'add' | 'remove') => {
     if (action === 'remove' && typeof targetKey === 'string') {
       dispatch(removeTab(targetKey));
+      // 如果关闭的是当前标签,切换到最后一个标签
+      if (targetKey === activeKey && tabs.length > 0) {
+        const lastTab = tabs[tabs.length - 1];
+        dispatch(setActiveTab(lastTab.key));
+        navigate(lastTab.key);
+      }
     }
   };
 
@@ -262,10 +267,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
             {isAppDetailPage && (
               <Button
                 type="text"
-                icon={<ArrowLeftOutlined />}
+                icon={<HomeOutlined />}
                 onClick={() => navigate('/dashboard')}
               >
-                返回应用列表
               </Button>
             )}
           </div>
@@ -285,7 +289,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
           overflow: 'auto',
           height: 'calc(100vh - 64px)', // 减去 header 高度
         }}>
-          {tabs.length > 0 ? (
+          {location.pathname === '/dashboard' ? (
+            children // 直接渲染AppList
+          ) : (
             <Tabs
               activeKey={activeKey}
               type="editable-card"
@@ -295,7 +301,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 key: tab.key,
                 label: tab.title,
                 closable: tab.closable,
-                children: tab.key === activeKey ? <Outlet /> : null
+                children: tab.key === activeKey ? children : null
               }))}
               style={{ height: '100%' }}
               tabBarStyle={{
@@ -306,7 +312,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               }}
               size="small"
             />
-          ) : children}
+          )}
         </Content>
       </Layout>
     </Layout>

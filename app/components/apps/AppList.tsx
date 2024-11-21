@@ -1,14 +1,15 @@
 import type { FC } from 'react';
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { 
   Card, 
   Button, 
-  List, 
   Modal, 
   Form, 
   Input, 
   message, 
-  Spin 
+  Spin,
+  Empty,
+  Typography 
 } from 'antd';
 import { 
   PlusOutlined, 
@@ -19,54 +20,51 @@ import {
 import { useNavigate } from '@remix-run/react';
 import { useAppSelector, useAppDispatch } from '~/stores';
 import { AppService } from '~/services/app';
-import { setApps, setLoading } from '~/stores/slices/appSlice';
+import { setApps, setLoading, setError } from '~/stores/slices/appSlice';
 import type { App, CreateAppDto } from '~/types/app';
 import styles from './AppList.module.css';
 import CreateAppModal from './CreateAppModal';
 
+const { Title, Paragraph } = Typography;
 const EMOJI_LIST = ['📊', '📈', '📱', '💼', '👥', '📦', '🔧', '📝', '📅', '📚'];
 
 const AppList: FC = () => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
-  const { apps, loading } = useAppSelector((state) => state.app);
-
-  // 模态框状态
+  const { apps, loading, error } = useAppSelector((state) => state.app);
   const [createModalVisible, setCreateModalVisible] = useState(false);
 
-  // 加载应用列表
-  const loadApps = async () => {
+  // 使用useCallback缓存函数
+  const loadApps = useCallback(async () => {
     try {
       dispatch(setLoading(true));
+      dispatch(setError(null));
       const response = await AppService.getApps();
-      if (response.code === 200) {
-        dispatch(setApps(response.data.items || []));
+      console.log('API Response:', response); // 调试日志
+      
+      if (response.code === 200 && response.data) {
+        const items = response.data.items || [];
+        dispatch(setApps(items));
       } else {
-        message.error(response.message || '获取应用列表失败');
+        dispatch(setError(response.message || '获取应用列表失败'));
       }
     } catch (err) {
-      message.error('获取应用列表失败');
+      console.error('Load apps error:', err);
+      dispatch(setError('获取应用列表失败'));
     } finally {
       dispatch(setLoading(false));
     }
-  };
-
-  useEffect(() => {
-    loadApps();
-  }, []);
+  }, [dispatch]);
 
   // 创建新应用
-  const handleCreate = async (values: CreateAppDto) => {
+  const handleCreate = useCallback(async (values: CreateAppDto) => {
     try {
-      console.log('Creating app with values:', values);
-      // 随机选择一个emoji作为图标
       const icon = EMOJI_LIST[Math.floor(Math.random() * EMOJI_LIST.length)];
       const data = {
         ...values,
         icon,
       };
 
-      console.log('Sending data to server:', data);
       const response = await AppService.createApp(data);
       if (response.code === 200) {
         message.success('创建成功');
@@ -79,66 +77,130 @@ const AppList: FC = () => {
       console.error('Create app error:', err);
       message.error('创建失败');
     }
-  };
+  }, [loadApps]);
 
   // 进入应用
-  const handleEnterApp = (app: App) => {
+  const handleEnterApp = useCallback((app: App) => {
     navigate(`/dashboard/${app.id}`);
-  };
+  }, [navigate]);
+
+  useEffect(() => {
+    console.log('Loading apps...'); // 调试日志
+    loadApps();
+  }, [loadApps]);
+
+  if (loading) {
+    return (
+      <div style={{ 
+        width: '100%', 
+        height: '100%', 
+        display: 'flex', 
+        justifyContent: 'center', 
+        alignItems: 'center',
+        padding: '48px'
+      }}>
+        <Spin size="large" tip="加载中..." />
+      </div>
+    );
+  }
 
   return (
     <div className={styles.container}>
       <div className={styles.header}>
-        <h1 className={styles.title}>我的应用</h1>
+        <div>
+          <Title level={2} style={{ marginBottom: 8 }}>
+            欢迎使用灵简低代码平台
+          </Title>
+          <Paragraph type="secondary" style={{ fontSize: 16, marginBottom: 0 }}>
+            选择一个应用开始工作，或创建新的应用
+          </Paragraph>
+        </div>
         <Button 
           type="primary" 
           icon={<PlusOutlined />}
           onClick={() => setCreateModalVisible(true)}
+          size="large"
         >
           创建应用
         </Button>
       </div>
 
       <div className={styles.content}>
-        <Spin spinning={loading}>
-          <List
-            grid={{ gutter: 16, xs: 1, sm: 2, md: 3, lg: 4 }}
-            dataSource={apps}
-            renderItem={(item: App) => (
-              <List.Item>
-                <Card 
-                  className={styles.card}
-                  hoverable
+        {apps && apps.length > 0 ? (
+          <div className={styles.cardGrid}>
+            {apps.map((app: App) => (
+              <Card 
+                key={app.id}
+                className={styles.card}
+                hoverable
+              >
+                <div className={styles.cardMeta}>
+                  <div className={styles.cardIcon}>
+                    {app.icon || <AppstoreOutlined />}
+                  </div>
+                  <div className={styles.cardContent}>
+                    <h3 className={styles.cardTitle}>{app.name}</h3>
+                    <p className={styles.cardDescription}>
+                      {app.description || '暂无描述'}
+                    </p>
+                  </div>
+                </div>
+                <div className={styles.cardActions}>
+                  <Button 
+                    type="primary" 
+                    icon={<ArrowRightOutlined />}
+                    onClick={() => handleEnterApp(app)}
+                  >
+                    进入应用
+                  </Button>
+                  <Button 
+                    icon={<SettingOutlined />}
+                    onClick={() => navigate(`/dashboard/${app.id}/settings`)}
+                  >
+                    设置
+                  </Button>
+                </div>
+              </Card>
+            ))}
+            <Card
+              className={styles.card}
+              hoverable
+              onClick={() => setCreateModalVisible(true)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                border: '1px dashed #d9d9d9',
+                background: '#fafafa'
+              }}
+            >
+              <div style={{ textAlign: 'center' }}>
+                <Button 
+                  type="dashed"
+                  icon={<PlusOutlined />}
+                  size="large"
+                  style={{ 
+                    height: 'auto',
+                    padding: '8px 16px',
+                    marginBottom: 8
+                  }}
                 >
-                  <div className={styles.cardMeta}>
-                    <AppstoreOutlined className={styles.cardIcon} />
-                    <div className={styles.cardContent}>
-                      <h3 className={styles.cardTitle}>{item.name}</h3>
-                      <p className={styles.cardDescription}>
-                        {item.description || '暂无描述'}
-                      </p>
-                    </div>
-                  </div>
-                  <div className={styles.cardActions}>
-                    <Button 
-                      type="primary" 
-                      icon={<ArrowRightOutlined />}
-                      onClick={() => handleEnterApp(item)}
-                    >
-                      进入应用
-                    </Button>
-                    <Button 
-                      icon={<SettingOutlined />}
-                      onClick={() => navigate(`/dashboard/${item.id}/settings`)}
-                    >
-                      设置
-                    </Button>
-                  </div>
-                </Card>
-              </List.Item>
-            )}
-          />
-        </Spin>
+                  创建新应用
+                </Button>
+                <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                  创建一个新的应用来开始您的工作
+                </Paragraph>
+              </div>
+            </Card>
+          </div>
+        ) : (
+          <div className={styles.emptyState}>
+            <Empty 
+              description={error || "暂无应用，点击上方按钮创建您的第一个应用"} 
+              image={Empty.PRESENTED_IMAGE_SIMPLE}
+            />
+          </div>
+        )}
       </div>
 
       <CreateAppModal

@@ -41,7 +41,7 @@ const appSlice = createSlice({
       }
       state.error = null;
     },
-    removeApp: (state, action: PayloadAction<string>) => {
+    removeApp: (state, action: PayloadAction<number>) => {
       state.apps = state.apps.filter(app => app.id !== action.payload);
       if (state.currentApp?.id === action.payload) {
         state.currentApp = null;
