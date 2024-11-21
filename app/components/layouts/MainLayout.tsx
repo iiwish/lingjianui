@@ -12,6 +12,8 @@ import {
 import { useNavigate, useLocation } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
+import { MenuService } from '~/services/menu';
+import type { Menu as AppMenu } from '~/types/menu';
 import SidebarFooter from '~/components/common/SidebarFooter';
 
 const { Header, Sider, Content } = Layout;
@@ -22,6 +24,7 @@ interface MainLayoutProps {
 
 export default function MainLayout({ children }: MainLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
+  const [appMenus, setAppMenus] = useState<AppMenu[]>([]);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -29,6 +32,22 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { currentApp } = useAppSelector((state) => state.app);
 
   const isAppDetailPage = location.pathname.match(/^\/dashboard\/[\w-]+$/);
+  const appId = isAppDetailPage ? location.pathname.split('/').pop() : null;
+
+  useEffect(() => {
+    // 如果是应用详情页,加载应用菜单
+    if (appId && currentApp) {
+      MenuService.getMenus(appId)
+        .then(response => {
+          if (response.code === 200) {
+            setAppMenus(response.data.items || []);
+          }
+        })
+        .catch(err => {
+          console.error('Failed to load app menus:', err);
+        });
+    }
+  }, [appId, currentApp]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -49,7 +68,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
     },
   ];
 
-  const sideMenuItems = [
+  // 系统菜单
+  const systemMenuItems = [
     {
       key: 'apps',
       icon: <AppstoreOutlined />,
@@ -79,6 +99,17 @@ export default function MainLayout({ children }: MainLayoutProps) {
       ],
     },
   ];
+
+  // 将应用菜单转换为antd Menu格式
+  const appMenuItems = appMenus.map(menu => ({
+    key: menu.menuCode,
+    icon: menu.icon ? <span>{menu.icon}</span> : null,
+    label: menu.menuName,
+    onClick: () => menu.path && navigate(menu.path),
+  }));
+
+  // 根据当前页面选择显示的菜单
+  const menuItems = isAppDetailPage ? appMenuItems : systemMenuItems;
 
   return (
     <Layout style={{ minHeight: '100vh', height: '100vh' }}>
@@ -122,7 +153,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               theme="dark"
               mode="inline"
               selectedKeys={[location.pathname]}
-              items={sideMenuItems}
+              items={menuItems}
             />
           </div>
           <div style={{

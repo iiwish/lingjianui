@@ -1,60 +1,16 @@
-import React, { useEffect } from 'react';
-import { useParams } from '@remix-run/react';
-import { Tabs, Spin, message } from 'antd';
-import type { TabsProps } from 'antd';
+import React, { useEffect, useState } from 'react';
+import { useParams, useNavigate } from '@remix-run/react';
+import { Spin, message } from 'antd';
 import MainLayout from '~/components/layouts/MainLayout';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { setCurrentApp, setLoading, setError } from '~/stores/slices/appSlice';
 import { AppService } from '~/services/app';
-import RBACManager from '~/components/rbac/RBACManager';
 
 export default function AppDetail() {
   const { appId } = useParams();
+  const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const { currentApp, loading, error } = useAppSelector((state) => state.app);
-
-  const items: TabsProps['items'] = [
-    {
-      key: 'overview',
-      label: '概览',
-      children: '应用概览（待开发）',
-    },
-    {
-      key: 'tables',
-      label: '数据表',
-      children: '数据表配置（待开发）',
-    },
-    {
-      key: 'models',
-      label: '数据模型',
-      children: '数据模型配置（待开发）',
-    },
-    {
-      key: 'forms',
-      label: '表单配置',
-      children: '表单配置（待开发）',
-    },
-    {
-      key: 'menus',
-      label: '菜单配置',
-      children: '菜单配置（待开发）',
-    },
-    {
-      key: 'roles',
-      label: '角色权限',
-      children: appId ? <RBACManager appId={appId} /> : null,
-    },
-    {
-      key: 'tasks',
-      label: '定时任务',
-      children: '定时任务配置（待开发）',
-    },
-    {
-      key: 'settings',
-      label: '应用设置',
-      children: '应用设置（待开发）',
-    },
-  ];
 
   const fetchAppDetail = async () => {
     if (!appId) return;
@@ -125,16 +81,6 @@ export default function AppDetail() {
             <p style={{ margin: 0, color: '#666' }}>{currentApp.description}</p>
           </div>
         </div>
-
-        <Tabs
-          defaultActiveKey="overview"
-          items={items}
-          style={{ 
-            background: '#fff',
-            padding: '16px',
-            borderRadius: '8px'
-          }}
-        />
       </div>
     </MainLayout>
   );
