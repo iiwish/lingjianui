@@ -5,13 +5,16 @@ export interface Permission {
   id: number;
   name: string;
   code: string;
-  description: string;
   type: string;
+  description: string;
+  menu_id: number;
   method: string;
   path: string;
-  menu_id: number;
   status: number;
   created_at: string;
+  creator_id: number;
+  updated_at: string;
+  updater_id: number;
 }
 
 export interface CreatePermissionRequest {

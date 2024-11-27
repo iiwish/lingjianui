@@ -4,7 +4,8 @@ import type {
   LoginResult, 
   UserInfo, 
   CaptchaResult,
-  ApiResponse  // 添加 ApiResponse 导入
+  Permission,
+  ApiResponse
 } from '../types/api';
 
 /**
@@ -14,7 +15,7 @@ export const AuthService = {
   /**
    * 获取验证码
    */
-  getCaptcha(): Promise<ApiResponse<CaptchaResult>> {  // 修改返回类型
+  getCaptcha(): Promise<ApiResponse<CaptchaResult>> {
     return get<CaptchaResult>('/auth/captcha');
   },
 
@@ -29,7 +30,7 @@ export const AuthService = {
   /**
    * 用户登出
    */
-  logout(): Promise<ApiResponse<void>> {  // 修改返回类型
+  logout(): Promise<ApiResponse<void>> {
     return post<void>('/auth/logout');
   },
 
@@ -37,7 +38,7 @@ export const AuthService = {
    * 刷新Token
    * @param refreshToken 刷新令牌
    */
-  refreshToken(refreshToken: string): Promise<ApiResponse<LoginResult>> {  // 修改返回类型
+  refreshToken(refreshToken: string): Promise<ApiResponse<LoginResult>> {
     return post<LoginResult>('/auth/refresh', undefined, {
       headers: {
         'X-Refresh-Token': refreshToken
@@ -48,12 +49,25 @@ export const AuthService = {
   /**
    * 获取当前用户信息
    */
-  getCurrentUser(): Promise<ApiResponse<UserInfo>> {  // 修改返回类型
-    return get<UserInfo>('/auth/userinfo').then(response => {
-      console.log('getCurrentUser response:', response); // 添加调试日志
+  getCurrentUser(): Promise<ApiResponse<UserInfo>> {
+    return get<UserInfo>('/user/profile').then(response => {
+      console.log('getCurrentUser response:', response);
       return response;
     }).catch(error => {
-      console.error('getCurrentUser error:', error); // 添加错误日志
+      console.error('getCurrentUser error:', error);
+      throw error;
+    });
+  },
+
+  /**
+   * 获取权限列表
+   */
+  getPermissions(): Promise<ApiResponse<Permission[]>> {
+    return get<Permission[]>('/permissions').then(response => {
+      console.log('getPermissions response:', response);
+      return response;
+    }).catch(error => {
+      console.error('getPermissions error:', error);
       throw error;
     });
   }

@@ -1,5 +1,5 @@
 import { createSlice, createAsyncThunk, PayloadAction, ActionReducerMapBuilder } from '@reduxjs/toolkit';
-import type { UserInfo, LoginParams, LoginResult } from '../../types/api';
+import type { UserInfo, LoginParams, LoginResult, Permission } from '../../types/api';
 import { AuthService } from '../../services/auth';
 
 interface AuthState {
@@ -29,7 +29,52 @@ const deleteCookie = (name: string) => {
   document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
 };
 
-// 修改登录异步action
+// 获取权限列表
+export const fetchPermissions = createAsyncThunk<string[]>(
+  'auth/fetchPermissions',
+  async (_, { getState }) => {
+    const response = await AuthService.getPermissions();
+    if (response.code !== 200) {
+      throw new Error(response.message);
+    }
+    // 提取权限code列表
+    return response.data.map(permission => permission.code);
+  }
+);
+
+// 获取用户信息
+export const fetchUserInfo = createAsyncThunk<UserInfo>(
+  'auth/fetchUserInfo',
+  async (_, { dispatch, getState, rejectWithValue }) => {
+    try {
+      const state = getState() as { auth: AuthState };
+      if (!state.auth.token) {
+        console.error('No token available');
+        return rejectWithValue('No token available');
+      }
+
+      // 获取用户信息
+      const response = await AuthService.getCurrentUser();
+      if (response.code !== 200) {
+        return rejectWithValue(response.message);
+      }
+
+      // 获取权限列表
+      const permissions = await dispatch(fetchPermissions()).unwrap();
+      
+      // 合并用户信息和权限列表
+      return {
+        ...response.data,
+        permissions
+      };
+    } catch (error) {
+      console.error('fetchUserInfo error:', error);
+      throw error;
+    }
+  }
+);
+
+// 登录
 export const login = createAsyncThunk<LoginResult, LoginParams>(
   'auth/login',
   async (loginParams: LoginParams, { dispatch }) => {
@@ -38,7 +83,7 @@ export const login = createAsyncThunk<LoginResult, LoginParams>(
       throw new Error(response.message);
     }
     
-    // 在登录成功后立即设置token
+    // 设置token
     const result = response.data;
     dispatch(setToken({
       token: result.access_token,
@@ -49,40 +94,14 @@ export const login = createAsyncThunk<LoginResult, LoginParams>(
     setCookie('token', result.access_token);
     setCookie('refreshToken', result.refresh_token);
     
-    // 立即获取用户信息
+    // 获取用户信息和权限
     await dispatch(fetchUserInfo()).unwrap();
     
     return result;
   }
 );
 
-// 修改获取用户信息action
-export const fetchUserInfo = createAsyncThunk<UserInfo>(
-  'auth/fetchUserInfo',
-  async (_, { getState, rejectWithValue }) => {
-    try {
-      const state = getState() as { auth: AuthState };
-      if (!state.auth.token) {
-        console.error('No token available');
-        return rejectWithValue('No token available');
-      }
-
-      console.log('Fetching user info with token:', state.auth.token);
-      const response = await AuthService.getCurrentUser();
-      console.log('User info response:', response);
-
-      if (response.code !== 200) {
-        return rejectWithValue(response.message);
-      }
-      return response.data;
-    } catch (error) {
-      console.error('fetchUserInfo error:', error);
-      throw error;
-    }
-  }
-);
-
-// 刷新token的异步action
+// 刷新token
 export const refreshTokenAction = createAsyncThunk(
   'auth/refreshToken',
   async (_, { getState, dispatch }) => {
@@ -127,7 +146,6 @@ const authSlice = createSlice({
     setToken: (state: AuthState, action: PayloadAction<{ token: string; refreshToken: string }>) => {
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;
-      console.log('Token updated in Redux:', action.payload.token);
       // 更新cookie
       setCookie('token', action.payload.token);
       setCookie('refreshToken', action.payload.refreshToken);
@@ -165,6 +183,12 @@ const authSlice = createSlice({
       .addCase(fetchUserInfo.rejected, (state: AuthState, action: { error: { message?: string } }) => {
         state.loading = false;
         state.error = action.error.message || '获取用户信息失败';
+      })
+      // 获取权限列表
+      .addCase(fetchPermissions.fulfilled, (state: AuthState, action: PayloadAction<string[]>) => {
+        if (state.user) {
+          state.user.permissions = action.payload;
+        }
       })
       // 刷新token
       .addCase(refreshTokenAction.fulfilled, (state: AuthState, action: PayloadAction<{ token: string; refreshToken: string }>) => {

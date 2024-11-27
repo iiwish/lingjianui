@@ -44,11 +44,25 @@ export interface CaptchaResult {
 export interface UserInfo {
   id: number;
   username: string;
-  nickname?: string;
-  avatar?: string;
-  email?: string;
-  roles: string[];
-  permissions: string[];
+  nickname?: string; // 添加可选的nickname字段
+  email: string;
+  phone: string;
+  status: number;
+  type: string;
+  permissions?: string[]; // 存储权限code列表
+}
+
+// 权限信息
+export interface Permission {
+  id: number;
+  name: string;
+  code: string;
+  type: string;
+  method?: string;
+  path?: string;
+  menu_id?: number;
+  status: number;
+  description?: string;
 }
 
 // 应用信息

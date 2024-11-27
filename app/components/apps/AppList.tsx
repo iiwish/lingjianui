@@ -24,6 +24,7 @@ import { setApps, setLoading, setError } from '~/stores/slices/appSlice';
 import type { App, CreateAppDto } from '~/types/app';
 import styles from './AppList.module.css';
 import CreateAppModal from './CreateAppModal';
+import { Authorized } from '~/utils/permission';
 
 const { Title, Paragraph } = Typography;
 const EMOJI_LIST = ['📊', '📈', '📱', '💼', '👥', '📦', '🔧', '📝', '📅', '📚'];
@@ -115,14 +116,16 @@ const AppList: FC = () => {
             选择一个应用开始工作，或创建新的应用
           </Paragraph>
         </div>
-        <Button 
-          type="primary" 
-          icon={<PlusOutlined />}
-          onClick={() => setCreateModalVisible(true)}
-          size="large"
-        >
-          创建应用
-        </Button>
+        <Authorized permission="app:create">
+          <Button 
+            type="primary" 
+            icon={<PlusOutlined />}
+            onClick={() => setCreateModalVisible(true)}
+            size="large"
+          >
+            创建应用
+          </Button>
+        </Authorized>
       </div>
 
       <div className={styles.content}>
@@ -146,52 +149,58 @@ const AppList: FC = () => {
                   </div>
                 </div>
                 <div className={styles.cardActions}>
-                  <Button 
-                    type="primary" 
-                    icon={<ArrowRightOutlined />}
-                    onClick={() => handleEnterApp(app)}
-                  >
-                    进入应用
-                  </Button>
-                  <Button 
-                    icon={<SettingOutlined />}
-                    onClick={() => navigate(`/dashboard/${app.id}/settings`)}
-                  >
-                    设置
-                  </Button>
+                  <Authorized permission="app:view">
+                    <Button 
+                      type="primary" 
+                      icon={<ArrowRightOutlined />}
+                      onClick={() => handleEnterApp(app)}
+                    >
+                      进入应用
+                    </Button>
+                  </Authorized>
+                  <Authorized permission="app:manage">
+                    <Button 
+                      icon={<SettingOutlined />}
+                      onClick={() => navigate(`/dashboard/${app.id}/settings`)}
+                    >
+                      设置
+                    </Button>
+                  </Authorized>
                 </div>
               </Card>
             ))}
-            <Card
-              className={styles.card}
-              hoverable
-              onClick={() => setCreateModalVisible(true)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                border: '1px dashed #d9d9d9',
-                background: '#fafafa'
-              }}
-            >
-              <div style={{ textAlign: 'center' }}>
-                <Button 
-                  type="dashed"
-                  icon={<PlusOutlined />}
-                  size="large"
-                  style={{ 
-                    height: 'auto',
-                    padding: '8px 16px',
-                    marginBottom: 8
-                  }}
-                >
-                  创建新应用
-                </Button>
-                <Paragraph type="secondary" style={{ marginBottom: 0 }}>
-                  创建一个新的应用来开始您的工作
-                </Paragraph>
-              </div>
-            </Card>
+            <Authorized permission="app:create">
+              <Card
+                className={styles.card}
+                hoverable
+                onClick={() => setCreateModalVisible(true)}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  border: '1px dashed #d9d9d9',
+                  background: '#fafafa'
+                }}
+              >
+                <div style={{ textAlign: 'center' }}>
+                  <Button 
+                    type="dashed"
+                    icon={<PlusOutlined />}
+                    size="large"
+                    style={{ 
+                      height: 'auto',
+                      padding: '8px 16px',
+                      marginBottom: 8
+                    }}
+                  >
+                    创建新应用
+                  </Button>
+                  <Paragraph type="secondary" style={{ marginBottom: 0 }}>
+                    创建一个新的应用来开始您的工作
+                  </Paragraph>
+                </div>
+              </Card>
+            </Authorized>
           </div>
         ) : (
           <div className={styles.emptyState}>

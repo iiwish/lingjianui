@@ -3,12 +3,15 @@ import { Table, Button, Modal, Form, Input, message, Space, Switch, Select } fro
 import type { ColumnsType } from 'antd/es/table';
 import { PermissionService, type Permission, type CreatePermissionRequest } from '~/services/permission';
 
+// 定义组件的属性接口
 interface PermissionListProps {
   appId: string;
 }
 
+// 定义表单数据类型
 type PermissionFormData = CreatePermissionRequest;
 
+// 权限类型常量
 const PERMISSION_TYPES = [
   { label: '菜单权限', value: 'menu' },
   { label: '接口权限', value: 'api' },
@@ -16,6 +19,7 @@ const PERMISSION_TYPES = [
   { label: '数据权限', value: 'data' }
 ];
 
+// HTTP请求方法常量
 const HTTP_METHODS = [
   { label: 'GET', value: 'GET' },
   { label: 'POST', value: 'POST' },
@@ -23,19 +27,26 @@ const HTTP_METHODS = [
   { label: 'DELETE', value: 'DELETE' }
 ];
 
+// 定义权限列表组件
 export default function PermissionList({ appId }: PermissionListProps) {
-  const [permissions, setPermissions] = useState<Permission[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [modalVisible, setModalVisible] = useState(false);
-  const [editingPermission, setEditingPermission] = useState<Permission | null>(null);
-  const [selectedType, setSelectedType] = useState<string>('');
-  const [form] = Form.useForm<PermissionFormData>();
+  const [permissions, setPermissions] = useState<Map<string, Permission>>(new Map()); // 权限列表状态
+  const [loading, setLoading] = useState(false); // 加载状态
+  const [modalVisible, setModalVisible] = useState(false); // 模态框显示状态
+  const [editingPermission, setEditingPermission] = useState<Permission | null>(null); // 当前编辑的权限
+  const [selectedType, setSelectedType] = useState<string>(''); // 选中的权限类型
+  const [form] = Form.useForm<PermissionFormData>(); // 表单实例
 
+  // 获取权限列表
   const fetchPermissions = async () => {
     try {
       setLoading(true);
       const response = await PermissionService.getPermissions();
-      setPermissions(response.data || []);
+      const permissionsArray: Permission[] = response.data || [];
+      const permissionsMap = new Map<string, Permission>();
+      permissionsArray.forEach(permission => {
+        permissionsMap.set(permission.code, permission);
+      });
+      setPermissions(permissionsMap);
     } catch (error) {
       message.error('获取权限列表失败');
     } finally {
@@ -43,6 +54,7 @@ export default function PermissionList({ appId }: PermissionListProps) {
     }
   };
 
+  // 提交表单
   const handleSubmit = async (values: PermissionFormData) => {
     try {
       if (editingPermission) {
@@ -61,6 +73,7 @@ export default function PermissionList({ appId }: PermissionListProps) {
     }
   };
 
+  // 删除权限
   const handleDelete = async (id: number) => {
     try {
       await PermissionService.deletePermission(id);
@@ -71,6 +84,7 @@ export default function PermissionList({ appId }: PermissionListProps) {
     }
   };
 
+  // 更新权限状态
   const handleStatusChange = async (checked: boolean, record: Permission) => {
     try {
       await PermissionService.updatePermission(record.id, {
@@ -83,6 +97,7 @@ export default function PermissionList({ appId }: PermissionListProps) {
     }
   };
 
+  // 定义表格列
   const columns: ColumnsType<Permission> = [
     {
       title: '权限名称',
@@ -169,9 +184,13 @@ export default function PermissionList({ appId }: PermissionListProps) {
     },
   ];
 
+  // 组件挂载时获取权��列表
   useEffect(() => {
     fetchPermissions();
   }, [appId]);
+
+  // 将 Map 转换为数组
+  const permissionsList = Array.from(permissions.values());
 
   return (
     <div>
@@ -190,7 +209,7 @@ export default function PermissionList({ appId }: PermissionListProps) {
 
       <Table
         columns={columns}
-        dataSource={permissions}
+        dataSource={permissionsList}
         loading={loading}
         rowKey="id"
       />
