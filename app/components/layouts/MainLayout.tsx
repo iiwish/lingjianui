@@ -96,14 +96,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
         dispatch(setActiveTab('/dashboard'));
       },
     },
-    // 根据权限显示“系统设置”菜单
+    // 根据权限显示"系统设置"菜单
     ...(
       canSystemManage ? [{
         key: 'settings',
         icon: <SettingOutlined />,
         label: '系统设置',
         children: [
-          // 根据权限显示“用户管理”菜单
+          // 根据权限显示"用户管理"菜单
           ...(
             canUserManage ? [{
               key: 'users',
@@ -119,7 +119,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               },
             }] : []
           ),
-          // 根据权限显示“角色管理”菜单
+          // 根据权限显示"角色管理"菜单
           ...(
             canRoleManage ? [{
               key: 'roles',
@@ -135,7 +135,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               },
             }] : []
           ),
-          // 根据权限显示“权限管理”菜单
+          // 根据权限显示"权限管理"菜单
           ...(
             canPermissionManage ? [{
               key: 'permissions',
@@ -230,7 +230,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           height: 'calc(100vh - 64px)',
           position: 'relative'
         }}>
-          {isAppDetailPage && (
+          {/* {isAppDetailPage && (
             <div style={{ padding: '8px', textAlign: 'center' }}>
               <Radio.Group 
                 value={menuType}
@@ -243,7 +243,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 <Radio.Button value="system" style={{ width: '50%' }}>系统菜单</Radio.Button>
               </Radio.Group>
             </div>
-          )}
+          )} */}
           <div style={{ 
             flex: 1, 
             overflow: 'auto'
@@ -274,7 +274,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           alignItems: 'center',
           position: 'sticky',
           top: 0,
-          zIndex: 1,
+          zIndex: 2,
         }}>
           <div style={{ display: 'flex', alignItems: 'center' }}>
             <Button
@@ -305,32 +305,51 @@ export default function MainLayout({ children }: MainLayoutProps) {
           margin: '0',
           background: '#fff',
           minHeight: 280,
-          overflow: 'auto',
           height: 'calc(100vh - 64px)', // 减去 header 高度
+          display: 'flex',
+          flexDirection: 'column',
         }}>
           {location.pathname === '/dashboard' ? (
             children // 直接渲染AppList
           ) : (
-            <Tabs
-              activeKey={activeKey}
-              type="editable-card"
-              onChange={handleTabChange}
-              onEdit={handleTabEdit}
-              items={tabs.map((tab) => ({
-                key: tab.key,
-                label: tab.title,
-                closable: tab.closable,
-                children: tab.key === activeKey ? children : null
-              }))}
-              style={{ height: '100%' }}
-              tabBarStyle={{
-                margin: 0,
+            <>
+              <div style={{
                 background: '#fafafa',
-                padding: '4px 4px 0',
-                borderBottom: '1px solid #f0f0f0'
-              }}
-              size="small"
-            />
+                borderBottom: '1px solid #f0f0f0',
+                position: 'sticky',
+                top: 0,
+                zIndex: 1,
+              }}>
+                <Tabs
+                  activeKey={activeKey}
+                  type="editable-card"
+                  hideAdd  // 添加此行
+                  onChange={handleTabChange}
+                  onEdit={handleTabEdit}
+                  items={tabs.map((tab) => ({
+                    key: tab.key,
+                    label: tab.title,
+                    closable: tab.closable,
+                    children: null // 不在这里渲染内容
+                  }))}
+                  tabBarStyle={{
+                    margin: 0,
+                    padding: '4px 4px 0',
+                  }}
+                  size="small"
+                  renderTabBar={(props, DefaultTabBar) => (
+                    <DefaultTabBar {...props} style={{ marginBottom: 0 }} />
+                  )}
+                />
+              </div>
+              <div style={{ 
+                flex: 1,
+                overflow: 'auto',
+                padding: '16px',
+              }}>
+                {tabs.find(tab => tab.key === activeKey) ? children : null}
+              </div>
+            </>
           )}
         </Content>
       </Layout>
