@@ -116,7 +116,7 @@ const AppList: FC = () => {
             选择一个应用开始工作，或创建新的应用
           </Paragraph>
         </div>
-        <Authorized permission="app:create">
+        <Authorized permission="btn:app_manage">
           <Button 
             type="primary" 
             icon={<PlusOutlined />}
@@ -149,7 +149,6 @@ const AppList: FC = () => {
                   </div>
                 </div>
                 <div className={styles.cardActions}>
-                  <Authorized permission="app:view">
                     <Button 
                       type="primary" 
                       icon={<ArrowRightOutlined />}
@@ -157,8 +156,7 @@ const AppList: FC = () => {
                     >
                       进入应用
                     </Button>
-                  </Authorized>
-                  <Authorized permission="app:manage">
+                  <Authorized permission="btn:app_manage">
                     <Button 
                       icon={<SettingOutlined />}
                       onClick={() => navigate(`/dashboard/${app.id}/settings`)}
@@ -169,7 +167,7 @@ const AppList: FC = () => {
                 </div>
               </Card>
             ))}
-            <Authorized permission="app:create">
+            <Authorized permission="btn:app_manage">
               <Card
                 className={styles.card}
                 hoverable

@@ -6,6 +6,8 @@ import { createElement } from 'react';
 // 权限检查hook
 // 这个hook用于检查用户是否拥有特定权限
 export const useHasPermission = (permission: string) => {
+  // 打印redux中的permissions
+  // console.log(useSelector((state: RootState) => state.auth.user?.permissions || [])); 
   // 从Redux状态中获取用户的权限列表
   const permissions = useSelector((state: RootState) => state.auth.user?.permissions || []);
   // 检查用户权限列表中是否包含指定的权限

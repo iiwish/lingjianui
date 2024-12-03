@@ -38,7 +38,7 @@ export const fetchPermissions = createAsyncThunk<string[]>(
       throw new Error(response.message);
     }
     // 提取权限code列表
-    return response.data.map(permission => permission.code);
+    return response.data.map(permission => `${permission.type}:${permission.code}`);
   }
 );
 

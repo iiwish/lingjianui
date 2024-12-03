@@ -16,7 +16,7 @@ export const ModelConfigService = {
    * @param query 查询参数
    */
   getList(query: ConfigQuery): Promise<ModelConfigResponse> {
-    return get<ModelConfigResponse>('/config/models', query);
+    return get<ModelConfigResponse>('/config/models', query).then(response => response.data);
   },
 
   /**
@@ -24,7 +24,7 @@ export const ModelConfigService = {
    * @param id 配置ID
    */
   getDetail(id: number): Promise<DataModelConfig> {
-    return get<DataModelConfig>(`/config/models/${id}`);
+    return get<DataModelConfig>(`/config/models/${id}`).then(response => response.data);
   },
 
   /**
@@ -32,7 +32,7 @@ export const ModelConfigService = {
    * @param data 配置信息
    */
   create(data: ModelConfigParams): Promise<DataModelConfig> {
-    return post<DataModelConfig>('/config/models', data);
+    return post<DataModelConfig>('/config/models', data).then(response => response.data);
   },
 
   /**
