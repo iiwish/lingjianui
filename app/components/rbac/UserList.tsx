@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, message, Space } from 'antd';
+import { EditOutlined, DeleteOutlined} from '@ant-design/icons';
 import type { ColumnsType } from 'antd/es/table';
 import { UserService, type User, type CreateUserRequest } from '~/services/user';
 
@@ -12,6 +13,8 @@ export default function UserList({ appId }: UserListProps) {
   const [loading, setLoading] = useState(false);
   const [modalVisible, setModalVisible] = useState(false);
   const [form] = Form.useForm();
+  const [isEdit, setIsEdit] = useState(false);
+  const [currentUserId, setCurrentUserId] = useState<number | null>(null);
 
   const fetchUsers = async () => {
     try {
@@ -25,25 +28,65 @@ export default function UserList({ appId }: UserListProps) {
     }
   };
 
-  const handleCreate = async (values: CreateUserRequest) => {
-    try {
-      await UserService.createUser(values);
-      message.success('创建用户成功');
-      setModalVisible(false);
-      form.resetFields();
-      fetchUsers();
-    } catch (error) {
-      message.error('创建用户失败');
-    }
+  const handleCreate = () => {
+    setIsEdit(false);
+    setCurrentUserId(null);
+    form.resetFields();
+    setModalVisible(true);
   };
 
-  const handleDelete = async (id: number) => {
+  const handleEdit = async (id: number) => {
     try {
-      await UserService.deleteUser(id);
-      message.success('删除用户成功');
-      fetchUsers();
+      const response = await UserService.getUser(id);
+      form.setFieldsValue(response.data);
+      setIsEdit(true);
+      setCurrentUserId(id);
+      setModalVisible(true);
     } catch (error) {
-      message.error('删除用户失败');
+      message.error('获取用户信息失败');
+    }
+  }
+
+  const handleDelete = async (id: number) => {
+    // 弹窗确认
+    Modal.confirm({
+      title: '删除用户',
+      content: '确认删除该用户吗？',
+      onOk: async () => {
+        try {
+          await UserService.deleteUser(id);
+          message.success('删除用户成功');
+          fetchUsers();
+        } catch (error) {
+          message.error('删除用户失败');
+        }
+      },
+    });
+  };
+
+  const handleSubmit = async (values: any) => {
+    if (isEdit && currentUserId !== null) {
+      // 编辑用户
+      try {
+        await UserService.updateUser(currentUserId, values);
+        message.success('编辑用户成功');
+        setModalVisible(false);
+        form.resetFields();
+        fetchUsers();
+      } catch (error) {
+        message.error('编辑用户失败');
+      }
+    } else {
+      // 创建用户
+      try {
+        await UserService.createUser(values);
+        message.success('创建用户成功');
+        setModalVisible(false);
+        form.resetFields();
+        fetchUsers();
+      } catch (error) {
+        message.error('创建用户失败');
+      }
     }
   };
 
@@ -68,14 +111,14 @@ export default function UserList({ appId }: UserListProps) {
       dataIndex: 'phone',
       key: 'phone',
     },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: number) => (
-        <span>{status === 1 ? '启用' : '禁用'}</span>
-      ),
-    },
+    // {
+    //   title: '状态',
+    //   dataIndex: 'status',
+    //   key: 'status',
+    //   render: (status: number) => (
+    //     <span>{status === 1 ? '启用' : '禁用'}</span>
+    //   ),
+    // },
     {
       title: '创建时间',
       dataIndex: 'created_at',
@@ -87,10 +130,15 @@ export default function UserList({ appId }: UserListProps) {
       render: (_, record) => (
         <Space>
           <Button 
+            type="link"
+            onClick={() => handleEdit(record.id)}
+            icon={<EditOutlined />}
+          ></Button>
+          <Button 
             type="link" 
             onClick={() => handleDelete(record.id)}
+            icon={<DeleteOutlined />}
           >
-            删除
           </Button>
         </Space>
       ),
@@ -106,7 +154,7 @@ export default function UserList({ appId }: UserListProps) {
       <div style={{ marginBottom: 16 }}>
         <Button 
           type="primary" 
-          onClick={() => setModalVisible(true)}
+          onClick={handleCreate}
         >
           新建用户
         </Button>
@@ -117,10 +165,11 @@ export default function UserList({ appId }: UserListProps) {
         dataSource={users}
         loading={loading}
         rowKey="id"
+        size="small"
       />
 
       <Modal
-        title="新建用户"
+        title={isEdit ? '编辑用户' : '新建用户'}
         open={modalVisible}
         onOk={() => form.submit()}
         onCancel={() => {
@@ -130,8 +179,10 @@ export default function UserList({ appId }: UserListProps) {
       >
         <Form
           form={form}
-          onFinish={handleCreate}
-          layout="vertical"
+          labelCol={{ span: 4 }}
+          size = "small"
+          onFinish={handleSubmit}
+          layout="horizontal"
         >
           <Form.Item
             name="username"
@@ -139,6 +190,13 @@ export default function UserList({ appId }: UserListProps) {
             rules={[{ required: true, message: '请输入用户名' }]}
           >
             <Input />
+          </Form.Item>
+          <Form.Item
+            name="password"
+            label="密码"
+            rules={[{ required: !isEdit, message: '请输入密码' }]}
+          >
+            <Input.Password />
           </Form.Item>
           <Form.Item
             name="nickname"
@@ -160,13 +218,6 @@ export default function UserList({ appId }: UserListProps) {
             label="手机"
           >
             <Input />
-          </Form.Item>
-          <Form.Item
-            name="password"
-            label="密码"
-            rules={[{ required: true, message: '请输入密码' }]}
-          >
-            <Input.Password />
           </Form.Item>
         </Form>
       </Modal>

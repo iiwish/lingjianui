@@ -25,6 +25,11 @@ export const UserService = {
     return get<User[]>('/users');
   },
 
+  // 获取用户详情
+  getUser: (id: number) => {
+    return get<User>(`/users/${id}`);
+  },
+
   // 创建用户
   createUser: (data: CreateUserRequest) => {
     return post<User>('/users', data);

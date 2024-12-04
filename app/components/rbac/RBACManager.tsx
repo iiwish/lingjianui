@@ -26,6 +26,7 @@ export default function RBACManager({ appId }: RBACManagerProps) {
       label: '权限管理',
       children: <PermissionList appId={appId} />,
     },
+
   ];
 
   return (
@@ -33,6 +34,7 @@ export default function RBACManager({ appId }: RBACManagerProps) {
       defaultActiveKey="users"
       items={items}
       type="card"
+      style={{ padding: 0 }}
     />
   );
 }

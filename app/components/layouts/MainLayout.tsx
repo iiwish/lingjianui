@@ -40,20 +40,24 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const appId = isAppDetailPage ? location.pathname.split('/').pop() : null;
 
   useEffect(() => {
-    // 如果是应用详情页,加载应用菜单
     if (appId && currentApp) {
       MenuService.getMenus(appId)
         .then(response => {
           if (response.code === 200) {
             setAppMenus(response.data.items || []);
-            setMenuType('app');
           }
         })
         .catch(err => {
           console.error('Failed to load app menus:', err);
         });
     }
-  }, [appId, currentApp]);
+  
+    if (isAppDetailPage) {
+      setMenuType('app');
+    } else {
+      setMenuType('system');
+    }
+  }, [appId, currentApp, isAppDetailPage]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -345,7 +349,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <div style={{ 
                 flex: 1,
                 overflow: 'auto',
-                padding: '16px',
+                // padding: '16px',
               }}>
                 {tabs.find(tab => tab.key === activeKey) ? children : null}
               </div>
