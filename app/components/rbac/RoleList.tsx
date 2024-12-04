@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Table, Button, Modal, Form, Input, message, Space, Switch } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
+import { EditOutlined, DeleteOutlined} from '@ant-design/icons';
 import { RoleService, type Role, type CreateRoleRequest } from '~/services/role';
 
 interface RoleListProps {
@@ -47,13 +48,20 @@ export default function RoleList({ appId }: RoleListProps) {
   };
 
   const handleDelete = async (id: number) => {
-    try {
-      await RoleService.deleteRole(id);
-      message.success('删除角色成功');
-      fetchRoles();
-    } catch (error) {
-      message.error('删除角色失败');
-    }
+    // 弹窗确认
+    Modal.confirm({
+      title: '删除角色',
+      content: '确认删除该角色吗？',
+      onOk: async () => {
+        try {
+          await RoleService.deleteRole(id);
+          message.success('删除角色成功');
+          fetchRoles();
+        } catch (error) {
+          message.error('删除角色失败');
+        }
+      },
+    });
   };
 
   const handleStatusChange = async (checked: boolean, record: Role) => {
@@ -84,17 +92,17 @@ export default function RoleList({ appId }: RoleListProps) {
       dataIndex: 'description',
       key: 'description',
     },
-    {
-      title: '状态',
-      dataIndex: 'status',
-      key: 'status',
-      render: (status: number, record) => (
-        <Switch
-          checked={status === 1}
-          onChange={(checked) => handleStatusChange(checked, record)}
-        />
-      ),
-    },
+    // {
+    //   title: '状态',
+    //   dataIndex: 'status',
+    //   key: 'status',
+    //   render: (status: number, record) => (
+    //     <Switch
+    //       checked={status === 1}
+    //       onChange={(checked) => handleStatusChange(checked, record)}
+    //     />
+    //   ),
+    // },
     {
       title: '创建时间',
       dataIndex: 'created_at',
@@ -116,14 +124,14 @@ export default function RoleList({ appId }: RoleListProps) {
               });
               setModalVisible(true);
             }}
+            icon={<EditOutlined />}
           >
-            编辑
           </Button>
           <Button 
             type="link" 
             onClick={() => handleDelete(record.id)}
+            icon={<DeleteOutlined />}
           >
-            删除
           </Button>
         </Space>
       ),
@@ -154,6 +162,7 @@ export default function RoleList({ appId }: RoleListProps) {
         dataSource={roles}
         loading={loading}
         rowKey="id"
+        size="small"
       />
 
       <Modal
