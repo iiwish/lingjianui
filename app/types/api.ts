@@ -40,6 +40,12 @@ export interface CaptchaResult {
   captcha_img: string;
 }
 
+// 改密码请求参数
+export interface ChangePasswordParams {
+  old_password: string; // 修改为下划线命名
+  new_password: string; // 修改为下划线命名
+}
+
 // 用户信息
 export interface UserInfo {
   id: number;

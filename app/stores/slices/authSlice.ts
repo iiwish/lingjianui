@@ -153,6 +153,11 @@ const authSlice = createSlice({
     clearError: (state: AuthState) => {
       state.error = null;
     },
+    updateUserInfo: (state: AuthState, action: PayloadAction<Partial<UserInfo>>) => {
+      if (state.user) {
+        state.user = { ...state.user, ...action.payload };
+      }
+    },
   },
   extraReducers: (builder: ActionReducerMapBuilder<AuthState>) => {
     builder
@@ -205,5 +210,5 @@ const authSlice = createSlice({
   },
 });
 
-export const { logout, setToken, clearError } = authSlice.actions;
+export const { logout, setToken, clearError, updateUserInfo } = authSlice.actions;
 export default authSlice.reducer;

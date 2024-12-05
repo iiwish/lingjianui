@@ -13,17 +13,17 @@ export interface App {
 
 export interface CreateAppDto {
   name: string;
+  code: string;
   description: string;
   icon?: string;
-  code: string;
 }
 
 export interface UpdateAppDto {
   name?: string;
   description?: string;
-  icon?: string;
   code?: string;
   status?: number;
+  icon?: string;
 }
 
 export interface AppState {

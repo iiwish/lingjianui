@@ -1,5 +1,6 @@
 import React from 'react';
 import { Modal, Form, Input } from 'antd';
+import AppForm from './AppForm';
 
 interface CreateAppModalProps {
   visible: boolean;
@@ -30,48 +31,7 @@ export default function CreateAppModal({ visible, onClose, onSubmit }: CreateApp
       onOk={handleSubmit}
       destroyOnClose
     >
-      <Form
-        form={form}
-        layout="vertical"
-        preserve={false}
-        onFinish={handleFinish}
-      >
-        <Form.Item
-          name="name"
-          label="应用名称"
-          rules={[
-            { required: true, message: '请输入应用名称' },
-            { max: 50, message: '应用名称不能超过50个字符' }
-          ]}
-        >
-          <Input placeholder="请输入应用名称" />
-        </Form.Item>
-
-        <Form.Item
-          name="code"
-          label="应用编码"
-          rules={[
-            { required: true, message: '请输入应用编码' },
-            { max: 50, message: '应用编码不能超过50个字符' },
-            { 
-              pattern: /^[a-zA-Z0-9_-]+$/, 
-              message: '应用编码只能包含英文、数字、下划线和连字符' 
-            }
-          ]}
-        >
-          <Input placeholder="请输入应用编码" />
-        </Form.Item>
-
-        <Form.Item
-          name="description"
-          label="应用描述"
-        >
-          <Input.TextArea 
-            placeholder="请输入应用描述" 
-            rows={4}
-          />
-        </Form.Item>
-      </Form>
+      <AppForm form={form} onFinish={handleFinish} />
     </Modal>
   );
 }

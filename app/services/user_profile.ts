@@ -19,11 +19,7 @@ export interface CreateUserRequest {
   phone?: string;
 }
 
-export const UserService = {
-  // 获取用户列表
-  getUsers: () => {
-    return get<User[]>('/users');
-  },
+export const UserProfileService = {
 
   // 获取用户详情
   getUser: (id: number) => {

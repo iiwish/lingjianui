@@ -66,6 +66,24 @@ http.interceptors.response.use(
       return Promise.reject(error);
     }
 
+    // 处理404未找到错误
+    if (response?.status === 404) {
+      message.error('请求的资源不存在');
+      return Promise.reject(error);
+    }
+
+    // 处理500服务器错误
+    if (response?.status === 500) {
+      message.error('服务器内部错误');
+      return Promise.reject(error);
+    }
+
+    // 处理400参数错误
+    if (response?.status === 400) {
+      message.error(response.data?.message || '请求参数错误');
+      return Promise.reject(error);
+    }
+
     // 处理401未登录错误
     if (response?.status === 401 && config) {
       // 如果已经在刷新token，加入等待队列

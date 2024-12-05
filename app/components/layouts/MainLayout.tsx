@@ -1,10 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, Avatar, Dropdown, Tabs, Radio } from 'antd';
+import { Layout, Menu, Button, Avatar, Dropdown, Tabs } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   AppstoreOutlined,
-  SettingOutlined,
   UserOutlined,
   LogoutOutlined,
   HomeOutlined,
@@ -14,10 +13,10 @@ import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
 import { addTab, removeTab, setActiveTab } from '~/stores/slices/tabSlice';
 import { MenuService } from '~/services/menu';
-import { useHasPermission } from '~/utils/permission';
 import type { Menu as AppMenu } from '~/types/menu';
 import type { Tab } from '~/types/tab';
 import SidebarFooter from '~/components/common/SidebarFooter';
+import UserProfileModal from '~/components/user/UserProfileModal';
 
 const { Header, Sider, Content } = Layout;
 
@@ -28,7 +27,7 @@ interface MainLayoutProps {
 export default function MainLayout({ children }: MainLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
   const [appMenus, setAppMenus] = useState<AppMenu[]>([]);
-  const [menuType, setMenuType] = useState<'system' | 'app'>('system');
+  const [profileModalVisible, setProfileModalVisible] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
   const dispatch = useAppDispatch();
@@ -51,13 +50,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           console.error('Failed to load app menus:', err);
         });
     }
-  
-    if (isAppDetailPage) {
-      setMenuType('app');
-    } else {
-      setMenuType('system');
-    }
-  }, [appId, currentApp, isAppDetailPage]);
+  }, [appId, currentApp]);
 
   const handleLogout = () => {
     dispatch(logout());
@@ -69,6 +62,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       key: 'profile',
       icon: <UserOutlined />,
       label: '个人信息',
+      onClick: () => setProfileModalVisible(true),
     },
     {
       key: 'logout',
@@ -77,12 +71,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
       onClick: handleLogout,
     },
   ];
-
-  // 添加权限检查
-  const canSystemManage = useHasPermission('menu:system_manage');
-  const canUserManage = useHasPermission('menu:user_manage');
-  const canRoleManage = useHasPermission('menu:role_manage');
-  const canPermissionManage = useHasPermission('menu:permission_manage');
 
   // 系统菜单
   const systemMenuItems = [
@@ -100,64 +88,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
         dispatch(setActiveTab('/dashboard'));
       },
     },
-    // 根据权限显示"系统设置"菜单
-    ...(
-      canSystemManage ? [{
-        key: 'settings',
-        icon: <SettingOutlined />,
-        label: '系统设置',
-        children: [
-          // 根据权限显示"用户管理"菜单
-          ...(
-            canUserManage ? [{
-              key: 'users',
-              label: '用户管理',
-              onClick: () => {
-                navigate('/dashboard/settings/users');
-                dispatch(addTab({
-                  key: '/dashboard/settings/users',
-                  title: '用户管理',
-                  closable: true
-                }));
-                dispatch(setActiveTab('/dashboard/settings/users'));
-              },
-            }] : []
-          ),
-          // 根据权限显示"角色管理"菜单
-          ...(
-            canRoleManage ? [{
-              key: 'roles',
-              label: '角色管理',
-              onClick: () => {
-                navigate('/dashboard/settings/roles');
-                dispatch(addTab({
-                  key: '/dashboard/settings/roles',
-                  title: '角色管理',
-                  closable: true
-                }));
-                dispatch(setActiveTab('/dashboard/settings/roles'));
-              },
-            }] : []
-          ),
-          // 根据权限显示"权限管理"菜单
-          ...(
-            canPermissionManage ? [{
-              key: 'permissions',
-              label: '权限管理',
-              onClick: () => {
-                navigate('/dashboard/settings/permissions');
-                dispatch(addTab({
-                  key: '/dashboard/settings/permissions',
-                  title: '权限管理',
-                  closable: true
-                }));
-                dispatch(setActiveTab('/dashboard/settings/permissions'));
-              },
-            }] : []
-          ),
-        ],
-      }] : []
-    ),
   ];
 
   // 将应用菜单转换为antd Menu格式
@@ -179,7 +109,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }));
 
   // 根据当前选择显示的菜单
-  const menuItems = menuType === 'app' ? appMenuItems : systemMenuItems;
+  const menuItems = isAppDetailPage ? appMenuItems : systemMenuItems;
 
   // 处理tab切换
   const handleTabChange = (key: string) => {
@@ -234,20 +164,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
           height: 'calc(100vh - 64px)',
           position: 'relative'
         }}>
-          {/* {isAppDetailPage && (
-            <div style={{ padding: '8px', textAlign: 'center' }}>
-              <Radio.Group 
-                value={menuType}
-                onChange={e => setMenuType(e.target.value)}
-                size="small"
-                buttonStyle="solid"
-                style={{ width: '100%' }}
-              >
-                <Radio.Button value="app" style={{ width: '50%' }}>应用菜单</Radio.Button>
-                <Radio.Button value="system" style={{ width: '50%' }}>系统菜单</Radio.Button>
-              </Radio.Group>
-            </div>
-          )} */}
           <div style={{ 
             flex: 1, 
             overflow: 'auto'
@@ -327,7 +243,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 <Tabs
                   activeKey={activeKey}
                   type="editable-card"
-                  hideAdd  // 添加此行
+                  hideAdd
                   onChange={handleTabChange}
                   onEdit={handleTabEdit}
                   items={tabs.map((tab) => ({
@@ -349,7 +265,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
               <div style={{ 
                 flex: 1,
                 overflow: 'auto',
-                // padding: '16px',
               }}>
                 {tabs.find(tab => tab.key === activeKey) ? children : null}
               </div>
@@ -357,6 +272,11 @@ export default function MainLayout({ children }: MainLayoutProps) {
           )}
         </Content>
       </Layout>
+
+      <UserProfileModal
+        visible={profileModalVisible}
+        onClose={() => setProfileModalVisible(false)}
+      />
     </Layout>
   );
 }

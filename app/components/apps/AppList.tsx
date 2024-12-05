@@ -24,6 +24,7 @@ import { setApps, setLoading, setError } from '~/stores/slices/appSlice';
 import type { App, CreateAppDto } from '~/types/app';
 import styles from './AppList.module.css';
 import CreateAppModal from './CreateAppModal';
+import AppSettingsModal from './AppSettingsModal';
 import { Authorized } from '~/utils/permission';
 
 const { Title, Paragraph } = Typography;
@@ -34,6 +35,8 @@ const AppList: FC = () => {
   const dispatch = useAppDispatch();
   const { apps, loading, error } = useAppSelector((state) => state.app);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [settingsModalVisible, setSettingsModalVisible] = useState(false);
+  const [selectedApp, setSelectedApp] = useState<App | null>(null);
 
   // 使用useCallback缓存函数
   const loadApps = useCallback(async () => {
@@ -84,6 +87,13 @@ const AppList: FC = () => {
   const handleEnterApp = useCallback((app: App) => {
     navigate(`/dashboard/${app.id}`);
   }, [navigate]);
+
+  // 打开设置Modal
+  const handleOpenSettings = useCallback((app: App, e: React.MouseEvent) => {
+    e.stopPropagation(); // 阻止事件冒泡
+    setSelectedApp(app);
+    setSettingsModalVisible(true);
+  }, []);
 
   useEffect(() => {
     console.log('Loading apps...'); // 调试日志
@@ -136,6 +146,7 @@ const AppList: FC = () => {
                 key={app.id}
                 className={styles.card}
                 hoverable
+                onClick={() => handleEnterApp(app)}
               >
                 <div className={styles.cardMeta}>
                   <div className={styles.cardIcon}>
@@ -152,14 +163,17 @@ const AppList: FC = () => {
                     <Button 
                       type="primary" 
                       icon={<ArrowRightOutlined />}
-                      onClick={() => handleEnterApp(app)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEnterApp(app);
+                      }}
                     >
                       进入应用
                     </Button>
                   <Authorized permission="btn:app_manage">
                     <Button 
                       icon={<SettingOutlined />}
-                      onClick={() => navigate(`/dashboard/${app.id}/settings`)}
+                      onClick={(e) => handleOpenSettings(app, e)}
                     >
                       设置
                     </Button>
@@ -215,6 +229,18 @@ const AppList: FC = () => {
         onClose={() => setCreateModalVisible(false)}
         onSubmit={handleCreate}
       />
+
+      {selectedApp && (
+        <AppSettingsModal
+          visible={settingsModalVisible}
+          onClose={() => {
+            setSettingsModalVisible(false);
+            setSelectedApp(null);
+          }}
+          app={selectedApp}
+          onSuccess={loadApps}
+        />
+      )}
     </div>
   );
 };

@@ -1,11 +1,12 @@
-import { get, post } from '../utils/http';
+import { get, put, post } from '../utils/http';
 import type { 
   LoginParams, 
   LoginResult, 
   UserInfo, 
   CaptchaResult,
   Permission,
-  ApiResponse
+  ApiResponse,
+  ChangePasswordParams
 } from '../types/api';
 
 /**
@@ -57,6 +58,38 @@ export const AuthService = {
       console.error('getCurrentUser error:', error);
       throw error;
     });
+  },
+
+  /**
+   * 更新当前用户信息
+   * @param data 用户信息
+   */
+  updateCurrentUser(data: UserInfo): Promise<ApiResponse<void>> {
+    return put<ApiResponse<void>>('/user/profile', data)
+      .then(response => {
+        console.log('updateCurrentUser response:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('updateCurrentUser error:', error);
+        throw error;
+      });
+  },
+
+  /**
+   * 更新当前用户密码
+   * @param data 密码
+   */
+  updatePassword(data: ChangePasswordParams): Promise<ApiResponse<void>> {
+    return put<ApiResponse<void>>('/auth/password', data)
+      .then(response => {
+        console.log('updatePassword response:', response);
+        return response;
+      })
+      .catch(error => {
+        console.error('updatePassword error:', error);
+        throw error;
+      });
   },
 
   /**
