@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu, Button, Avatar, Dropdown, Tabs } from 'antd';
+import { Layout, Menu as AntMenu, Button, Avatar, Dropdown, Tabs, Select } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -7,26 +7,43 @@ import {
   UserOutlined,
   LogoutOutlined,
   HomeOutlined,
+  FolderOutlined,
+  TableOutlined,
+  ContainerOutlined,
+  MenuOutlined,
+  DatabaseOutlined,
+  FormOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
 import { addTab, removeTab, setActiveTab } from '~/stores/slices/tabSlice';
+import { setMenus, setCurrentMenuGroup, setLoading, setError } from '~/stores/slices/menuSlice';
 import { MenuService } from '~/services/menu';
-import type { Menu as AppMenu } from '~/types/menu';
+import type { Menu as AppMenu, MenuItem } from '~/types/menu';
 import type { Tab } from '~/types/tab';
 import SidebarFooter from '~/components/common/SidebarFooter';
 import UserProfileModal from '~/components/user/UserProfileModal';
+import { s } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
 
 const { Header, Sider, Content } = Layout;
+const { Option } = Select;
 
 interface MainLayoutProps {
   children: React.ReactNode;
 }
 
+const iconMap: { [key: string]: React.ReactNode } = {
+  'folder': <FolderOutlined />,
+  'table': <TableOutlined />,
+  'model': <ContainerOutlined />,
+  'menu': <MenuOutlined />,
+  'dim': <DatabaseOutlined />,
+  'form': <FormOutlined />,
+};
+
 export default function MainLayout({ children }: MainLayoutProps) {
   const [collapsed, setCollapsed] = useState(false);
-  const [appMenus, setAppMenus] = useState<AppMenu[]>([]);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const navigate = useNavigate();
   const location = useLocation();
@@ -34,23 +51,74 @@ export default function MainLayout({ children }: MainLayoutProps) {
   const { user } = useAppSelector((state) => state.auth);
   const { currentApp } = useAppSelector((state) => state.app);
   const { tabs, activeKey } = useAppSelector((state) => state.tab);
+  const { menus, currentMenuGroup, loading } = useAppSelector((state) => state.menu);
 
-  const isAppDetailPage = location.pathname.match(/^\/dashboard\/[\w-]+$/);
-  const appId = isAppDetailPage ? location.pathname.split('/').pop() : null;
+  // 修改判断逻辑,只要路径包含/dashboard/就认为是应用页面
+  const isAppPage = location.pathname.includes('/dashboard/');
+  const appId = isAppPage ? location.pathname.split('/')[2] : null;
 
+  // 加载菜单数据
   useEffect(() => {
     if (appId && currentApp) {
+      dispatch(setLoading(true));
       MenuService.getMenus(appId)
         .then(response => {
           if (response.code === 200) {
-            setAppMenus(response.data.items || []);
+            const menuData = response.data.items;
+            dispatch(setMenus(menuData));
+            // 如果没有当前菜单组,设置第一个为默认
+            if (menuData.length > 0 && !currentMenuGroup) {
+              dispatch(setCurrentMenuGroup(menuData[0]));
+              // 打开第一个菜单
+              // dispatch(addTab({
+              //   key: menuData[0].path,
+              //   title: menuData[0].menu_name,
+              //   closable: true
+              // }));
+            }
           }
         })
         .catch(err => {
           console.error('Failed to load app menus:', err);
+          dispatch(setError(err.message));
+        })
+        .finally(() => {
+          dispatch(setLoading(false));
         });
     }
   }, [appId, currentApp]);
+
+  // 生成菜单路径
+  const generateMenuPath = (menu: AppMenu): string => {
+    return `/dashboard/${appId}/${menu.path}`;
+  };
+
+  // 递归构建菜单项
+  const buildMenuItems = (menus: AppMenu[]): MenuItem[] => {
+    return menus.map(menu => {
+      const icon = iconMap[menu.icon?.toLowerCase()] || null;
+      const menuItem: MenuItem = {
+        key: menu.path,
+        icon: icon,
+        label: menu.menu_name, // 确保显示 menuName
+        children: menu.children && menu.children.length > 0 
+          ? buildMenuItems(menu.children) 
+          : undefined,
+        // 如果是菜单类型,则可以点击
+        onClick: menu.menu_type !== '1' ? () => {
+          const menuPath = generateMenuPath(menu);
+          navigate(menuPath);
+          dispatch(addTab({
+            key: menuPath,
+            title: menu.menu_name,
+            closable: true
+          }));
+          dispatch(setActiveTab(menuPath));
+        } : undefined,
+      };
+      return menuItem;
+    });
+  };
 
   const handleLogout = () => {
     dispatch(logout());
@@ -90,26 +158,23 @@ export default function MainLayout({ children }: MainLayoutProps) {
     },
   ];
 
-  // 将应用菜单转换为antd Menu格式
-  const appMenuItems = appMenus.map(menu => ({
-    key: menu.menuCode,
-    icon: menu.icon ? <span>{menu.icon}</span> : null,
-    label: menu.menuName,
-    onClick: () => {
-      if (menu.path) {
-        navigate(menu.path);
-        dispatch(addTab({
-          key: menu.path,
-          title: menu.menuName,
-          closable: true
-        }));
-        dispatch(setActiveTab(menu.path));
-      }
-    },
-  }));
+  // 处理菜单组切换
+  const handleMenuGroupChange = (menuId: string) => {
+    const selectedMenu = menus.find(menu => menu.id === Number(menuId));
+    if (selectedMenu) {
+      dispatch(setCurrentMenuGroup(selectedMenu));
+      // dispatch(addTab({
+      //   key: selectedMenu.path,
+      //   title: selectedMenu.menu_name,
+      //   closable: true
+      // }));
+    }
+  };
 
   // 根据当前选择显示的菜单
-  const menuItems = isAppDetailPage ? appMenuItems : systemMenuItems;
+  const menuItems = isAppPage 
+    ? (currentMenuGroup ? buildMenuItems(currentMenuGroup.children || []) : [])
+    : systemMenuItems;
 
   // 处理tab切换
   const handleTabChange = (key: string) => {
@@ -168,7 +233,23 @@ export default function MainLayout({ children }: MainLayoutProps) {
             flex: 1, 
             overflow: 'auto'
           }}>
-            <Menu
+            {isAppPage && (
+              <div style={{ padding: '8px' }}>
+                <Select
+                  style={{ width: '100%' }}
+                  value={currentMenuGroup?.menu_name}
+                  onChange={handleMenuGroupChange}
+                  loading={loading}
+                >
+                  {menus.map(menu => (
+                    <Option key={menu.id} value={menu.id}>
+                      {menu.menu_name}
+                    </Option>
+                  ))}
+                </Select>
+              </div>
+            )}
+            <AntMenu
               theme="dark"
               mode="inline"
               selectedKeys={[location.pathname]}
@@ -203,12 +284,13 @@ export default function MainLayout({ children }: MainLayoutProps) {
               onClick={() => setCollapsed(!collapsed)}
               style={{ fontSize: '16px', width: 64, height: 64 }}
             />
-            {isAppDetailPage && (
+            {isAppPage && (
               <Button
                 type="text"
                 icon={<HomeOutlined />}
                 onClick={() => navigate('/dashboard')}
               >
+                返回应用列表
               </Button>
             )}
           </div>
@@ -257,14 +339,12 @@ export default function MainLayout({ children }: MainLayoutProps) {
                     padding: '4px 4px 0',
                   }}
                   size="small"
-                  renderTabBar={(props, DefaultTabBar) => (
-                    <DefaultTabBar {...props} style={{ marginBottom: 0 }} />
-                  )}
                 />
               </div>
               <div style={{ 
                 flex: 1,
                 overflow: 'auto',
+                padding: '16px'
               }}>
                 {tabs.find(tab => tab.key === activeKey) ? children : null}
               </div>

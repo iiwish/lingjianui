@@ -40,9 +40,19 @@ export default function AppDetail() {
         display: 'flex', 
         justifyContent: 'center', 
         alignItems: 'center', 
-        height: '100%' 
+        height: '100%',
+        position: 'relative'
       }}>
-        <Spin size="large" tip="加载中..." />
+        <Spin 
+          size="large" 
+          tip="加载中..." 
+          style={{
+            maxHeight: '100%'
+          }}
+          wrapperClassName="custom-spin-wrapper"
+        >
+          <div style={{ padding: '50px 0' }} />
+        </Spin>
       </div>
     );
   }

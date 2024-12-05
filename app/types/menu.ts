@@ -1,18 +1,30 @@
 export interface Menu {
-  id: string;
-  appId: string;
-  menuName: string;
-  menuCode: string;
-  menuType: string;
+  id: number;
+  app_id: number;
+  menu_name: string;
+  menu_code: string;
+  menu_type: string;
   icon: string;
   path: string;
-  parentId: string;
+  source_id: string;
+  parent_id: number;
   level: number;
   sort: number;
   status: number;
-  nodeId: string;
-  createdAt?: string;
-  updatedAt?: string;
+  node_id: string;
+  created_at?: string;
+  updated_at?: string;
+  creator_id: number;
+  updater_id: number;
+  children?: Menu[];
+}
+
+export interface MenuItem {
+  key: string;
+  icon: React.ReactNode;
+  label: string;
+  children?: MenuItem[];
+  onClick?: () => void;
 }
 
 export interface MenuResponse {
