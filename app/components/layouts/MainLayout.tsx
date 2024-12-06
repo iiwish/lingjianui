@@ -24,7 +24,6 @@ import type { Menu as AppMenu, MenuItem } from '~/types/menu';
 import type { Tab } from '~/types/tab';
 import SidebarFooter from '~/components/common/SidebarFooter';
 import UserProfileModal from '~/components/user/UserProfileModal';
-import { s } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
 
 const { Header, Sider, Content } = Layout;
 const { Option } = Select;
@@ -69,12 +68,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
             // 如果没有当前菜单组,设置第一个为默认
             if (menuData.length > 0 && !currentMenuGroup) {
               dispatch(setCurrentMenuGroup(menuData[0]));
-              // 打开第一个菜单
-              // dispatch(addTab({
-              //   key: menuData[0].path,
-              //   title: menuData[0].menu_name,
-              //   closable: true
-              // }));
             }
           }
         })
@@ -90,17 +83,24 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   // 生成菜单路径
   const generateMenuPath = (menu: AppMenu): string => {
-    return `/dashboard/${appId}/${menu.path}`;
+    if (menu.menu_type === '1') {
+      // 目录类型,直接使用path
+      return `/dashboard/${appId}/${menu.path}`;
+    }
+    
+  return `/dashboard/${appId}/element/${menu.menu_type}/${menu.source_id}`;
   };
 
   // 递归构建菜单项
   const buildMenuItems = (menus: AppMenu[]): MenuItem[] => {
     return menus.map(menu => {
       const icon = iconMap[menu.icon?.toLowerCase()] || null;
+      
+      
       const menuItem: MenuItem = {
-        key: menu.path,
+        key: menu.path, // 使用完整路径作为key
         icon: icon,
-        label: menu.menu_name, // 确保显示 menuName
+        label: menu.menu_name,
         children: menu.children && menu.children.length > 0 
           ? buildMenuItems(menu.children) 
           : undefined,
@@ -163,11 +163,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const selectedMenu = menus.find(menu => menu.id === Number(menuId));
     if (selectedMenu) {
       dispatch(setCurrentMenuGroup(selectedMenu));
-      // dispatch(addTab({
-      //   key: selectedMenu.path,
-      //   title: selectedMenu.menu_name,
-      //   closable: true
-      // }));
+      // 当切换菜单组时，移除应用列表tab
+      const newTabs = tabs.filter(tab => tab.key !== '/dashboard');
+      newTabs.forEach(tab => dispatch(removeTab(tab.key)));
     }
   };
 
