@@ -12,18 +12,18 @@ export default function Dashboard() {
 
   useEffect(() => {
       // 只在首次渲染时添加tab并设置为激活状态
-      if (location.pathname === '/dashboard' && !tabs.find(tab => tab.key === '/dashboard')) {
+    if (location.pathname === '/dashboard' && !tabs.find(tab => tab.key === '/dashboard')) {
         dispatch(addTab({
           key: '/dashboard',
           title: '应用列表',
           closable: false
         }));
         dispatch(setActiveTab('/dashboard'));
-      }
+       }
     }, [dispatch, location.pathname, tabs]);
     
     // 如果是根路径,渲染AppList
-    if (location.pathname === '/dashboard') {
+  if (location.pathname === '/dashboard') {
       return (
         <MainLayout>
           <div style={{ padding: '24px', height: '100%', overflow: 'auto' }}>
@@ -32,11 +32,13 @@ export default function Dashboard() {
         </MainLayout>
       );
     }
-    
-    // 其他路由使用Outlet
+      
+   // 其他路由使用Outlet
+
   return (
     <MainLayout>
       <Outlet />
     </MainLayout>
   );
 }
+

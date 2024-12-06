@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu as AntMenu, Button, Avatar, Dropdown, Tabs, Select } from 'antd';
+import { Layout, Menu as AntMenu, Button, Avatar, Dropdown, Tabs, Select, Result } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -82,31 +82,30 @@ export default function MainLayout({ children }: MainLayoutProps) {
   }, [appId, currentApp]);
 
   // 生成菜单路径
-  const generateMenuPath = (menu: AppMenu): string => {
+  const generateMenuPath = (menu: AppMenu): string | null => {
     if (menu.menu_type === '1') {
-      // 目录类型,直接使用path
-      return `/dashboard/${appId}/${menu.path}`;
+      // 目录类型不生成路径
+      return null;
     }
-    
-  return `/dashboard/${appId}/element/${menu.menu_type}/${menu.source_id}`;
+    // 其他类型都使用element路由
+    return `/dashboard/${appId}/element/${menu.menu_type}/${menu.source_id}`;
   };
 
   // 递归构建菜单项
   const buildMenuItems = (menus: AppMenu[]): MenuItem[] => {
     return menus.map(menu => {
       const icon = iconMap[menu.icon?.toLowerCase()] || null;
-      
+      const menuPath = generateMenuPath(menu);
       
       const menuItem: MenuItem = {
-        key: menu.path, // 使用完整路径作为key
+        key: menuPath || menu.path, // 如果没有menuPath就用原始path作为key
         icon: icon,
         label: menu.menu_name,
         children: menu.children && menu.children.length > 0 
           ? buildMenuItems(menu.children) 
           : undefined,
-        // 如果是菜单类型,则可以点击
-        onClick: menu.menu_type !== '1' ? () => {
-          const menuPath = generateMenuPath(menu);
+        // 如果不是目录且有menuPath,则可以点击
+        onClick: menu.menu_type !== '1' && menuPath ? () => {
           navigate(menuPath);
           dispatch(addTab({
             key: menuPath,
@@ -191,6 +190,18 @@ export default function MainLayout({ children }: MainLayoutProps) {
         navigate(lastTab.key);
       }
     }
+  };
+
+  // 检查当前路径是否为element路由
+  const isElementRoute = (path: string) => {
+    const parts = path.split('/');
+    return parts.includes('element');
+  };
+
+  // 检查当前路径是否为应用首页
+  const isAppHome = (path: string) => {
+    const parts = path.split('/');
+    return parts.length === 3 && parts[1] === 'dashboard';
   };
 
   return (
@@ -344,7 +355,15 @@ export default function MainLayout({ children }: MainLayoutProps) {
                 overflow: 'auto',
                 padding: '16px'
               }}>
-                {tabs.find(tab => tab.key === activeKey) ? children : null}
+                {tabs.find(tab => tab.key === activeKey) ? (
+                  isAppHome(location.pathname) || isElementRoute(location.pathname) ? 
+                    children : 
+                    <Result
+                      status="404"
+                      title="404"
+                      subTitle="对不起,您访问的页面不存在"
+                    />
+                ) : null}
               </div>
             </>
           )}
