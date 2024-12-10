@@ -164,51 +164,51 @@ export interface ApiResponse<T> {
 }
 
 // 获取表格配置
-export const getTableConfig = async (tableId: string): Promise<ApiResponse<TableConfig>> => {
-  return get(`/config/tables/${tableId}`);
+export const getTableConfig = async (appId: string, tableId: string): Promise<ApiResponse<TableConfig>> => {
+  return get(`/config/tables/${tableId}`, { headers: { 'App-ID': appId } });
 };
 
 // 获取表格数据
-export const getTableData = async (tableId: string): Promise<ApiResponse<Record<string, any>[]>> => {
-  return get(`/element/tables/${tableId}`);
+export const getTableData = async (appId: string, tableId: string): Promise<ApiResponse<Record<string, any>[]>> => {
+  return get(`/config/tables/${tableId}/items`, { headers: { 'App-ID': appId } });
 };
 
 // 获取维度配置
-export const getDimensionConfig = async (dimId: string): Promise<ApiResponse<DimensionConfig>> => {
-  return get(`/config/dimensions/${dimId}`);
+export const getDimensionConfig = async (appId: string, dimId: string): Promise<ApiResponse<DimensionConfig>> => {
+  return get(`/config/dimensions/${dimId}`, { headers: { 'App-ID': appId } });
 };
 
 // 获取维度数据
-export const getDimensionData = async (dimId: string): Promise<ApiResponse<DimensionItem[]>> => {
-  return get(`/element/dimensions/${dimId}`);
+export const getDimensionData = async (appId: string, dimId: string): Promise<ApiResponse<DimensionItem[]>> => {
+  return get(`/config/dimensions/${dimId}/items`, { headers: { 'App-ID': appId } });
 };
 
 // 获取菜单配置
-export const getMenuConfig = async (menuId: string): Promise<ApiResponse<MenuConfig>> => {
-  return get(`/config/menus/${menuId}`);
+export const getMenuConfig = async (appId: string, menuId: string): Promise<ApiResponse<MenuConfig>> => {
+  return get(`/config/menus/${menuId}`, { headers: { 'App-ID': appId } });
 };
 
 // 获取菜单数据
-export const getMenuData = async (menuId: string): Promise<ApiResponse<MenuItem[]>> => {
-  return get(`/element/menus/${menuId}`);
+export const getMenuData = async (appId: string, menuId: string): Promise<ApiResponse<MenuItem[]>> => {
+  return get(`/config/menus/${menuId}`, { headers: { 'App-ID': appId } });
 };
 
 // 获取模型配置
-export const getModelConfig = async (modelId: string): Promise<ApiResponse<ModelConfig>> => {
-  return get(`/config/models/${modelId}`);
+export const getModelConfig = async (appId: string, modelId: string): Promise<ApiResponse<ModelConfig>> => {
+  return get(`/config/models/${modelId}`, { headers: { 'App-ID': appId } });
 };
 
 // 获取模型数据
-export const getModelData = async (modelId: string): Promise<ApiResponse<Record<string, any>[]>> => {
-  return get(`/element/models/${modelId}`);
+export const getModelData = async (appId: string, modelId: string): Promise<ApiResponse<Record<string, any>[]>> => {
+  return get(`/config/models/${modelId}`, { headers: { 'App-ID': appId } });
 };
 
 // 获取表单配置
-export const getFormConfig = async (formId: string): Promise<ApiResponse<FormConfig>> => {
-  return get(`/config/forms/${formId}`);
+export const getFormConfig = async (appId: string, formId: string): Promise<ApiResponse<FormConfig>> => {
+  return get(`/config/forms/${formId}`, { headers: { 'App-ID': appId } });
 };
 
 // 获取表单数据
-export const getFormData = async (formId: string): Promise<ApiResponse<Record<string, any>>> => {
-  return get(`/element/forms/${formId}`);
+export const getFormData = async (appId: string, formId: string): Promise<ApiResponse<Record<string, any>>> => {
+  return get(`/config/forms/${formId}`, { headers: { 'App-ID': appId } });
 };

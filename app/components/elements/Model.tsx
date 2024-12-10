@@ -1,15 +1,14 @@
 import React, { useEffect, useState } from 'react';
 import { Form, Input, Select, InputNumber, Switch, Row, Col, Spin, message } from 'antd';
-import { useParams } from '@remix-run/react';
 import {
   getModelConfig,
   getModelData,
   type ModelConfig,
   type ModelConfiguration
 } from '~/services/element';
+import type { ElementProps } from '~/types/element';
 
-export default function Model() {
-  const { id } = useParams();
+const Model: React.FC<ElementProps> = ({ elementId, appId }) => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<ModelConfig | null>(null);
   const [configuration, setConfiguration] = useState<ModelConfiguration | null>(null);
@@ -42,13 +41,13 @@ export default function Model() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!id) return;
+      if (!elementId || !appId) return;
 
       try {
         setLoading(true);
 
         // 获取模型配置
-        const configRes = await getModelConfig(id);
+        const configRes = await getModelConfig(appId, elementId);
         if (configRes.code === 200 && configRes.data) {
           setConfig(configRes.data);
           
@@ -67,7 +66,7 @@ export default function Model() {
         }
 
         // 获取模型数据
-        const dataRes = await getModelData(id);
+        const dataRes = await getModelData(appId, elementId);
         if (dataRes.code === 200 && Array.isArray(dataRes.data)) {
           setData(dataRes.data);
           // 如果有数据,设置表单初始值
@@ -86,7 +85,7 @@ export default function Model() {
     };
 
     loadData();
-  }, [id, form]);
+  }, [elementId, appId, form]);
 
   if (loading) {
     return (
@@ -131,4 +130,6 @@ export default function Model() {
       )}
     </div>
   );
-}
+};
+
+export default Model;

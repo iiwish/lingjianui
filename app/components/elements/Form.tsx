@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Form as AntForm, Input, InputNumber, Select, Switch, Button, Row, Col, Spin, message } from 'antd';
 import type { SwitchProps, InputProps, InputNumberProps, SelectProps } from 'antd';
 import type { TextAreaProps } from 'antd/es/input';
-import { useParams } from '@remix-run/react';
 import {
   getFormConfig,
   getFormData,
   type FormConfig,
   type FormConfiguration
 } from '~/services/element';
+import type { ElementProps } from '~/types/element';
 
 type FieldProps = {
   string: InputProps;
@@ -18,8 +18,7 @@ type FieldProps = {
   textarea: TextAreaProps;
 };
 
-export default function Form() {
-  const { id } = useParams();
+const Form: React.FC<ElementProps> = ({ elementId, appId }) => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<FormConfig | null>(null);
   const [configuration, setConfiguration] = useState<FormConfiguration | null>(null);
@@ -86,13 +85,13 @@ export default function Form() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!id) return;
+      if (!elementId || !appId) return;
 
       try {
         setLoading(true);
 
         // 获取表单配置
-        const configRes = await getFormConfig(id);
+        const configRes = await getFormConfig(appId, elementId);
         if (configRes.code === 200 && configRes.data) {
           setConfig(configRes.data);
           
@@ -111,7 +110,7 @@ export default function Form() {
         }
 
         // 获取表单数据
-        const dataRes = await getFormData(id);
+        const dataRes = await getFormData(appId, elementId);
         if (dataRes.code === 200 && dataRes.data) {
           setData(dataRes.data);
           form.setFieldsValue(dataRes.data);
@@ -125,7 +124,7 @@ export default function Form() {
     };
 
     loadData();
-  }, [id, form]);
+  }, [elementId, appId, form]);
 
   // 处理表单提交
   const handleSubmit = async (values: Record<string, any>) => {
@@ -192,4 +191,6 @@ export default function Form() {
       )}
     </div>
   );
-}
+};
+
+export default Form;

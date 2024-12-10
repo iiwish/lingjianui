@@ -32,6 +32,13 @@ interface MainLayoutProps {
   children: React.ReactNode;
 }
 
+interface SystemMenuItem {
+  key: string;
+  icon: React.ReactNode;
+  label: string;
+  onClick?: () => void;
+}
+
 const iconMap: { [key: string]: React.ReactNode } = {
   'folder': <FolderOutlined />,
   'table': <TableOutlined />,
@@ -41,7 +48,25 @@ const iconMap: { [key: string]: React.ReactNode } = {
   'form': <FormOutlined />,
 };
 
-export default function MainLayout({ children }: MainLayoutProps) {
+// 菜单类型到路由类型的映射
+const menuTypeToRouteType: { [key: string]: string } = {
+  'table': '2',
+  'dim': '3',
+  'menu': '4',
+  'model': '5',
+  'form': '6',
+};
+
+// 路由类型到菜单类型的映射
+const routeTypeToMenuType: { [key: string]: string } = {
+  '2': 'table',
+  '3': 'dim',
+  '4': 'menu',
+  '5': 'model',
+  '6': 'form',
+};
+
+const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
   const [profileModalVisible, setProfileModalVisible] = useState(false);
   const navigate = useNavigate();
@@ -65,9 +90,52 @@ export default function MainLayout({ children }: MainLayoutProps) {
           if (response.code === 200) {
             const menuData = response.data.items;
             dispatch(setMenus(menuData));
+            
             // 如果没有当前菜单组,设置第一个为默认
             if (menuData.length > 0 && !currentMenuGroup) {
               dispatch(setCurrentMenuGroup(menuData[0]));
+            }
+            
+            // 如果是元素路由,自动打开对应的tab
+            const pathParts = location.pathname.split('/');
+            if (pathParts.includes('element')) {
+              const type = pathParts[4];
+              const id = pathParts[5];
+              const menuType = routeTypeToMenuType[type];
+              const menuPath = `/dashboard/${appId}/element/${type}/${id}`;
+              
+              // 在菜单数据中查找对应的菜单项
+              const findMenuItem = (menus: AppMenu[]): AppMenu | null => {
+                for (const menu of menus) {
+                  if (menu.source_id?.toString() === id && menu.menu_type === menuType) {
+                    return menu;
+                  }
+                  if (menu.children) {
+                    const found = findMenuItem(menu.children);
+                    if (found) return found;
+                  }
+                }
+                return null;
+              };
+              
+              // 遍历所有菜单组查找
+              for (const group of menuData) {
+                if (group.children) {
+                  const menuItem = findMenuItem(group.children);
+                  if (menuItem) {
+                    // 设置当前菜单组
+                    dispatch(setCurrentMenuGroup(group));
+                    // 添加tab
+                    dispatch(addTab({
+                      key: menuPath,
+                      title: menuItem.menu_name,
+                      closable: true
+                    }));
+                    dispatch(setActiveTab(menuPath));
+                    break;
+                  }
+                }
+              }
             }
           }
         })
@@ -79,7 +147,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
           dispatch(setLoading(false));
         });
     }
-  }, [appId, currentApp]);
+  }, [appId, currentApp, location.pathname]);
 
   // 生成菜单路径
   const generateMenuPath = (menu: AppMenu): string | null => {
@@ -88,6 +156,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
       return null;
     }
     // 其他类型都使用element路由
+    // const routeType = menuTypeToRouteType[menu.menu_type];
     return `/dashboard/${appId}/element/${menu.menu_type}/${menu.source_id}`;
   };
 
@@ -139,32 +208,14 @@ export default function MainLayout({ children }: MainLayoutProps) {
     },
   ];
 
-  // 系统菜单
-  const systemMenuItems = [
-    {
-      key: 'apps',
-      icon: <AppstoreOutlined />,
-      label: '应用列表',
-      onClick: () => {
-        navigate('/dashboard');
-        dispatch(addTab({
-          key: '/dashboard',
-          title: '应用列表',
-          closable: false
-        }));
-        dispatch(setActiveTab('/dashboard'));
-      },
-    },
-  ];
+  // 系统菜单 - 移除应用列表相关逻辑
+  const systemMenuItems: SystemMenuItem[] = [];
 
   // 处理菜单组切换
   const handleMenuGroupChange = (menuId: string) => {
     const selectedMenu = menus.find(menu => menu.id === Number(menuId));
     if (selectedMenu) {
       dispatch(setCurrentMenuGroup(selectedMenu));
-      // 当切换菜单组时，移除应用列表tab
-      const newTabs = tabs.filter(tab => tab.key !== '/dashboard');
-      newTabs.forEach(tab => dispatch(removeTab(tab.key)));
     }
   };
 
@@ -175,6 +226,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   // 处理tab切换
   const handleTabChange = (key: string) => {
+    // 如果是应用列表tab,不做任何操作
+    if (key === '/dashboard') return;
+    
     dispatch(setActiveTab(key));
     navigate(key);
   };
@@ -203,6 +257,9 @@ export default function MainLayout({ children }: MainLayoutProps) {
     const parts = path.split('/');
     return parts.length === 3 && parts[1] === 'dashboard';
   };
+
+  // 过滤掉应用列表tab
+  const filteredTabs = tabs.filter(tab => tab.key !== '/dashboard');
 
   return (
     <Layout style={{ minHeight: '100vh', height: '100vh' }}>
@@ -337,7 +394,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
                   hideAdd
                   onChange={handleTabChange}
                   onEdit={handleTabEdit}
-                  items={tabs.map((tab) => ({
+                  items={filteredTabs.map((tab) => ({
                     key: tab.key,
                     label: tab.title,
                     closable: tab.closable,
@@ -376,4 +433,6 @@ export default function MainLayout({ children }: MainLayoutProps) {
       />
     </Layout>
   );
-}
+};
+
+export default MainLayout;

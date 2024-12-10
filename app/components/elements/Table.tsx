@@ -2,8 +2,8 @@ import React, { useEffect, useState } from 'react';
 import { Table as AntTable, Input, Space, message } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import type { Key } from 'react';
-import { useParams } from '@remix-run/react';
 import { getTableConfig, getTableData, type TableConfig } from '~/services/element';
+import type { ElementProps } from '~/types/element';
 
 interface TableFunc {
   filter?: Array<{
@@ -19,8 +19,7 @@ interface DataType {
   [key: string]: any;
 }
 
-export default function Table() {
-  const { id } = useParams();
+const Table: React.FC<ElementProps> = ({ elementId, appId, menuItem }) => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<TableConfig | null>(null);
   const [func, setFunc] = useState<TableFunc | null>(null);
@@ -30,13 +29,13 @@ export default function Table() {
   // 加载表格配置和数据
   useEffect(() => {
     const loadData = async () => {
-      if (!id) return;
+      if (!elementId || !appId) return;
       
       try {
         setLoading(true);
         
         // 获取表格配置
-        const configRes = await getTableConfig(id);
+        const configRes = await getTableConfig(appId, elementId);
         if (configRes.code === 200 && configRes.data) {
           setConfig(configRes.data);
           
@@ -49,13 +48,29 @@ export default function Table() {
               console.error('解析func字段失败:', e);
             }
           }
+
+          // 如果有menuItem配置,合并配置
+          if (menuItem?.configuration) {
+            try {
+              const menuConfig = JSON.parse(menuItem.configuration);
+              if (menuConfig.func) {
+                setFunc(prevFunc => ({
+                  ...prevFunc,
+                  ...menuConfig.func
+                }));
+              }
+            } catch (e) {
+              console.error('解析菜单配置失败:', e);
+              message.warning('菜单配置格式错误,将使用默认配置');
+            }
+          }
         } else {
           message.error('获取表格配置失败');
           return;
         }
 
         // 获取表格数据
-        const dataRes = await getTableData(id);
+        const dataRes = await getTableData(appId, elementId);
         if (dataRes.code === 200 && dataRes.data) {
           // 确保每条数据都有id字段
           const processedData = dataRes.data.map((item, index) => ({
@@ -123,7 +138,7 @@ export default function Table() {
     };
 
     loadData();
-  }, [id]);
+  }, [elementId, appId, menuItem]);
 
   return (
     <div style={{ padding: '24px' }}>
@@ -140,4 +155,6 @@ export default function Table() {
       />
     </div>
   );
-}
+};
+
+export default Table;

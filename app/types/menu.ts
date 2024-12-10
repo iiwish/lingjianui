@@ -12,6 +12,7 @@ export interface Menu {
   sort: number;
   status: number;
   node_id: string;
+  configuration?: string; // 添加配置字段
   created_at?: string;
   updated_at?: string;
   creator_id: number;

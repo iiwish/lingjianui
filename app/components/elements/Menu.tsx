@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Menu as AntMenu, Spin, message } from 'antd';
 import type { MenuProps } from 'antd';
-import { useParams } from '@remix-run/react';
+import { useNavigate } from '@remix-run/react';
 import {
   FolderOutlined,
   TableOutlined,
@@ -16,6 +16,9 @@ import {
   type MenuConfig,
   type MenuItem as ElementMenuItem 
 } from '~/services/element';
+import type { ElementProps } from '~/types/element';
+import { useAppDispatch } from '~/stores';
+import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
 
 type AntMenuItem = Required<MenuProps>['items'][number];
 
@@ -29,11 +32,22 @@ const iconMap: { [key: string]: React.ReactNode } = {
   'form': <FormOutlined />,
 };
 
-export default function Menu() {
-  const { id } = useParams();
+// 菜单类型到路由类型的映射
+const menuTypeToRouteType: { [key: string]: string } = {
+  'table': '2',
+  'dim': '3',
+  'menu': '4',
+  'model': '5',
+  'form': '6',
+};
+
+const Menu: React.FC<ElementProps> = ({ elementId, appId }) => {
+  const navigate = useNavigate();
+  const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<MenuConfig | null>(null);
   const [menuItems, setMenuItems] = useState<AntMenuItem[]>([]);
+  const [menuData, setMenuData] = useState<ElementMenuItem[]>([]);
 
   // 将菜单数据转换为antd Menu组件需要的格式
   const transformToMenuItems = (items: ElementMenuItem[]): AntMenuItem[] => {
@@ -46,15 +60,59 @@ export default function Menu() {
     }));
   };
 
+  // 根据菜单项key查找原始菜单数据
+  const findMenuItem = (items: ElementMenuItem[], key: string): ElementMenuItem | null => {
+    for (const item of items) {
+      if (item.id.toString() === key) {
+        return item;
+      }
+      if (item.children) {
+        const found = findMenuItem(item.children, key);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // 处理菜单项点击
+  const handleMenuClick: MenuProps['onClick'] = ({ key }) => {
+    const menuItem = findMenuItem(menuData, key);
+    if (!menuItem) return;
+
+    // 如果是文件夹类型,不做任何处理(让它展开/折叠)
+    if (menuItem.menu_type === 'folder') return;
+
+    // 获取路由类型
+    const routeType = menuTypeToRouteType[menuItem.menu_type];
+    if (!routeType) {
+      message.error('不支持的菜单类型');
+      return;
+    }
+
+    // 构建路由路径
+    const path = `/dashboard/${appId}/element/${routeType}/${menuItem.id}`;
+
+    // 添加并激活tab
+    dispatch(addTab({
+      key: path,
+      title: menuItem.menu_name,
+      closable: true
+    }));
+    dispatch(setActiveTab(path));
+
+    // 导航到对应路由
+    navigate(path);
+  };
+
   useEffect(() => {
     const loadData = async () => {
-      if (!id) return;
+      if (!elementId || !appId) return;
 
       try {
         setLoading(true);
 
         // 获取菜单配置
-        const configRes = await getMenuConfig(id);
+        const configRes = await getMenuConfig(appId, elementId);
         if (configRes.code === 200 && configRes.data) {
           setConfig(configRes.data);
         } else {
@@ -63,8 +121,9 @@ export default function Menu() {
         }
 
         // 获取菜单数据
-        const dataRes = await getMenuData(id);
+        const dataRes = await getMenuData(appId, elementId);
         if (dataRes.code === 200 && Array.isArray(dataRes.data)) {
+          setMenuData(dataRes.data);
           const items = transformToMenuItems(dataRes.data);
           setMenuItems(items);
         } else {
@@ -79,7 +138,7 @@ export default function Menu() {
     };
 
     loadData();
-  }, [id]);
+  }, [elementId, appId]);
 
   if (loading) {
     return (
@@ -101,8 +160,11 @@ export default function Menu() {
         mode="inline"
         items={menuItems}
         defaultOpenKeys={menuItems.map(item => item?.key?.toString() || '')}
+        onClick={handleMenuClick}
         style={{ width: '100%' }}
       />
     </div>
   );
-}
+};
+
+export default Menu;

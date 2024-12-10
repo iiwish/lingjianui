@@ -1,16 +1,15 @@
 import React, { useEffect, useState } from 'react';
 import { Tree, Spin, message } from 'antd';
 import type { DataNode } from 'antd/es/tree';
-import { useParams } from '@remix-run/react';
 import { 
   getDimensionConfig, 
   getDimensionData,
   type DimensionConfig,
   type DimensionItem 
 } from '~/services/element';
+import type { ElementProps } from '~/types/element';
 
-export default function Dimension() {
-  const { id } = useParams();
+const Dimension: React.FC<ElementProps> = ({ elementId, appId }) => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<DimensionConfig | null>(null);
   const [treeData, setTreeData] = useState<DataNode[]>([]);
@@ -26,13 +25,13 @@ export default function Dimension() {
 
   useEffect(() => {
     const loadData = async () => {
-      if (!id) return;
+      if (!elementId || !appId) return;
 
       try {
         setLoading(true);
 
         // 获取维度配置
-        const configRes = await getDimensionConfig(id);
+        const configRes = await getDimensionConfig(appId, elementId);
         if (configRes.code === 200 && configRes.data) {
           setConfig(configRes.data);
         } else {
@@ -41,7 +40,7 @@ export default function Dimension() {
         }
 
         // 获取维度数据
-        const dataRes = await getDimensionData(id);
+        const dataRes = await getDimensionData(appId, elementId);
         if (dataRes.code === 200 && Array.isArray(dataRes.data)) {
           const treeData = transformToTreeData(dataRes.data);
           setTreeData(treeData);
@@ -57,7 +56,7 @@ export default function Dimension() {
     };
 
     loadData();
-  }, [id]);
+  }, [elementId, appId]);
 
   if (loading) {
     return (
@@ -83,4 +82,6 @@ export default function Dimension() {
       />
     </div>
   );
-}
+};
+
+export default Dimension;
