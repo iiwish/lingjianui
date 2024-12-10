@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useParams } from '@remix-run/react';
+import { useParams, Outlet } from '@remix-run/react';
 import { Spin, message } from 'antd';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { setCurrentApp, setLoading, setError } from '~/stores/slices/appSlice';
@@ -84,6 +84,8 @@ export default function AppDetail() {
           <p style={{ margin: 0, color: '#666' }}>{currentApp.description}</p>
         </div>
       </div>
+      {/* 添加Outlet组件来渲染子路由 */}
+      <Outlet />
     </div>
   );
 }

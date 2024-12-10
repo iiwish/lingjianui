@@ -21,23 +21,18 @@ const ELEMENT_TYPES = {
     '6': Form,
 } as const;
 
-// 路由类型到菜单类型的映射
-const routeTypeToMenuType: { [key: string]: string } = {
-  '2': 'table',
-  '3': 'dim',
-  '4': 'menu',
-  '5': 'model',
-  '6': 'form',
-};
-
 const ElementRoute: React.FC = () => {
     const params = useParams();
     const { type, id, appId } = params;
     const dispatch = useAppDispatch();
     const { menus, loading, error } = useAppSelector((state) => state.menu);
 
+    console.log('ElementRoute params:', { type, id, appId });
+    console.log('Current menus:', menus);
+
     // 如果必要参数不存在,显示404
     if (!type || !id || !appId || !(type in ELEMENT_TYPES)) {
+        console.log('Missing required params or invalid type');
         return (
             <Result
                 status="404"
@@ -71,10 +66,11 @@ const ElementRoute: React.FC = () => {
     }
 
     // 在菜单数据中查找对应的菜单项
-    const menuType = routeTypeToMenuType[type];
     const findMenuItem = (menus: any[]): any | null => {
         for (const menu of menus) {
-            if (menu.source_id?.toString() === id && menu.menu_type === menuType) {
+            // 直接比较menu_type和type，因为都是字符串类型的数字
+            if (menu.source_id?.toString() === id && menu.menu_type === type) {
+                console.log('Found matching menu item:', menu);
                 return menu;
             }
             if (menu.children) {
@@ -94,6 +90,7 @@ const ElementRoute: React.FC = () => {
             if (found) {
                 foundMenuItem = found;
                 foundGroup = group;
+                console.log('Found menu item in group:', group.menu_name);
                 break;
             }
         }
@@ -101,6 +98,7 @@ const ElementRoute: React.FC = () => {
 
     // 如果找不到对应的菜单项,显示404
     if (!foundMenuItem) {
+        console.log('Menu item not found');
         return (
             <Result
                 status="404"
@@ -122,6 +120,16 @@ const ElementRoute: React.FC = () => {
         dispatch(setActiveTab(menuPath));
     }
 
+    // 生成唯一的key,确保组件在参数变化时重新渲染
+    const elementKey = `${appId}-${type}-${id}`;
+
+    console.log('Rendering ElementComponent with props:', {
+        elementId: id,
+        elementType: type,
+        appId,
+        menuItem: foundMenuItem
+    });
+
     return (
         <Suspense
             fallback={
@@ -132,6 +140,7 @@ const ElementRoute: React.FC = () => {
         >
             <ErrorBoundary>
                 <ElementComponent 
+                    key={elementKey}
                     elementId={id} 
                     elementType={type} 
                     appId={appId}

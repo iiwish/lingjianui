@@ -25,14 +25,20 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, menuItem }) => {
   const [func, setFunc] = useState<TableFunc | null>(null);
   const [data, setData] = useState<DataType[]>([]);
   const [columns, setColumns] = useState<ColumnsType<DataType>>([]);
+  const [error, setError] = useState<string | null>(null);
 
   // 加载表格配置和数据
   useEffect(() => {
     const loadData = async () => {
-      if (!elementId || !appId) return;
+      if (!elementId || !appId) {
+        setError('缺少必要参数');
+        return;
+      }
       
       try {
         setLoading(true);
+        setError(null);
+        console.log('Loading table data for elementId:', elementId, 'appId:', appId);
         
         // 获取表格配置
         const configRes = await getTableConfig(appId, elementId);
@@ -65,8 +71,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, menuItem }) => {
             }
           }
         } else {
-          message.error('获取表格配置失败');
-          return;
+          throw new Error(configRes.message || '获取表格配置失败');
         }
 
         // 获取表格数据
@@ -127,10 +132,11 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, menuItem }) => {
             setColumns(cols);
           }
         } else {
-          message.error('获取表格数据失败');
+          throw new Error(dataRes.message || '获取表格数据失败');
         }
       } catch (error) {
         console.error('加载表格数据失败:', error);
+        setError(error instanceof Error ? error.message : '加载表格数据失败');
         message.error('加载表格数据失败');
       } finally {
         setLoading(false);
@@ -138,7 +144,11 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, menuItem }) => {
     };
 
     loadData();
-  }, [elementId, appId, menuItem]);
+  }, [elementId, appId, menuItem]); // 移除其他不必要的依赖
+
+  if (error) {
+    return <div style={{ padding: '24px', color: 'red' }}>{error}</div>;
+  }
 
   return (
     <div style={{ padding: '24px' }}>
