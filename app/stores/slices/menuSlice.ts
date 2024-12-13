@@ -1,5 +1,6 @@
-import { createSlice, PayloadAction } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import type { Menu } from '~/types/menu';
+import { MenuService } from '~/services/menu';
 
 interface MenuState {
   menus: Menu[];
@@ -14,6 +15,15 @@ const initialState: MenuState = {
   loading: false,
   error: null,
 };
+
+// 获取菜单配置列表
+export const fetchMenus = createAsyncThunk(
+  'menu/fetchMenus',
+  async (appId: number) => {
+    const response = await MenuService.getMenus(appId.toString());
+    return response;
+  }
+);
 
 const menuSlice = createSlice({
   name: 'menu',
@@ -40,6 +50,21 @@ const menuSlice = createSlice({
       state.currentMenuGroup = null;
       state.error = null;
     },
+  },
+  extraReducers: (builder) => {
+    builder
+    .addCase(fetchMenus.pending, (state) => {
+      state.loading = true;
+      state.error = null;
+    })
+    .addCase(fetchMenus.fulfilled, (state, action) => {
+      state.loading = false;
+      state.menus = action.payload.data.items;
+    })
+    .addCase(fetchMenus.rejected, (state, action) => {
+      state.loading = false;
+      state.error = action.error.message || '获取菜单配置列表失败';
+    });
   },
 });
 

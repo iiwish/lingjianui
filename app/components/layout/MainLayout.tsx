@@ -11,8 +11,8 @@ import {
 import { useNavigate, useLocation } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
-import { fetchMenus } from '~/stores/slices/configSlice';
-import type { MenuConfig } from '~/types/api';
+import { fetchMenus } from '~/stores/slices/menuSlice'; // 更新导入路径
+import type { Menu as MenuType } from '~/types/menu'; // 更新导入路径
 
 const { Header, Sider, Content } = Layout;
 
@@ -35,7 +35,7 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const { user } = useAppSelector((state) => state.auth);
   const { currentApp } = useAppSelector((state) => state.app);
-  const { menus, loading } = useAppSelector((state) => state.config);
+  const { menus, loading } = useAppSelector((state) => state.menu); // 更新state路径
 
   // 加载菜单数据
   useEffect(() => {
@@ -60,34 +60,34 @@ export default function MainLayout({ children }: MainLayoutProps) {
   };
 
   // 转换菜单数据为Antd Menu项
-  const transformMenus = (menus: MenuConfig[]): MenuItem[] => {
-    const menuMap = new Map<number, MenuConfig>();
-    const rootMenus: MenuConfig[] = [];
+  const transformMenus = (menus: MenuType[]): MenuItem[] => {
+    const menuMap = new Map<number, MenuType>();
+    const rootMenus: MenuType[] = [];
 
     // 构建菜单映射
     menus.forEach(menu => {
       menuMap.set(menu.id, menu);
-      if (!menu.parentId) {
+      if (!menu.parent_id) {
         rootMenus.push(menu);
       }
     });
 
     // 递归构建菜单树
-    const buildMenuTree = (menuItem: MenuConfig): MenuItem => {
-      const children = menus.filter(m => m.parentId === menuItem.id);
+    const buildMenuTree = (menuItem: MenuType): MenuItem => {
+      const children = menus.filter(m => m.parent_id === menuItem.id);
       
       if (children.length === 0) {
         return {
           key: menuItem.path,
           icon: menuItem.icon ? React.createElement(AppstoreOutlined) : null,
-          label: menuItem.name,
+          label: menuItem.menu_name,
         };
       }
 
       return {
         key: menuItem.path,
         icon: menuItem.icon ? React.createElement(AppstoreOutlined) : null,
-        label: menuItem.name,
+        label: menuItem.menu_name,
         children: children.map(child => buildMenuTree(child)),
       };
     };

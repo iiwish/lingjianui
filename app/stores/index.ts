@@ -5,7 +5,6 @@ import { persistStore, persistReducer } from 'redux-persist';
 import storage from './storage';
 import authReducer from './slices/authSlice';
 import appReducer from './slices/appSlice';
-import configReducer from './slices/configSlice';
 import tabReducer from './slices/tabSlice';
 import menuReducer from './slices/menuSlice';
 
@@ -25,7 +24,6 @@ export const store = configureStore({
   reducer: {
     auth: persistedAuthReducer,
     app: appReducer,
-    config: configReducer,
     tab: tabReducer,
     menu: menuReducer,
   },
