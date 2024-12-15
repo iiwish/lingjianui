@@ -24,7 +24,12 @@ const tabSlice = createSlice({
         state.tabs.splice(index, 1);
         // 如果关闭的是当前激活的tab,切换到前一个tab
         if (action.payload === state.activeKey) {
-          state.activeKey = state.tabs[Math.max(0, index - 1)]?.key || '';
+          if (state.tabs.length > 0) {
+            const newIndex = index === 0 ? 0 : index - 1;
+            state.activeKey = state.tabs[newIndex].key;
+          } else {
+            state.activeKey = '';
+          }
         }
       }
     },

@@ -1,4 +1,4 @@
-import React, { Suspense } from 'react';
+import React, { Suspense, useEffect } from 'react';
 import { useParams } from '@remix-run/react';
 import { Result, Spin } from 'antd';
 import { useAppDispatch, useAppSelector } from '~/stores';
@@ -27,12 +27,8 @@ const ElementRoute: React.FC = () => {
     const dispatch = useAppDispatch();
     const { menus, loading, error } = useAppSelector((state) => state.menu);
 
-    console.log('ElementRoute params:', { type, id, appId });
-    console.log('Current menus:', menus);
-
     // 如果必要参数不存在,显示404
     if (!type || !id || !appId || !(type in ELEMENT_TYPES)) {
-        console.log('Missing required params or invalid type');
         return (
             <Result
                 status="404"
@@ -44,6 +40,49 @@ const ElementRoute: React.FC = () => {
 
     // 获取对应的组件
     const ElementComponent = ELEMENT_TYPES[type as keyof typeof ELEMENT_TYPES];
+
+    // 在菜单数据中查找对应的菜单项
+    const findMenuItem = (menus: any[]): any | null => {
+        for (const menu of menus) {
+            // 直接比较menu_type和type，因为都是字符串类型的数字
+            if (menu.source_id?.toString() === id && menu.menu_type === type) {
+                return menu;
+            }
+            if (menu.children) {
+                const found = findMenuItem(menu.children);
+                if (found) return found;
+            }
+        }
+        return null;
+    };
+
+    // 遍历所有菜单组查找
+    let foundMenuItem = null;
+    let foundGroup = null;
+    for (const group of menus) {
+        if (group.children) {
+            const found = findMenuItem(group.children);
+            if (found) {
+                foundMenuItem = found;
+                foundGroup = group;
+                break;
+            }
+        }
+    }
+
+    // 设置当前菜单组和tab
+    useEffect(() => {
+        if (foundGroup) {
+            dispatch(setCurrentMenuGroup(foundGroup));
+            const menuPath = `/dashboard/${appId}/element/${type}/${id}`;
+            dispatch(addTab({
+                key: menuPath,
+                title: foundMenuItem.menu_name,
+                closable: true
+            }));
+            dispatch(setActiveTab(menuPath));
+        }
+    }, [foundGroup, appId, type, id, dispatch]);
 
     // 如果正在加载菜单数据,显示加载状态
     if (loading) {
@@ -65,37 +104,6 @@ const ElementRoute: React.FC = () => {
         );
     }
 
-    // 在菜单数据中查找对应的菜单项
-    const findMenuItem = (menus: any[]): any | null => {
-        for (const menu of menus) {
-            // 直接比较menu_type和type，因为都是字符串类型的数字
-            if (menu.source_id?.toString() === id && menu.menu_type === type) {
-                console.log('Found matching menu item:', menu);
-                return menu;
-            }
-            if (menu.children) {
-                const found = findMenuItem(menu.children);
-                if (found) return found;
-            }
-        }
-        return null;
-    };
-
-    // 遍历所有菜单组查找
-    let foundMenuItem = null;
-    let foundGroup = null;
-    for (const group of menus) {
-        if (group.children) {
-            const found = findMenuItem(group.children);
-            if (found) {
-                foundMenuItem = found;
-                foundGroup = group;
-                console.log('Found menu item in group:', group.menu_name);
-                break;
-            }
-        }
-    }
-
     // 如果找不到对应的菜单项,显示404
     if (!foundMenuItem) {
         console.log('Menu item not found');
@@ -106,18 +114,6 @@ const ElementRoute: React.FC = () => {
                 subTitle="找不到对应的菜单项"
             />
         );
-    }
-
-    // 设置当前菜单组和tab
-    if (foundGroup) {
-        dispatch(setCurrentMenuGroup(foundGroup));
-        const menuPath = `/dashboard/${appId}/element/${type}/${id}`;
-        dispatch(addTab({
-            key: menuPath,
-            title: foundMenuItem.menu_name,
-            closable: true
-        }));
-        dispatch(setActiveTab(menuPath));
     }
 
     // 生成唯一的key,确保组件在参数变化时重新渲染

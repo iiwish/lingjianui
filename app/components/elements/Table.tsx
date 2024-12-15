@@ -113,7 +113,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
         const dataRes = await getTableData(elementId);
         if (dataRes.code === 200 && dataRes.data) {
           // 确保每条数据都有id字段
-          const processedData = dataRes.data.items.map((item, index) => ({
+          const processedData = (dataRes.data.items || []).map((item, index) => ({
             id: item.id || `row-${index}`,
             ...item
           }));
@@ -216,7 +216,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
   }
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '0px' }}>
       <Button type="primary" onClick={handleAdd} style={{ marginBottom: 16 }}>
         新增
       </Button>
@@ -247,7 +247,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
       />
       <Modal
         title={editingRecord ? '编辑记录' : '新增记录'}
-        visible={isModalVisible}
+        open={isModalVisible}
         onOk={handleOk}
         onCancel={handleCancel}
       >
