@@ -1,17 +1,48 @@
-import { get } from '~/utils/http';
+import { get,put,post,del } from '~/utils/http';
 
+// 数据表配置信息
 export interface TableConfig {
-  id: number;
+  app_id: number;
   table_name: string;
   display_name: string;
   description: string;
   func?: string;
-  app_id: number;
-  status: number;
-  created_at: string;
-  updated_at: string;
-  creator_id: number;
-  updater_id: number;
+  fields: FieldConfig[];
+  indexes: IndexConfig[];
+}
+
+export interface FieldConfig {
+  name: string;
+  comment: string;
+  type: string;
+  sort: number;
+  primary_key?: boolean;
+  auto_increment?: boolean;
+  not_null?: boolean;
+  default?: string;
+}
+
+export interface IndexConfig {
+  name: string;
+  type: string;
+  fields: string[];
+}
+
+// 数据表数据
+interface TableData {
+  items: Array<{ [key: string]: any }>;
+  page: number;
+  pageSize: number;
+  total: number;
+}
+
+// 创建数据表记录请求参数
+export type CreateTableItemsRequest = Array<Record<string, any>>;
+
+// 更新数据表记录请求参数
+export interface UpdateTableItemsRequest {
+  primary_key_columns: string[]; // 主键列名列表
+  items: Array<Record<string, any>>; // 要更新的数据表记录
 }
 
 export interface DimensionConfig {
@@ -164,14 +195,30 @@ export interface ApiResponse<T> {
 }
 
 // 获取表格配置
-export const getTableConfig = async (appId: string, tableId: string): Promise<ApiResponse<TableConfig>> => {
+export const getTableConfig = async (tableId: string): Promise<ApiResponse<TableConfig>> => {
   return get(`/config/tables/${tableId}`);
 };
 
 // 获取表格数据
-export const getTableData = async (appId: string, tableId: string): Promise<ApiResponse<Record<string, any>[]>> => {
-  return get(`/config/tables/${tableId}/items`,);
+export const getTableData = async (tableId: string): Promise<ApiResponse<TableData>> => {
+  return get(`/table/${tableId}`);
 };
+
+// 创建数据表记录
+export const createTableItems = async (tableId: string, request: CreateTableItemsRequest): Promise<ApiResponse<null>> => {
+  return post(`/table/${tableId}`, request);
+};
+
+// 更新数据表记录
+export const updateTableItems = async (tableId: string, request: UpdateTableItemsRequest): Promise<ApiResponse<null>> => {
+  return put(`/table/${tableId}`, request);
+};
+
+// 批量删除数据表记录
+export const deleteTableItems = async (tableId: string, request: CreateTableItemsRequest): Promise<ApiResponse<null>> => {
+  return del(`/table/${tableId}`, request);
+};
+
 
 // 获取维度配置
 export const getDimensionConfig = async (appId: string, dimId: string): Promise<ApiResponse<DimensionConfig>> => {
