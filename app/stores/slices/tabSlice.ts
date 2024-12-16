@@ -20,16 +20,28 @@ const tabSlice = createSlice({
     },
     removeTab: (state, action: PayloadAction<string>) => {
       const index = state.tabs.findIndex(tab => tab.key === action.payload);
+      console.log('removeTab', index);
       if (index > -1) {
-        state.tabs.splice(index, 1);
-        // 如果关闭的是当前激活的tab,切换到前一个tab
-        if (action.payload === state.activeKey) {
-          if (state.tabs.length > 0) {
-            const newIndex = index === 0 ? 0 : index - 1;
-            state.activeKey = state.tabs[newIndex].key;
-          } else {
-            state.activeKey = '';
+        console.log('removeTab', action.payload);
+        // 检查tabs是否为null或undefined
+        if (state.tabs) {
+          // 打印tabs内容
+          console.log('tabs before splice', JSON.stringify(state.tabs));
+          state.tabs.splice(index, 1);
+          console.log('tabs after splice', JSON.stringify(state.tabs));
+          // 如果关闭的是当前激活的tab,切换到前一个tab
+          if (action.payload === state.activeKey) {
+            if (state.tabs.length > 0) {
+              const newIndex = index === 0 ? 0 : index - 1;
+              state.activeKey = state.tabs[newIndex].key;
+              console.log('new activeKey', state.activeKey);
+            } else {
+              state.activeKey = '';
+              console.log('no tabs left, activeKey set to empty');
+            }
           }
+        } else {
+          console.log('state.tabs is null or undefined');
         }
       }
     },

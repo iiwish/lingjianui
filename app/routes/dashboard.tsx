@@ -7,12 +7,13 @@ import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
 import { setCurrentApp } from '~/stores/slices/appSlice';
 import { AppService } from '~/services/app';
 import { message } from 'antd';
- 
+
 export default function Dashboard() {
   const location = useLocation();
   const dispatch = useAppDispatch();
-  const { tabs } = useAppSelector(state => state.tab);
-  const { currentApp } = useAppSelector(state => state.app);
+  const tabs = useAppSelector(state => state.tab.tabs);
+  const activeKey = useAppSelector(state => state.tab.activeKey);
+  const currentApp = useAppSelector(state => state.app.currentApp);
 
   useEffect(() => {
     const loadApp = async (appId: string) => {
@@ -49,7 +50,15 @@ export default function Dashboard() {
       dispatch(setActiveTab('/dashboard'));
     }
   }, [dispatch, location.pathname, tabs, currentApp]);
-    
+
+  useEffect(() => {
+    console.log('activeKey changed:', activeKey);
+  }, [activeKey]);
+
+  useEffect(() => {
+    console.log('Dashboard component re-rendered');
+  });
+
   // 如果是根路径,渲染AppList
   if (location.pathname === '/dashboard') {
     return (
@@ -60,7 +69,7 @@ export default function Dashboard() {
       </MainLayout>
     );
   }
-      
+
   // 其他路由使用Outlet
   return (
     <MainLayout>

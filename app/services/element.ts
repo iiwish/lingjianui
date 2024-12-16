@@ -200,8 +200,8 @@ export const getTableConfig = async (tableId: string): Promise<ApiResponse<Table
 };
 
 // 获取表格数据
-export const getTableData = async (tableId: string): Promise<ApiResponse<TableData>> => {
-  return get(`/table/${tableId}`);
+export const getTableData = async (tableId: string, page: number, page_size: number): Promise<ApiResponse<TableData>> => {
+  return get(`/table/${tableId}`, { page, page_size });
 };
 
 // 创建数据表记录

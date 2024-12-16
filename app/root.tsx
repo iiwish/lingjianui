@@ -33,7 +33,7 @@ function AppWithAuth() {
 
   useEffect(() => {
     const { token, user } = auth;
-    console.log('Current auth state:', { token, user, path: location.pathname });
+    // console.log('Current auth state:', { token, user, path: location.pathname });
     
     // 修改路由判断逻辑
     if (!token && location.pathname !== '/login') {
