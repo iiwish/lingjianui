@@ -2,7 +2,6 @@ import React from 'react';
 import { Modal, Form, Input, Switch, message } from 'antd';
 import { AppService } from '~/services/app';
 import type { App } from '~/types/app';
-import { c } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
 import AppForm from './AppForm';
 
 interface AppSettingsModalProps {

@@ -2,7 +2,7 @@ import React from 'react';
 import { useParams } from '@remix-run/react';
 import TabContent from '~/components/layout/TabContent';
 
-const ElementRoute: React.FC = () => {
+const ConfigRoute: React.FC = () => {
   const params = useParams();
   const { type, id, appId } = params;
 
@@ -12,7 +12,7 @@ const ElementRoute: React.FC = () => {
 
   return (
     <TabContent
-      type="element"
+      type="config"
       elementType={type}
       elementId={id}
       appId={appId}
@@ -20,4 +20,4 @@ const ElementRoute: React.FC = () => {
   );
 };
 
-export default ElementRoute;
+export default ConfigRoute;

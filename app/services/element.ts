@@ -199,6 +199,26 @@ export const getTableConfig = async (tableId: string): Promise<ApiResponse<Table
   return get(`/config/tables/${tableId}`);
 };
 
+// 更新表格基础信息
+export const updateTableConfig = async (tableId: string, config: Partial<TableConfig>): Promise<ApiResponse<null>> => {
+  return put(`/config/tables/${tableId}`, config);
+};
+
+// 更新表格字段
+export const updateTableFields = async (tableId: string, fields: FieldConfig[]): Promise<ApiResponse<null>> => {
+  return put(`/config/tables/${tableId}/fields`, { fields });
+};
+
+// 更新表格索引
+export const updateTableIndexes = async (tableId: string, indexes: IndexConfig[]): Promise<ApiResponse<null>> => {
+  return put(`/config/tables/${tableId}/indexes`, { indexes });
+};
+
+// 更新表格func配置
+export const updateTableFunc = async (tableId: string, func: string): Promise<ApiResponse<null>> => {
+  return put(`/config/tables/${tableId}/func`, { func });
+};
+
 // 获取表格数据
 export const getTableData = async (tableId: string, page: number, page_size: number): Promise<ApiResponse<TableData>> => {
   return get(`/table/${tableId}`, { page, page_size });

@@ -4,6 +4,10 @@ import type { ColumnsType } from 'antd/es/table';
 import type { Key } from 'react';
 import { getTableConfig, getTableData, createTableItems, updateTableItems, deleteTableItems, type TableConfig } from '~/services/element';
 import type { ElementProps } from '~/types/element';
+import { useDispatch } from 'react-redux';
+import { addTab } from '~/stores/slices/tabSlice';
+import { Authorized } from '~/utils/permission';
+import { useNavigate } from '@remix-run/react';
 
 interface TableFunc {
   filter?: Array<{
@@ -19,7 +23,7 @@ interface DataType {
   [key: string]: any;
 }
 
-const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
+const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<TableConfig | null>(null);
   const [func, setFunc] = useState<TableFunc | null>(null);
@@ -29,10 +33,12 @@ const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [editingRecord, setEditingRecord] = useState<DataType | null>(null);
   const [form] = Form.useForm();
-  const [total, setTotal] = useState(0); // 添加 total 状态
-  const [currentPage, setCurrentPage] = useState(1); // 添加 currentPage 状态
-  const [pageSize, setPageSize] = useState(10); // 添加 pageSize 状态
-  const [tableHeight, setTableHeight] = useState(window.innerHeight - 200); // 添加 tableHeight 状态
+  const [total, setTotal] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [tableHeight, setTableHeight] = useState(window.innerHeight - 200);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   // 监听窗口大小变化
   useEffect(() => {
@@ -135,9 +141,9 @@ const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
           ...item
         }));
         setData(processedData);
-        setTotal(dataRes.data.total); // 设置 total
-        setCurrentPage(page); // 设置当前页
-        setPageSize(size); // 设置每页条数
+        setTotal(dataRes.data.total);
+        setCurrentPage(page);
+        setPageSize(size);
       } else {
         throw new Error(dataRes.message || '获取表格数据失败');
       }
@@ -220,7 +226,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
             ...item
           }));
           setData(processedData);
-          setTotal(dataRes.data.total); // 设置 total
+          setTotal(dataRes.data.total);
         } else {
           throw new Error(dataRes.message || '获取表格数据失败');
         }
@@ -237,15 +243,32 @@ const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
     form.resetFields();
   };
 
+  const handleConfig = () => {
+    const configPath = `/dashboard/${appId}/config/${elementType}/${elementId}`;
+    // 先导航到新的URL
+    navigate(configPath);
+    // 然后添加和激活tab
+    dispatch(addTab({
+      key: configPath,
+      title: `${config?.display_name || '表格'}配置`,
+      closable: true
+    }));
+  };
+
   if (error) {
     return <div style={{ padding: '24px', color: 'red' }}>{error}</div>;
   }
 
   return (
     <div style={{ padding: '0px' }}>
-      <Button type="primary" onClick={handleAdd} style={{ marginBottom: 16 }}>
-        新增
-      </Button>
+      <Space style={{ marginBottom: 16 }}>
+        <Button type="primary" onClick={handleAdd}>
+          新增
+        </Button>
+        <Authorized permission="btn:element_manage">
+          <Button onClick={handleConfig}>配置</Button>
+        </Authorized>
+      </Space>
       <AntTable
         loading={loading}
         columns={[
@@ -264,7 +287,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId }) => {
         ]}
         dataSource={data}
         rowKey="id"
-        scroll={{ x: 1500, y: tableHeight }} // 固定表格的标题栏
+        scroll={{ x: 1500, y: tableHeight }}
         size="small"
         pagination={{
           current: currentPage,
