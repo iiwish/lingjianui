@@ -1,6 +1,5 @@
 import React, { Suspense } from 'react';
 import { Result, Spin } from 'antd';
-import { useLocation } from '@remix-run/react';
 
 // 懒加载组件
 const Table = React.lazy(() => import('~/components/elements/Table'));
@@ -14,7 +13,13 @@ interface Props {
 }
 
 const TabContent: React.FC<Props> = ({ appId, elementId, elementType, type }) => {
-  const location = useLocation();
+  console.log('TabContent render:', {
+    appId,
+    elementId,
+    elementType,
+    type,
+    pathname: window.location.pathname
+  });
 
   // 根据路径类型和元素类型选择要渲染的组件
   const getComponent = () => {
@@ -32,6 +37,7 @@ const TabContent: React.FC<Props> = ({ appId, elementId, elementType, type }) =>
           );
       }
     } else if (type === 'config') {
+      console.log('Rendering config component for type:', elementType);
       switch (elementType) {
         case '2':
           return <TableConfig elementId={elementId} appId={appId} />;

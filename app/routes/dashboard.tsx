@@ -15,6 +15,7 @@ export default function Dashboard() {
   const activeKey = useAppSelector(state => state.tab.activeKey);
   const currentApp = useAppSelector(state => state.app.currentApp);
 
+  // 处理应用信息加载
   useEffect(() => {
     const loadApp = async (appId: string) => {
       try {
@@ -39,25 +40,53 @@ export default function Dashboard() {
     if (appId && appId !== 'undefined' && appId !== currentApp?.id.toString()) {
       loadApp(appId);
     }
+  }, [dispatch, location.pathname, currentApp]);
 
-    // 只在首次渲染时添加tab并设置为激活状态
-    if (location.pathname === '/dashboard' && !tabs.find(tab => tab.key === '/dashboard')) {
-      dispatch(addTab({
-        key: '/dashboard',
-        title: '应用列表',
-        closable: false
-      }));
-      dispatch(setActiveTab('/dashboard'));
+  // 处理tab的添加和激活
+  useEffect(() => {
+    const currentPath = location.pathname;
+    const existingTab = tabs.find(tab => tab.key === currentPath);
+
+    // 如果是dashboard根路径
+    if (currentPath === '/dashboard') {
+      if (!tabs.find(tab => tab.key === '/dashboard')) {
+        dispatch(addTab({
+          key: '/dashboard',
+          title: '应用列表',
+          closable: false
+        }));
+      }
+      // 只有当activeKey不是dashboard时才设置
+      if (activeKey !== '/dashboard') {
+        dispatch(setActiveTab('/dashboard'));
+      }
+      return;
     }
-  }, [dispatch, location.pathname, tabs, currentApp]);
 
-  useEffect(() => {
-    console.log('activeKey changed:', activeKey);
-  }, [activeKey]);
+    // 如果tab不存在，添加新tab
+    if (!existingTab) {
+      let title = '未知页面';
+      const pathType = currentPath.includes('/config/') ? 'config' : 
+                      currentPath.includes('/element/') ? 'element' : null;
 
-  useEffect(() => {
-    console.log('Dashboard component re-rendered');
-  });
+      if (pathType === 'config') {
+        title = '配置页面';
+      } else if (pathType === 'element') {
+        title = '元素页面';
+      }
+      
+      dispatch(addTab({
+        key: currentPath,
+        title,
+        closable: true
+      }));
+    }
+
+    // 只有当activeKey不是当前路径时才设置
+    if (activeKey !== currentPath) {
+      dispatch(setActiveTab(currentPath));
+    }
+  }, [dispatch, location.pathname, tabs]);
 
   // 如果是根路径,渲染AppList
   if (location.pathname === '/dashboard') {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, type ReactNode } from 'react';
-import { Layout, Menu, Spin, Avatar, Dropdown } from 'antd';
+import { Layout, Menu, Spin, Avatar, Dropdown, Tabs } from 'antd';
 import type { MenuProps } from 'antd';
 import {
   MenuFoldOutlined,
@@ -11,8 +11,9 @@ import {
 import { useNavigate, useLocation } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
-import { fetchMenus } from '~/stores/slices/menuSlice'; // 更新导入路径
-import type { Menu as MenuType } from '~/types/menu'; // 更新导入路径
+import { fetchMenus } from '~/stores/slices/menuSlice';
+import { removeTab, setActiveTab } from '~/stores/slices/tabSlice';
+import type { Menu as MenuType } from '~/types/menu';
 
 const { Header, Sider, Content } = Layout;
 
@@ -35,7 +36,8 @@ export default function MainLayout({ children }: MainLayoutProps) {
 
   const { user } = useAppSelector((state) => state.auth);
   const { currentApp } = useAppSelector((state) => state.app);
-  const { menus, loading } = useAppSelector((state) => state.menu); // 更新state路径
+  const { menus, loading } = useAppSelector((state) => state.menu);
+  const { tabs, activeKey } = useAppSelector((state) => state.tab);
 
   // 加载菜单数据
   useEffect(() => {
@@ -56,6 +58,24 @@ export default function MainLayout({ children }: MainLayoutProps) {
       navigate('/login');
     } else if (key === 'profile') {
       navigate('/profile');
+    }
+  };
+
+  // 处理tab切换
+  const handleTabChange = (key: string) => {
+    dispatch(setActiveTab(key));
+    navigate(key);
+  };
+
+  // 处理tab关闭
+  const handleTabEdit = (
+    targetKey: React.MouseEvent | React.KeyboardEvent | string,
+    action: 'add' | 'remove'
+  ) => {
+    if (action === 'remove') {
+      const key = typeof targetKey === 'string' ? targetKey : '';
+      if (!key) return;
+      dispatch(removeTab(key));
     }
   };
 
@@ -156,14 +176,31 @@ export default function MainLayout({ children }: MainLayoutProps) {
           </Dropdown>
         </Header>
         <Content style={{ 
-          margin: '24px 16px', 
-          padding: '24px', 
-          background: '#fff', 
-          minHeight: 280 
+          margin: '24px 16px',
+          background: '#fff',
+          minHeight: 280,
+          display: 'flex',
+          flexDirection: 'column'
         }}>
-          <Spin spinning={loading}>
-            {children}
-          </Spin>
+          <Tabs
+            activeKey={activeKey}
+            type="editable-card"
+            hideAdd
+            onChange={handleTabChange}
+            onEdit={handleTabEdit}
+            items={tabs.map(tab => ({
+              key: tab.key,
+              label: tab.title,
+              closable: tab.closable,
+              children: tab.key === activeKey ? (
+                <div style={{ padding: '24px' }}>
+                  <Spin spinning={loading}>
+                    {children}
+                  </Spin>
+                </div>
+              ) : null,
+            }))}
+          />
         </Content>
       </Layout>
     </Layout>

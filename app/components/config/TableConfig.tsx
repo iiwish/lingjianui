@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Tabs, Form, Input, Switch, InputNumber, Select, Button, Space, Table, message, Modal } from 'antd';
+import { Tabs, Form, Input, Switch, InputNumber, Select, Button, Space, Table, message, Modal, Result, Spin } from 'antd';
 import type { TableConfig as ITableConfig, FieldConfig, IndexConfig } from '~/services/element';
 import { getTableConfig, updateTableConfig, updateTableFields, updateTableIndexes, updateTableFunc } from '~/services/element';
 
@@ -32,6 +32,7 @@ const INDEX_TYPES = [
 const TableConfig: React.FC<Props> = ({ elementId, appId }) => {
   const [config, setConfig] = useState<ITableConfig | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const [activeKey, setActiveKey] = useState('1');
   const [form] = Form.useForm();
   const [fieldForm] = Form.useForm();
@@ -42,12 +43,16 @@ const TableConfig: React.FC<Props> = ({ elementId, appId }) => {
 
   useEffect(() => {
     loadConfig();
-  }, [elementId]);
+  }, [elementId, appId]);
 
   const loadConfig = async () => {
     try {
       setLoading(true);
+      setError(null);
+      console.log('Loading config for:', { elementId, appId });
       const res = await getTableConfig(elementId);
+      console.log('Config response:', res);
+      
       if (res.code === 200 && res.data) {
         setConfig(res.data);
         form.setFieldsValue({
@@ -63,13 +68,58 @@ const TableConfig: React.FC<Props> = ({ elementId, appId }) => {
             console.error('解析func字段失败:', e);
           }
         }
+      } else {
+        throw new Error(res.message || '加载配置失败');
       }
     } catch (error) {
+      console.error('加载配置失败:', error);
+      setError(error instanceof Error ? error.message : '加载配置失败');
       message.error('加载配置失败');
     } finally {
       setLoading(false);
     }
   };
+
+  // 如果正在加载，显示加载状态
+  if (loading) {
+    return (
+      <div style={{ padding: '24px', textAlign: 'center' }}>
+        <Spin size="large" tip="加载中..." />
+      </div>
+    );
+  }
+
+  // 如果有错误，显示错误信息
+  if (error) {
+    return (
+      <Result
+        status="error"
+        title="加载失败"
+        subTitle={error}
+        extra={[
+          <Button key="retry" type="primary" onClick={loadConfig}>
+            重试
+          </Button>
+        ]}
+      />
+    );
+  }
+
+  // 如果没有配置数据，显示空状态
+  if (!config) {
+    return (
+      <Result
+        status="warning"
+        title="无数据"
+        subTitle="未找到配置信息"
+        extra={[
+          <Button key="retry" type="primary" onClick={loadConfig}>
+            重试
+          </Button>
+        ]}
+      />
+    );
+  }
 
   const handleSaveBasic = async () => {
     try {
