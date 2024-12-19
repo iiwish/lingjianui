@@ -280,12 +280,29 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // 处理tab关闭
   const handleTabEdit = (targetKey: React.MouseEvent | React.KeyboardEvent | string, action: 'add' | 'remove') => {
     if (action === 'remove' && typeof targetKey === 'string') {
+      const targetIndex = tabs.findIndex(tab => tab.key === targetKey);
       dispatch(removeTab(targetKey));
-      // 如果关闭的是当前标签,切换到最后一个标签
-      if (targetKey === activeKey && tabs.length > 0) {
-        const lastTab = tabs[tabs.length - 1];
-        dispatch(setActiveTab(lastTab.key));
-        navigate(lastTab.key);
+  
+      // 如果关闭的是当前标签
+      if (targetKey === activeKey) {
+        // 如果还有其他tab
+        if (tabs.length > 1) {
+          let newActiveKey;
+          // 优先选择前一个tab
+          if (targetIndex > 0) {
+            newActiveKey = tabs[targetIndex - 1].key;
+          } else {
+            // 如果关闭的是第一个tab，选择下一个tab
+            newActiveKey = tabs[1].key;
+          }
+          dispatch(setActiveTab(newActiveKey));
+          navigate(newActiveKey);
+        } else {
+          // 如果没有其他tab了，设置为空或默认值
+          const defaultKey = '/dashboard';
+          dispatch(setActiveTab(defaultKey));
+          navigate(defaultKey);
+        }
       }
     }
   };

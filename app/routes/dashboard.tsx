@@ -3,7 +3,6 @@ import { Outlet, useLocation } from '@remix-run/react';
 import MainLayout from '~/components/layout/MainLayout';
 import AppList from '~/components/apps/AppList';
 import { useAppDispatch, useAppSelector } from '~/stores';
-import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
 import { setCurrentApp } from '~/stores/slices/appSlice';
 import { AppService } from '~/services/app';
 import { message } from 'antd';
@@ -41,52 +40,6 @@ export default function Dashboard() {
       loadApp(appId);
     }
   }, [dispatch, location.pathname, currentApp]);
-
-  // 处理tab的添加和激活
-  useEffect(() => {
-    const currentPath = location.pathname;
-    const existingTab = tabs.find(tab => tab.key === currentPath);
-
-    // 如果是dashboard根路径
-    if (currentPath === '/dashboard') {
-      if (!tabs.find(tab => tab.key === '/dashboard')) {
-        dispatch(addTab({
-          key: '/dashboard',
-          title: '应用列表',
-          closable: false
-        }));
-      }
-      // 只有当activeKey不是dashboard时才设置
-      if (activeKey !== '/dashboard') {
-        dispatch(setActiveTab('/dashboard'));
-      }
-      return;
-    }
-
-    // 如果tab不存在，添加新tab
-    if (!existingTab) {
-      let title = '未知页面';
-      const pathType = currentPath.includes('/config/') ? 'config' : 
-                      currentPath.includes('/element/') ? 'element' : null;
-
-      if (pathType === 'config') {
-        title = '配置页面';
-      } else if (pathType === 'element') {
-        title = '元素页面';
-      }
-      
-      dispatch(addTab({
-        key: currentPath,
-        title,
-        closable: true
-      }));
-    }
-
-    // 只有当activeKey不是当前路径时才设置
-    if (activeKey !== currentPath) {
-      dispatch(setActiveTab(currentPath));
-    }
-  }, [dispatch, location.pathname, tabs]);
 
   // 如果是根路径,渲染AppList
   if (location.pathname === '/dashboard') {
