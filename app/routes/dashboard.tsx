@@ -1,6 +1,6 @@
 import React, { useEffect } from 'react';
 import { Outlet, useLocation } from '@remix-run/react';
-import MainLayout from '~/components/layouts/MainLayout';
+import MainLayout from '~/components/layout/MainLayout';
 import AppList from '~/components/apps/AppList';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
