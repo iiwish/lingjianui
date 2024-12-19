@@ -12,21 +12,23 @@ interface Props {
 
 // 字段类型选项
 const FIELD_TYPES = [
-  { label: '字符串', value: 'varchar' },
-  { label: '整数', value: 'int' },
-  { label: '小数', value: 'decimal' },
-  { label: '日期', value: 'date' },
-  { label: '日期时间', value: 'datetime' },
-  { label: '布尔', value: 'boolean' },
-  { label: '文本', value: 'text' },
-  { label: 'JSON', value: 'json' },
+  { label: 'varchar', value: 'varchar' },
+  { label: 'int', value: 'int' },
+  { label: 'bigint', value: 'bigint' },
+  { label: 'double', value: 'double' },
+  { label: 'decimal', value: 'decimal' },
+  { label: 'date', value: 'date' },
+  { label: 'datetime', value: 'datetime' },
+  { label: 'boolean', value: 'boolean' },
+  { label: 'text', value: 'text' },
+  { label: 'json', value: 'json' },
 ];
 
 // 索引类型选项
 const INDEX_TYPES = [
-  { label: '普通索引', value: 'normal' },
-  { label: '唯一索引', value: 'unique' },
-  { label: '全文索引', value: 'fulltext' },
+  { label: 'normal', value: 'normal' },
+  { label: 'unique', value: 'unique' },
+  { label: 'fulltext', value: 'fulltext' },
 ];
 
 const TableConfig: React.FC<Props> = ({ elementId, appId }) => {

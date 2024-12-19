@@ -86,13 +86,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     if (appId && currentApp) {
       // 如果已经有菜单数据且appId没变，就不重新获取
       if (menus.length > 0 && menus[0]?.app_id === Number(appId)) {
-        // 如果是元素路由，只更新tab状态
+        // 如果是element或config路由，只更新tab状态
         const pathParts = location.pathname.split('/');
-        if (pathParts.includes('element')) {
+        if (pathParts.includes('element') || pathParts.includes('config')) {
+          const routeType = pathParts[3]; // element或config
           const type = pathParts[4];
           const id = pathParts[5];
           const menuType = routeTypeToMenuType[type];
-          const menuPath = `/dashboard/${appId}/element/${type}/${id}`;
+          const menuPath = `/dashboard/${appId}/${routeType}/${type}/${id}`;
 
           // 在现有菜单中查找对应的菜单项
           const findMenuItem = (menus: AppMenu[]): AppMenu | null => {
@@ -142,12 +143,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               dispatch(setCurrentMenuGroup(menuData[0]));
             }
             
-            // 如果是元素路由,自动打开对应的tab
+            // 如果是element或config路由,自动打开对应的tab
             const pathParts = location.pathname.split('/');
-            if (pathParts.includes('element')) {
+            if (pathParts.includes('element') || pathParts.includes('config')) {
+              const routeType = pathParts[3]; // element或config
               const type = pathParts[4];
               const id = pathParts[5];
-              const menuPath = `/dashboard/${appId}/element/${type}/${id}`;
+              const menuPath = `/dashboard/${appId}/${routeType}/${type}/${id}`;
               
               // 在菜单数据中查找对应的菜单项
               const findMenuItem = (menus: AppMenu[]): AppMenu | null => {
@@ -200,8 +202,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       // 目录类型不生成路径
       return null;
     }
-    // const routeType = menuTypeToRouteType[menu.menu_type];
-    return `/dashboard/${appId}/element/${menu.menu_type}/${menu.source_id}`;
+  // 根据menu_type决定使用element还是config路由
+  const routeType = menu.menu_type === 'config' ? 'config' : 'element';
+  return `/dashboard/${appId}/${routeType}/${menu.menu_type}/${menu.source_id}`;
   };
 
   // 递归构建菜单项
@@ -307,10 +310,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     }
   };
 
-  // 检查当前路径是否为element路由
+  // 检查当前路径是否为element或config路由
   const isElementRoute = (path: string) => {
     const parts = path.split('/');
-    return parts.includes('element');
+    return parts.includes('element') || parts.includes('config');
   };
 
   // 检查当前路径是否为应用首页
