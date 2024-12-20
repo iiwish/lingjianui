@@ -14,7 +14,7 @@ export interface TableConfig {
 export interface FieldConfig {
   name: string;
   comment: string;
-  type: string;
+  column_type: string;
   sort: number;
   primary_key?: boolean;
   auto_increment?: boolean;

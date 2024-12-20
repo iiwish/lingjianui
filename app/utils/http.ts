@@ -179,9 +179,9 @@ export const put = async <T>(
   url: string, 
   data?: unknown,
   config?: AxiosRequestConfig
-): Promise<T> => {
+): Promise<ApiResponse<T>> => {
   const response = await http.put<ApiResponse<T>>(url, data, config);
-  return response.data.data;
+  return response.data;
 };
 
 // 封装DELETE请求
@@ -189,12 +189,12 @@ export const del = async <T>(
   url: string,
   data?: unknown,
   config?: AxiosRequestConfig
-): Promise<T> => {
+): Promise<ApiResponse<T>> => {
   const response = await http.delete<ApiResponse<T>>(url, {
     ...config,
     data: data
   });
-  return response.data.data;
+  return response.data;
 };
 
 // 导出实例
