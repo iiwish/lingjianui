@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
-import { Table as AntTable, Input, Space, message, Button, Modal, Form } from 'antd';
+import { Table as AntTable, Input, Space, message, Button, Modal, Form, Row, Col } from 'antd';
+import FilterArea from './FilterArea';
 import type { ColumnsType } from 'antd/es/table';
-import type { Key } from 'react';
 import { getTableConfig, getTableData, createTableItems, updateTableItems, deleteTableItems, type TableConfig } from '~/services/element';
 import type { ElementProps } from '~/types/element';
 import { useDispatch } from 'react-redux';
@@ -9,11 +9,29 @@ import { addTab } from '~/stores/slices/tabSlice';
 import { Authorized } from '~/utils/permission';
 import { useNavigate } from '@remix-run/react';
 
-interface TableFunc {
-  filter?: Array<{
-    col: string;
-    type: string;
-  }>;
+export interface Condition {
+  field: string;
+  operator: string;
+  value: any;
+}
+
+export interface ConditionGroup {
+  logic: 'AND' | 'OR';
+  conditions: Array<Condition | ConditionGroup>;
+}
+
+export interface OrderBy {
+  field: string;
+  desc: boolean;
+}
+
+export interface TableFunc {
+  queryCondition?: {
+    root: ConditionGroup;
+    orderBy?: OrderBy[];
+    groupBy?: string[];
+  };
+  custom_filter?: boolean;
   query_cols?: string[];
   hide_cols?: string[];
 }
@@ -37,6 +55,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [tableHeight, setTableHeight] = useState(window.innerHeight - 200);
+  const [conditions, setConditions] = useState<any>(null);
   const dispatch = useDispatch();
   const navigate = useNavigate();
 
@@ -52,26 +71,46 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
     };
   }, []);
 
+  // 监听func变化，更新columns
+  useEffect(() => {
+    if (config && func) {
+      const sortedFields = config.fields.sort((a, b) => a.sort - b.sort);
+      const cols: ColumnsType<DataType> = sortedFields
+        .filter(field => !func.hide_cols?.includes(field.name))
+        .map(field => ({
+          title: field.comment,
+          dataIndex: field.name,
+          key: field.name,
+        }));
+      setColumns(cols);
+    }
+  }, [config, func]);
+
   // 加载表格配置和数据
   useEffect(() => {
-    loadData(currentPage, pageSize);
-  }, [elementId, appId, currentPage, pageSize]);
+    loadData(currentPage, pageSize, conditions);
+  }, [elementId, appId, currentPage, pageSize, conditions]);
 
-  const loadData = async (page = 1, size = 10) => {
+  const loadData = async (page = 1, size = 10, conditions?: any) => {
     if (!elementId || !appId) {
       setError('缺少必要参数');
       return;
     }
-
+  
     try {
       setLoading(true);
       setError(null);
-
+  
+      // 构造查询条件
+      const queryCondition = conditions ? {
+        root: conditions
+      } : undefined;
+  
       // 获取表格配置
       const configRes = await getTableConfig(elementId);
       if (configRes.code === 200 && configRes.data) {
         setConfig(configRes.data);
-
+  
         // 解析func字段
         if (configRes.data.func) {
           try {
@@ -81,59 +120,13 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
             console.error('解析func字段失败:', e);
           }
         }
-
-        // 设置列配置
-        const sortedFields = configRes.data.fields.sort((a, b) => a.sort - b.sort);
-        const cols: ColumnsType<DataType> = sortedFields
-          .filter(field => !func?.hide_cols?.includes(field.name))
-          .map(field => {
-            const baseColumn = {
-              title: field.comment,
-              dataIndex: field.name,
-              key: field.name,
-            };
-
-            // 如果是快速查询列,添加筛选功能
-            if (func?.query_cols?.includes(field.name)) {
-              return {
-                ...baseColumn,
-                filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => (
-                  <div style={{ padding: 8 }}>
-                    <Input
-                      placeholder={`搜索 ${field.comment}`}
-                      value={selectedKeys[0]}
-                      onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
-                      onPressEnter={() => confirm()}
-                      style={{ width: 188, marginBottom: 8, display: 'block' }}
-                    />
-                    <Space>
-                      <a onClick={() => confirm()}>确定</a>
-                      <a onClick={() => clearFilters && clearFilters()}>重置</a>
-                    </Space>
-                  </div>
-                ),
-                onFilter: (value: Key | boolean, record: DataType) => {
-                  const recordValue = record[field.name];
-                  if (recordValue == null) return false;
-                  return recordValue.toString().toLowerCase()
-                    .includes(value.toString().toLowerCase());
-                },
-                filterIcon: (filtered: boolean) => (
-                  <span style={{ color: filtered ? '#1890ff' : undefined }}>🔍</span>
-                )
-              };
-            }
-
-            return baseColumn;
-          });
-        setColumns(cols);
-
+  
       } else {
         throw new Error(configRes.message || '获取表格配置失败');
       }
-
+  
       // 获取表格数据
-      const dataRes = await getTableData(elementId, page, size);
+      const dataRes = await getTableData(elementId, page, size, queryCondition);
       if (dataRes.code === 200 && dataRes.data) {
         // 确保每条数据都有id字段
         const processedData = (dataRes.data.items || []).map((item, index) => ({
@@ -219,7 +212,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
           throw new Error(createRes.message || '新增失败');
         }
         // 重新获取数据
-        const dataRes = await getTableData(elementId, currentPage, pageSize);
+        const dataRes = await getTableData(elementId, currentPage, pageSize, conditions);
         if (dataRes.code === 200 && dataRes.data) {
           const processedData = dataRes.data.items.map((item, index) => ({
             id: item.id || `row-${index}`,
@@ -255,20 +248,65 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
     }));
   };
 
+  const handleGlobalSearch = (value: string) => {
+    if (!value.trim()) {
+      setConditions(null);
+      return;
+    }
+    if (func?.query_cols && func.query_cols.length > 0) {
+      const orConditions = func.query_cols.map(col => ({
+        field: col,
+        operator: 'like',
+        value,
+      }));
+      setConditions({
+        logic: 'OR',
+        conditions: orConditions,
+      });
+      setCurrentPage(1);
+    }
+  };
+
   if (error) {
     return <div style={{ padding: '24px', color: 'red' }}>{error}</div>;
   }
 
   return (
     <div style={{ padding: '0px' }}>
-      <Space style={{ marginBottom: 16 }}>
-        <Button type="primary" onClick={handleAdd}>
-          新增
-        </Button>
-        <Authorized permission="btn:element_manage">
-          <Button onClick={handleConfig}>配置</Button>
-        </Authorized>
-      </Space>
+      <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
+        <Col flex="auto">
+          {config && func && (
+            <FilterArea
+              config={config}
+              func={func}
+              onSearch={(values) => {
+                setConditions(values);
+                setCurrentPage(1);
+              }}
+            />
+          )}
+        </Col>
+        <Col>
+          <Space>
+            {func?.query_cols && func.query_cols.length > 0 && config && (
+              <Input.Search
+                placeholder={`搜索 ${func.query_cols
+                  .map(col => config.fields.find(f => f.name === col)?.comment || col)
+                  .join('/')} 字段`}
+                allowClear
+                onSearch={handleGlobalSearch}
+                style={{ width: 200 }}
+              />
+            )}
+            <Button type="primary" onClick={handleAdd}>
+              新增
+            </Button>
+            <Authorized permission="btn:element_manage">
+              <Button onClick={handleConfig}>配置</Button>
+            </Authorized>
+          </Space>
+        </Col>
+      </Row>
       <AntTable
         loading={loading}
         columns={[
@@ -299,7 +337,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
           onChange: (page, size) => {
             setCurrentPage(page);
             setPageSize(size);
-            loadData(page, size);
+            loadData(page, size, conditions);
           },
         }}
       />
@@ -310,27 +348,29 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
         onCancel={handleCancel}
       >
         <Form form={form} layout="horizontal" labelCol={{ span: 6 }}>
-          {config?.fields.map(field => (
-            <Form.Item
-              key={field.name}
-              name={field.name}
-              label={field.comment}
-              rules={[
-                {
-                  required: field.not_null,
-                  message: `请输入${field.comment}`,
-                  validator: (_, value) => {
-                    if (field.not_null && value === '') {
+          {config?.fields
+            .filter(field => !func?.hide_cols?.includes(field.name)) // 过滤掉在 hide_cols 中的字段
+            .map(field => (
+              <Form.Item
+                key={field.name}
+                name={field.name}
+                label={field.comment}
+                rules={[
+                  {
+                    required: field.not_null,
+                    message: `请输入${field.comment}`,
+                    validator: (_, value) => {
+                      if (field.not_null && value === '') {
+                        return Promise.resolve();
+                      }
                       return Promise.resolve();
                     }
-                    return Promise.resolve();
                   }
-                }
-              ]}
-            >
-              <Input />
-            </Form.Item>
-          ))}
+                ]}
+              >
+                <Input />
+              </Form.Item>
+            ))}
         </Form>
       </Modal>
     </div>

@@ -194,6 +194,22 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface QueryCondition {
+  root: {
+    logic: 'AND' | 'OR';
+    conditions: Array<{
+      field: string;
+      operator: string;
+      value: any;
+    } | QueryCondition>;
+  };
+  order_by?: Array<{
+    field: string;
+    desc: boolean;
+  }>;
+  group_by?: string[];
+}
+
 // 获取表格配置
 export const getTableConfig = async (tableId: string): Promise<ApiResponse<TableConfig>> => {
   return get(`/config/tables/${tableId}`);
@@ -220,8 +236,17 @@ export const updateTableFunc = async (tableId: string, func: string): Promise<Ap
 };
 
 // 获取表格数据
-export const getTableData = async (tableId: string, page: number, page_size: number): Promise<ApiResponse<TableData>> => {
-  return get(`/table/${tableId}`, { page, page_size });
+export const getTableData = async (
+  tableId: string, 
+  page: number, 
+  page_size: number,
+  queryCondition?: QueryCondition
+): Promise<ApiResponse<TableData>> => {
+  return post(`/table/${tableId}/query`, {
+    page,
+    page_size,
+    query: queryCondition
+  });
 };
 
 // 创建数据表记录

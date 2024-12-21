@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Select, Button, message, Row, Col } from 'antd';
+import { Form, Select, Button, message, Row, Col, Switch, Radio, Space, Card } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import { updateTableFunc } from '~/services/element';
 import type { TabComponentProps } from './types';
@@ -19,6 +19,119 @@ const queryTypes = [
   { label: '不在区间', value: 'not_between' },
 ];
 
+const ConditionGroupEditor: React.FC<{
+  namePath: (string | number)[];
+  config: any;
+}> = ({ namePath, config }) => {
+  return (
+    <Card size="small" style={{ marginBottom: 8, border: '1px solid #ddd' }}>
+      <Row gutter={16} align="middle" style={{ marginBottom: 8 }}>
+        <Col flex="0 0 auto">
+          <Form.Item label="逻辑" name={[...namePath, 'logic']} noStyle>
+            <Radio.Group>
+              <Radio value="AND">AND</Radio>
+              <Radio value="OR">OR</Radio>
+            </Radio.Group>
+          </Form.Item>
+        </Col>
+        <Col flex="1 1 auto" style={{ textAlign: 'right' }}>
+          <Form.List name={[...namePath, 'conditions']}>
+            {(fields, { add }) => (
+              <Space>
+                <Button
+                  size="small"
+                  onClick={() => add({ itemType: 'condition' })}
+                  icon={<PlusOutlined />}
+                >
+                  单条条件
+                </Button>
+                <Button
+                  size="small"
+                  onClick={() => add({ itemType: 'group', logic: 'AND', conditions: [] })}
+                  icon={<PlusOutlined />}
+                >
+                  子条件组
+                </Button>
+              </Space>
+            )}
+          </Form.List>
+        </Col>
+      </Row>
+
+      <Form.List name={[...namePath, 'conditions']}>
+        {(fields, { remove }) => (
+          <>
+            {fields.map(({ key, name }) => (
+              <Card
+                size="small"
+                key={key}
+                style={{ marginBottom: 8 }}
+                bodyStyle={{ padding: 8, position: 'relative' }}
+              >
+                <Form.Item name={[name, 'itemType']} initialValue="condition" style={{ marginBottom: 8 }}>
+                  <Radio.Group>
+                    <Radio value="condition">单条条件</Radio>
+                    <Radio value="group">子条件组</Radio>
+                  </Radio.Group>
+                </Form.Item>
+                <Form.Item noStyle shouldUpdate>
+                  {({ getFieldValue }) => {
+                    const itemType = getFieldValue([...namePath, 'conditions', name, 'itemType']);
+                    if (itemType === 'group') {
+                      return (
+                        <ConditionGroupEditor
+                          namePath={[...namePath, 'conditions', name]}
+                          config={config}
+                        />
+                      );
+                    }
+                    return (
+                      <Row gutter={16}>
+                        <Col span={10}>
+                          <Form.Item
+                            name={[name, 'col']}
+                            rules={[{ required: true, message: '请选择筛选列' }]}
+                          >
+                            <Select
+                              placeholder="选择筛选列"
+                              options={config?.fields.map((field: any) => ({
+                                label: field.comment || field.name,
+                                value: field.name,
+                              }))}
+                            />
+                          </Form.Item>
+                        </Col>
+                        <Col span={10}>
+                          <Form.Item
+                            name={[name, 'type']}
+                            rules={[{ required: true, message: '请选择查询类型' }]}
+                          >
+                            <Select placeholder="选择查询类型" options={queryTypes} />
+                          </Form.Item>
+                        </Col>
+                      </Row>
+                    );
+                  }}
+                </Form.Item>
+                <MinusCircleOutlined
+                  style={{
+                    position: 'absolute',
+                    right: 8,
+                    top: 8,
+                    cursor: 'pointer',
+                    fontSize: 16,
+                  }}
+                  onClick={() => remove(name)}
+                />
+              </Card>
+            ))}
+          </>
+        )}
+      </Form.List>
+    </Card>
+  );
+};
+
 const FuncConfig: React.FC<TabComponentProps> = ({ elementId, config, onReload }) => {
   const [form] = Form.useForm();
 
@@ -26,19 +139,32 @@ const FuncConfig: React.FC<TabComponentProps> = ({ elementId, config, onReload }
     if (config.func) {
       try {
         const funcData = JSON.parse(config.func);
+        if (!funcData.queryCondition) {
+          funcData.queryCondition = {
+            root: { logic: 'AND', conditions: [] },
+            orderBy: [],
+            groupBy: []
+          };
+        }
         form.setFieldsValue(funcData);
       } catch (e) {
         console.error('解析func字段失败:', e);
       }
     }
-  }, [config]);
+  }, [config, form]);
 
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
+      if (!values.queryCondition) {
+        values.queryCondition = {
+          root: { logic: 'AND', conditions: [] },
+          orderBy: [],
+          groupBy: []
+        };
+      }
       const funcStr = JSON.stringify(values);
       const res = await updateTableFunc(elementId, funcStr);
-      console.log('保存结果:', res);
       if (res.code === 200) {
         message.success('保存成功');
         onReload();
@@ -52,70 +178,36 @@ const FuncConfig: React.FC<TabComponentProps> = ({ elementId, config, onReload }
 
   return (
     <Form form={form} layout="vertical">
-      <Form.List name="filter">
-        {(fields, { add, remove }) => (
-          <>
-            {fields.map(({ key, name, fieldKey, ...restField }) => (
-              <Row key={key} gutter={16}>
-                <Col span={10}>
-                  <Form.Item
-                    {...restField}
-                    name={[name, 'col']}
-                    rules={[{ required: true, message: '请选择筛选列' }]}
-                  >
-                    <Select
-                      placeholder="选择筛选列"
-                      options={config?.fields.map(field => ({
-                        label: field.comment || field.name,
-                        value: field.name,
-                      }))}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={10}>
-                  <Form.Item
-                    {...restField}
-                    name={[name, 'type']}
-                  >
-                    <Select
-                      placeholder="选择查询类型"
-                      options={queryTypes}
-                    />
-                  </Form.Item>
-                </Col>
-                <Col span={4}>
-                  <MinusCircleOutlined onClick={() => remove(name)} />
-                </Col>
-              </Row>
-            ))}
-            <Form.Item>
-              <Button type="dashed" onClick={() => add()} block icon={<PlusOutlined />}>
-                添加筛选条件
-              </Button>
-            </Form.Item>
-          </>
-        )}
-      </Form.List>
-      <Form.Item label="查询列" name={['query_cols']}>
+      <Form.Item label="查询条件">
+        <ConditionGroupEditor namePath={['queryCondition', 'root']} config={config} />
+      </Form.Item>
+
+      <Form.Item label="允许自定义筛选" name="custom_filter" valuePropName="checked">
+        <Switch />
+      </Form.Item>
+
+      <Form.Item label="查询列" name="query_cols">
         <Select
           mode="multiple"
           placeholder="选择查询列"
-          options={config?.fields.map(field => ({
+          options={config?.fields.map((field: any) => ({
             label: field.comment || field.name,
             value: field.name,
           }))}
         />
       </Form.Item>
-      <Form.Item label="隐藏列" name={['hide_cols']}>
+
+      <Form.Item label="隐藏列" name="hide_cols">
         <Select
           mode="multiple"
           placeholder="选择隐藏列"
-          options={config?.fields.map(field => ({
+          options={config?.fields.map((field: any) => ({
             label: field.comment || field.name,
             value: field.name,
           }))}
         />
       </Form.Item>
+
       <Form.Item>
         <Button type="primary" onClick={handleSave}>
           保存
