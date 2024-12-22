@@ -112,13 +112,16 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
         setConfig(configRes.data);
   
         // 解析func字段
-        if (configRes.data.func) {
+        if (configRes.data.func && configRes.data.func !== '') {
           try {
             const funcData = JSON.parse(configRes.data.func);
             setFunc(funcData);
           } catch (e) {
             console.error('解析func字段失败:', e);
+            setFunc(null);
           }
+        } else {
+          setFunc(null);
         }
   
       } else {
@@ -275,7 +278,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
     <div style={{ padding: '0px' }}>
       <Row justify="space-between" align="middle" style={{ marginBottom: 16 }}>
         <Col flex="auto">
-          {config && func && (
+          {config && func && func?.custom_filter && (
             <FilterArea
               config={config}
               func={func}
@@ -288,7 +291,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
         </Col>
         <Col>
           <Space>
-            {func?.query_cols && func.query_cols.length > 0 && config && (
+            {func && func.query_cols && Array.isArray(func.query_cols) && func.query_cols.length > 0 && config && (
               <Input.Search
                 placeholder={`搜索 ${func.query_cols
                   .map(col => config.fields.find(f => f.name === col)?.comment || col)
