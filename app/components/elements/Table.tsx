@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Table as AntTable, Input, Space, message, Button, Modal, Form, Row, Col } from 'antd';
-import FilterArea from './FilterArea';
+import FilterArea from './common/FilterArea';
 import type { ColumnsType } from 'antd/es/table';
 import { getTableConfig, getTableData, createTableItems, updateTableItems, deleteTableItems, type TableConfig } from '~/services/element';
 import type { ElementProps } from '~/types/element';

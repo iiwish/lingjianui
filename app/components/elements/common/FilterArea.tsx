@@ -2,7 +2,7 @@ import React from 'react';
 import { Form, Select, Input, DatePicker, InputNumber, Space, Button, Row, Col } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import type { TableConfig } from '~/services/element';
-import type { TableFunc } from './Table';
+import type { TableFunc } from '../Table';
 
 const queryTypes = [
   { label: '等于', value: 'eq' },
