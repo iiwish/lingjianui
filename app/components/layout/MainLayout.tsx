@@ -263,6 +263,18 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     const selectedMenu = menus.find(menu => menu.id === Number(menuId));
     if (selectedMenu) {
       dispatch(setCurrentMenuGroup(selectedMenu));
+      
+      // 如果是系统菜单,自动打开folder tab
+      if (selectedMenu.menu_code === '_sys') {
+        const path = `/dashboard/${appId}/element/1/${selectedMenu.id}`;
+        dispatch(addTab({
+          key: path,
+          title: selectedMenu.menu_name,
+          closable: true
+        }));
+        dispatch(setActiveTab(path));
+        navigate(path);
+      }
     }
   };
 

@@ -4,7 +4,21 @@ export interface Tab {
   closable?: boolean;  // 是否可关闭
 }
 
+export interface BreadcrumbItem {
+  id: number;
+  name: string;
+  menu_type: string;
+}
+
+export interface FolderTabState {
+  currentFolder: number | null;
+  breadcrumbs: BreadcrumbItem[];
+}
+
 export interface TabState {
   tabs: Tab[];  // 当前打开的tabs
   activeKey: string;  // 当前激活的tab key
+  tabStates: {
+    [key: string]: FolderTabState;  // 每个tab的状态
+  };
 }

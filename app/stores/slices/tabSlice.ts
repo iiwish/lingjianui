@@ -1,9 +1,10 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Tab, TabState } from '~/types/tab';
+import type { Tab, TabState, FolderTabState } from '~/types/tab';
 
 const initialState: TabState = {
   tabs: [],
-  activeKey: ''
+  activeKey: '',
+  tabStates: {}
 };
 
 const tabSlice = createSlice({
@@ -31,16 +32,23 @@ const tabSlice = createSlice({
 
       // 移除tab
       state.tabs.splice(targetIndex, 1);
-      // console.log('Tabs after removal:', JSON.stringify(state.tabs));
+      // 移除对应的状态
+      delete state.tabStates[targetKey];
     },
     setActiveTab: (state, action: PayloadAction<string>) => {
       // 只有当activeKey不同时才更新
       if (state.activeKey !== action.payload) {
         state.activeKey = action.payload;
       }
+    },
+    updateFolderState: (state, action: PayloadAction<{
+      key: string;
+      state: FolderTabState;
+    }>) => {
+      state.tabStates[action.payload.key] = action.payload.state;
     }
   }
 });
 
-export const { addTab, removeTab, setActiveTab } = tabSlice.actions;
+export const { addTab, removeTab, setActiveTab, updateFolderState } = tabSlice.actions;
 export default tabSlice.reducer;

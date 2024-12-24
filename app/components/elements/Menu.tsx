@@ -5,10 +5,10 @@ import { useNavigate } from '@remix-run/react';
 import {
   FolderOutlined,
   TableOutlined,
-  ContainerOutlined,
+  DeploymentUnitOutlined,
   MenuOutlined,
-  DatabaseOutlined,
-  FormOutlined,
+  PartitionOutlined,
+  SnippetsOutlined,
 } from '@ant-design/icons';
 import { 
   getMenuConfig, 
@@ -26,10 +26,10 @@ type AntMenuItem = Required<MenuProps>['items'][number];
 const iconMap: { [key: string]: React.ReactNode } = {
   'folder': <FolderOutlined />,
   'table': <TableOutlined />,
-  'model': <ContainerOutlined />,
+  'model': <DeploymentUnitOutlined />,
   'menu': <MenuOutlined />,
-  'dim': <DatabaseOutlined />,
-  'form': <FormOutlined />,
+  'dim': <PartitionOutlined />,
+  'form': <SnippetsOutlined />,
 };
 
 // 菜单类型到路由类型的映射

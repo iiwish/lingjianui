@@ -3,6 +3,7 @@ import { Result, Spin } from 'antd';
 
 // 懒加载组件
 const Table = React.lazy(() => import('~/components/elements/Table'));
+const Folder = React.lazy(() => import('~/components/elements/Folder'));
 const TableConfig = React.lazy(() => import('~/components/config/TableConfig'));
 
 interface Props {
@@ -25,6 +26,8 @@ const TabContent: React.FC<Props> = ({ appId, elementId, elementType, type }) =>
   const getComponent = () => {
     if (type === 'element') {
       switch (elementType) {
+        case '1':
+          return <Folder elementId={elementId} appId={appId} />;
         case '2':
           return <Table elementId={elementId} appId={appId} elementType={elementType} />;
         default:
