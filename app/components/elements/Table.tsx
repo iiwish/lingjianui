@@ -72,12 +72,12 @@ const Table: React.FC<ElementProps> = ({ elementId, appCode, elementType }) => {
     };
   }, []);
 
-  // 监听func变化，更新columns
+  // 更新columns
   useEffect(() => {
-    if (config && func) {
+    if (config) {
       const sortedFields = config.fields.sort((a, b) => a.sort - b.sort);
       const cols: ColumnsType<DataType> = sortedFields
-        .filter(field => !func.hide_cols?.includes(field.name))
+        .filter(field => !func?.hide_cols?.includes(field.name))
         .map(field => ({
           title: field.comment,
           dataIndex: field.name,
@@ -85,7 +85,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appCode, elementType }) => {
         }));
       setColumns(cols);
     }
-  }, [config, func]);
+  }, [config, func?.hide_cols]);
 
   // 加载表格配置和数据
   useEffect(() => {

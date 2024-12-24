@@ -1,45 +1,11 @@
 import React, { useState, useRef } from 'react';
-import { Modal, Form, Input, message, Row, Col } from 'antd';
+import { Modal, Form, Input, message, Row, Col, Card } from 'antd';
 import { useNavigate } from '@remix-run/react';
-import { useAppDispatch } from '~/stores';
+import { useAppDispatch, store } from '~/stores';
 import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
 import { MenuService } from '~/services/menu';
 import { routeTypeToMenuType } from '~/constants/elementType';
 import { elementTypes } from '../assets/element-types';
-import styled from '@emotion/styled';
-
-const ElementTypeCard = styled.div`
-  padding: 20px;
-  border: 1px solid #f0f0f0;
-  border-radius: 8px;
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.3s;
-  height: 100%;
-
-  &:hover {
-    border-color: #1890ff;
-    background: #f6f8ff;
-    box-shadow: 0 2px 8px rgba(0,0,0,0.15);
-  }
-
-  .icon {
-    font-size: 32px;
-    margin-bottom: 12px;
-    color: #1890ff;
-  }
-
-  .title {
-    font-size: 16px;
-    font-weight: 500;
-    margin-bottom: 8px;
-  }
-
-  .description {
-    font-size: 14px;
-    color: #666;
-  }
-`;
 
 enum Step {
   SelectType,
@@ -67,6 +33,7 @@ const ElementCreateModal: React.FC<Props> = ({
   const formRef = useRef<any>(null);
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
+  const state = store.getState();
 
   // 重置状态
   const handleCancel = () => {
@@ -106,11 +73,15 @@ const ElementCreateModal: React.FC<Props> = ({
 
       // 构建创建菜单的参数
       const params = {
-        app_id: appCode,
+        app_id: state.app.currentApp?.id,
         menu_name: values.name,
         menu_code: values.code,
-        menu_type: routeTypeToMenuType[selectedType],
+        menu_type: parseInt(routeTypeToMenuType[selectedType]),
         parent_id: parentId,
+        icon: selectedType,
+        // level: parentMenu.level + 1,
+        // sort: parentMenu.children.length + 1,
+        // node_id: parentMenu.node_id,
         status: 1
       };
 
@@ -130,33 +101,53 @@ const ElementCreateModal: React.FC<Props> = ({
     }
   };
 
+  const [form] = Form.useForm();
+  
+  React.useEffect(() => {
+    formRef.current = form;
+  }, [form]);
+
   const renderContent = () => {
     if (currentStep === Step.SelectType) {
       return (
         <Row gutter={[16, 16]}>
           {elementTypes.map(type => (
             <Col span={8} key={type.type}>
-              <ElementTypeCard onClick={() => handleTypeSelect(type.type)}>
-                <div className="icon">
+              <Card
+                hoverable
+                onClick={() => handleTypeSelect(type.type)}
+                style={{ textAlign: 'center', height: '100%' }}
+                bodyStyle={{ 
+                  display: 'flex', 
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  height: '100%',
+                  padding: '24px 16px'
+                }}
+              >
+                <div style={{ fontSize: 32, marginBottom: 12, color: '#1890ff' }}>
                   {React.createElement(type.icon)}
                 </div>
-                <div className="title">{type.name}</div>
-                <div className="description">{type.description}</div>
-              </ElementTypeCard>
+                <div style={{ fontSize: 16, fontWeight: 500, marginBottom: 8 }}>
+                  {type.name}
+                </div>
+                <div style={{ fontSize: 14, color: '#666' }}>
+                  {type.description}
+                </div>
+              </Card>
             </Col>
           ))}
         </Row>
       );
     }
-
-    const [form] = Form.useForm();
-    formRef.current = form;
     
     return (
       <Form
         form={form}
         layout="vertical"
         onFinish={handleSubmit}
+        style={{ padding: '8px 0' }}
       >
         <Form.Item
           name="name"
@@ -186,6 +177,7 @@ const ElementCreateModal: React.FC<Props> = ({
       confirmLoading={loading}
       footer={currentStep === Step.SelectType ? null : undefined}
       width={currentStep === Step.SelectType ? 800 : 520}
+      centered
     >
       {renderContent()}
     </Modal>

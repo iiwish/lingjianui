@@ -11,9 +11,6 @@ export const MenuService = {
     const response = await http.get<MenusResponse>(BASE_URL, {
       params: {
         type: 'descendants'
-      },
-      headers: {
-        'App-ID': appId
       }
     });
     return response.data;
@@ -23,11 +20,7 @@ export const MenuService = {
    * 获取菜单详情
    */
   getMenu: async (id: string, appId: string) => {
-    const response = await http.get<MenuResponse>(`${BASE_URL}/${id}`, {
-      headers: {
-        'App-ID': appId
-      }
-    });
+    const response = await http.get<MenuResponse>(`${BASE_URL}/${id}`);
     return response.data;
   },
 
@@ -35,11 +28,7 @@ export const MenuService = {
    * 创建菜单
    */
   createMenu: async (params: CreateMenuRequest) => {
-    const response = await http.post<MenuResponse>(BASE_URL, params, {
-      headers: {
-        'App-ID': params.app_id
-      }
-    });
+    const response = await http.post<MenuResponse>(BASE_URL, params);
     return response.data;
   },
 };

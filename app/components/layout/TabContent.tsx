@@ -1,6 +1,6 @@
 import React, { Suspense } from 'react';
 import { Result, Spin } from 'antd';
-import { menuTypeToRouteType } from '~/constants/elementType';
+import { menuTypeToRouteType, routeTypeToMenuType } from '~/constants/elementType';
 import { useAppSelector } from '~/stores';
 
 // 懒加载组件
