@@ -31,4 +31,12 @@ export const MenuService = {
     const response = await http.post<MenuResponse>(BASE_URL, params);
     return response.data;
   },
+
+  /**
+   * 删除菜单
+   */ 
+  deleteMenu: async (id: string) => {
+    const response = await http.delete<MenuResponse>(`${BASE_URL}/${id}`);
+    return response.data;
+  }
 };

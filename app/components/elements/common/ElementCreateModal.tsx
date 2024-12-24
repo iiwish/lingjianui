@@ -79,9 +79,6 @@ const ElementCreateModal: React.FC<Props> = ({
         menu_type: parseInt(routeTypeToMenuType[selectedType]),
         parent_id: parentId,
         icon: selectedType,
-        // level: parentMenu.level + 1,
-        // sort: parentMenu.children.length + 1,
-        // node_id: parentMenu.node_id,
         status: 1
       };
 
@@ -117,13 +114,15 @@ const ElementCreateModal: React.FC<Props> = ({
                 hoverable
                 onClick={() => handleTypeSelect(type.type)}
                 style={{ textAlign: 'center', height: '100%' }}
-                bodyStyle={{ 
-                  display: 'flex', 
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  height: '100%',
-                  padding: '24px 16px'
+                styles={{ 
+                  body: {
+                    display: 'flex', 
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    height: '100%',
+                    padding: '24px 16px'
+                  }
                 }}
               >
                 <div style={{ fontSize: 32, marginBottom: 12, color: '#1890ff' }}>

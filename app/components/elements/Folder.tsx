@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ElementCreateModal from './common/ElementCreateModal';
-import { Table, Button, message, Breadcrumb, Space } from 'antd';
+import { Table, Button, message, Breadcrumb, Space, Modal, App } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   FolderOpenTwoTone,
@@ -11,7 +11,8 @@ import {
   SnippetsOutlined,
   EditOutlined,
   FileOutlined,
-  ArrowLeftOutlined
+  ArrowLeftOutlined,
+  DeleteOutlined
 } from '@ant-design/icons';
 import { useNavigate } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
@@ -67,24 +68,24 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
       setLoading(true);
       const response = await MenuService.getMenus(appCode);
       if (response.code === 200) {
-        // 找到当前菜单组
         const currentGroup = response.data.items.find(menu => menu.id === Number(elementId));
         if (!currentGroup) return;
-
-        // 如果没有指定文件夹ID,显示根目录
+  
         if (!folderId) {
-          // 过滤掉children字段
+          // 添加唯一key
           setData((currentGroup.children || []).map(item => {
             const { children, ...rest } = item;
-            return rest;
+            return {
+              ...rest,
+              key: `${item.id}_${item.menu_code}` // 使用id和menu_code组合作为唯一key
+            };
           }));
           const newBreadcrumbs = [{ id: currentGroup.id, name: 'sys', menu_type: '1' }];
           setBreadcrumbs(newBreadcrumbs);
           updateTabState(newBreadcrumbs, null);
           return;
         }
-
-        // 查找指定的文件夹
+  
         const findFolder = (items: AppMenu[]): AppMenu | null => {
           for (const item of items) {
             if (item.id === folderId) return item;
@@ -95,13 +96,16 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
           }
           return null;
         };
-
+  
         const folder = findFolder(currentGroup.children || []);
         if (folder && folder.children) {
-          // 过滤掉children字段
+          // 添加唯一key
           setData((folder.children || []).map(item => {
             const { children, ...rest } = item;
-            return rest;
+            return {
+              ...rest,
+              key: `${item.id}_${item.menu_code}` // 使用id和menu_code组合作为唯一key
+            };
           }));
         }
       } else {
@@ -205,6 +209,30 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
     navigate(path);
   };
 
+  // 处理删除按钮点击
+  const handleDelete = (record: AppMenu) => {
+    Modal.confirm({
+      title: '确认删除',
+      content: '确定要删除这个菜单吗？此操作不可恢复。',
+      okText: '确认',
+      cancelText: '取消',
+      onOk: async () => {
+        try {
+          const response = await MenuService.deleteMenu(record.id);
+          if (response.code === 200) {
+            message.success('删除成功');
+            loadFolderData(currentFolder);
+          } else {
+            message.error('删除失败');
+          }
+        } catch (error) {
+          console.error('删除失败:', error);
+          message.error('删除失败');
+        }
+      }
+    });
+  };
+
   const columns: ColumnsType<AppMenu> = [
     {
       title: '名称',
@@ -233,12 +261,18 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           />
+          <Button
+            type="text"
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+          />
         </Authorized>
       )
     }
   ];
 
   return (
+    <App>
     <div style={{ padding: '0px' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16, gap: 8 }}>
         <Button
@@ -282,6 +316,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
         onSuccess={() => loadFolderData(currentFolder)}
       />
     </div>
+    </App>
   );
 };
 
