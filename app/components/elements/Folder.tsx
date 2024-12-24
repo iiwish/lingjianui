@@ -1,4 +1,5 @@
 import React, { useEffect, useState } from 'react';
+import ElementCreateModal from './common/ElementCreateModal';
 import { Table, Button, message, Breadcrumb, Space } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
@@ -43,6 +44,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
   const [data, setData] = useState<AppMenu[]>([]);
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
   const [currentFolder, setCurrentFolder] = useState<number | null>(null);
+  const [createModalVisible, setCreateModalVisible] = useState(false);
 
   // 获取当前tab的key和状态
   const tabKey = `/dashboard/${appCode}/element/folder/${elementId}`;
@@ -237,7 +239,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
   ];
 
   return (
-    <div style={{ padding: '24px' }}>
+    <div style={{ padding: '0px' }}>
       <div style={{ display: 'flex', alignItems: 'center', marginBottom: 16, gap: 8 }}>
         <Button
           type="text"
@@ -252,7 +254,12 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
           }))}
         />
         <Authorized permission="btn:element_manage">
-          <Button type="primary">新建元素</Button>
+          <Button 
+            type="primary"
+            onClick={() => setCreateModalVisible(true)}
+          >
+            新建元素
+          </Button>
         </Authorized>
       </div>
       <Table
@@ -261,10 +268,18 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
         loading={loading}
         pagination={false}
         size="small"
+        rowKey="id"
         expandable={{ expandIcon: () => null }}
         onRow={(record) => ({
           onDoubleClick: () => handleDoubleClick(record)
         })}
+      />
+      <ElementCreateModal
+        open={createModalVisible}
+        onCancel={() => setCreateModalVisible(false)}
+        appCode={appCode}
+        parentId={currentFolder || Number(elementId)}
+        onSuccess={() => loadFolderData(currentFolder)}
       />
     </div>
   );

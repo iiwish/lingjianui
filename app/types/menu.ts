@@ -42,3 +42,19 @@ export interface MenusResponse {
   };
   message: string;
 }
+
+export interface CreateMenuRequest {
+  app_id: string;
+  menu_name: string;
+  menu_code: string;
+  menu_type: string;
+  parent_id: number;
+  status: number;
+  icon?: string;
+  path?: string;
+  source_id?: string;
+  level?: number;
+  sort?: number;
+  node_id?: string;
+  configuration?: string;
+}

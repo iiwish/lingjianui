@@ -10,7 +10,7 @@ export const menuTypeToRouteType: { [key: string]: string } = {
 
 // 路由类型到菜单类型的映射(code -> id)
 export const routeTypeToMenuType: { [key: string]: string } = {
-    "folder": "1",
+  "folder": "1",
   "table": "2",
   "dim": "3",
   "menu": "4",
