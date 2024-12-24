@@ -6,6 +6,8 @@ const initialState: AppState = {
   currentApp: null,
   loading: false,
   error: null,
+  idToCode: {} as { [key: string]: string }, // id到code的映射
+  codeToId: {} as { [key: string]: string }, // code到id的映射
 };
 
 const appSlice = createSlice({
@@ -14,10 +16,22 @@ const appSlice = createSlice({
   reducers: {
     setApps: (state, action: PayloadAction<App[]>) => {
       state.apps = action.payload;
+      // 更新映射
+      state.idToCode = {};
+      state.codeToId = {};
+      action.payload.forEach(app => {
+        state.idToCode[app.id] = app.code;
+        state.codeToId[app.code] = app.id.toString();
+      });
       state.error = null;
     },
     setCurrentApp: (state, action: PayloadAction<App | null>) => {
       state.currentApp = action.payload;
+      // 更新映射
+      if (action.payload) {
+        state.idToCode[action.payload.id] = action.payload.code;
+        state.codeToId[action.payload.code] = action.payload.id.toString();
+      }
       state.error = null;
     },
     setLoading: (state, action: PayloadAction<boolean>) => {

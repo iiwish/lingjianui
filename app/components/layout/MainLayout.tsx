@@ -48,23 +48,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
   'form': <FormOutlined />,
 };
 
-// 菜单类型到路由类型的映射
-const menuTypeToRouteType: { [key: string]: string } = {
-  'table': '2',
-  'dim': '3',
-  'menu': '4',
-  'model': '5',
-  'form': '6',
-};
-
-// 路由类型到菜单类型的映射
-const routeTypeToMenuType: { [key: string]: string } = {
-  '2': 'table',
-  '3': 'dim',
-  '4': 'menu',
-  '5': 'model',
-  '6': 'form',
-};
+import { menuTypeToRouteType, routeTypeToMenuType } from '~/constants/elementType';
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -79,26 +63,26 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // 修改判断逻辑,只要路径包含/dashboard/就认为是应用页面
   const isAppPage = location.pathname.includes('/dashboard/');
-  const appId = isAppPage ? location.pathname.split('/')[2] : null;
+  const appCode = isAppPage ? location.pathname.split('/')[2] : null;
 
   // 加载菜单数据
   useEffect(() => {
-    if (appId && currentApp) {
-      // 如果已经有菜单数据且appId没变，就不重新获取
-      if (menus.length > 0 && menus[0]?.app_id === Number(appId)) {
+    if (appCode && currentApp) {
+      // 如果已经有菜单数据且appCode没变，就不重新获取
+      if (menus.length > 0 && menus[0]?.app_id === currentApp.id) {
         // 如果是element或config路由，只更新tab状态
         const pathParts = location.pathname.split('/');
         if (pathParts.includes('element') || pathParts.includes('config')) {
           const routeType = pathParts[3]; // element或config
-          const type = pathParts[4];
+          const typeCode = pathParts[4];
           const id = pathParts[5];
-          const menuType = routeTypeToMenuType[type];
-          const menuPath = `/dashboard/${appId}/${routeType}/${type}/${id}`;
+          const menuType = routeTypeToMenuType[typeCode];
+          const menuPath = `/dashboard/${appCode}/${routeType}/${typeCode}/${id}`;
 
           // 在现有菜单中查找对应的菜单项
           const findMenuItem = (menus: AppMenu[]): AppMenu | null => {
             for (const menu of menus) {
-              if (menu.source_id?.toString() === id && menu.menu_type === menuType) {
+              if (menu.source_id?.toString() === id && menuTypeToRouteType[menu.menu_type] === typeCode) {
                 return menu;
               }
               if (menu.children) {
@@ -132,7 +116,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       }
 
       dispatch(setLoading(true));
-      MenuService.getMenus(appId)
+      MenuService.getMenus(currentApp.id.toString())
         .then(response => {
           if (response.code === 200) {
             const menuData = response.data.items;
@@ -147,14 +131,15 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             const pathParts = location.pathname.split('/');
             if (pathParts.includes('element') || pathParts.includes('config')) {
               const routeType = pathParts[3]; // element或config
-              const type = pathParts[4];
+              const typeCode = pathParts[4];
               const id = pathParts[5];
-              const menuPath = `/dashboard/${appId}/${routeType}/${type}/${id}`;
+              const menuType = routeTypeToMenuType[typeCode];
+              const menuPath = `/dashboard/${appCode}/${routeType}/${typeCode}/${id}`;
               
               // 在菜单数据中查找对应的菜单项
               const findMenuItem = (menus: AppMenu[]): AppMenu | null => {
                 for (const menu of menus) {
-                  if (menu.source_id?.toString() === id && menu.menu_type === type) {
+                  if (menu.source_id?.toString() === id && menuTypeToRouteType[menu.menu_type] === typeCode) {
                     return menu;
                   }
                   if (menu.children) {
@@ -194,7 +179,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           dispatch(setLoading(false));
         });
     }
-  }, [appId, currentApp]); // 只在appId或currentApp变化时重新获取菜单
+  }, [appCode, currentApp]); // 只在appCode或currentApp变化时重新获取菜单
 
   // 生成菜单路径
   const generateMenuPath = (menu: AppMenu): string | null => {
@@ -202,9 +187,10 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       // 目录类型不生成路径
       return null;
     }
-  // 根据menu_type决定使用element还是config路由
-  const routeType = menu.menu_type === 'config' ? 'config' : 'element';
-  return `/dashboard/${appId}/${routeType}/${menu.menu_type}/${menu.source_id}`;
+    // 根据menu_type决定使用element还是config路由
+    const routeType = menu.menu_type === 'config' ? 'config' : 'element';
+    const typeCode = menuTypeToRouteType[menu.menu_type];
+    return `/dashboard/${currentApp?.code}/${routeType}/${typeCode}/${menu.source_id}`;
   };
 
   // 递归构建菜单项
@@ -266,7 +252,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       
       // 如果是系统菜单,自动打开folder tab
       if (selectedMenu.menu_code === '_sys') {
-        const path = `/dashboard/${appId}/element/1/${selectedMenu.id}`;
+        const path = `/dashboard/${currentApp?.code}/element/folder/${selectedMenu.id}`;
         dispatch(addTab({
           key: path,
           title: selectedMenu.menu_name,

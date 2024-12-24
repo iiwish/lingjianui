@@ -85,7 +85,7 @@ const AppList: FC = () => {
 
   // 进入应用
   const handleEnterApp = useCallback((app: App) => {
-    navigate(`/dashboard/${app.id}`);
+    navigate(`/dashboard/${app.code}`);
   }, [navigate]);
 
   // 打开设置Modal

@@ -31,6 +31,8 @@ export interface AppState {
   currentApp: App | null;
   loading: boolean;
   error: string | null;
+  idToCode: { [key: string]: string }; // id到code的映射
+  codeToId: { [key: string]: string }; // code到id的映射
 }
 
 // API响应类型

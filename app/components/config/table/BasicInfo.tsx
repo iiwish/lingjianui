@@ -3,14 +3,14 @@ import { Form, Input, Button, message } from 'antd';
 import { updateTableConfig } from '~/services/element';
 import type { TabComponentProps } from './types';
 
-const BasicInfo: React.FC<TabComponentProps> = ({ elementId, appId, config, onReload }) => {
+const BasicInfo: React.FC<TabComponentProps> = ({ elementId, appCode, config, onReload }) => {
   const [form] = Form.useForm();
-  const prefix = appId !== "1" ? `app${appId}_` : '';
+  const prefix = appCode !== "sys" ? `app_${appCode}_` : '';
 
   // 分割表名和前缀
   const splitTableName = (fullName: string) => {
-    if (appId === "1") return fullName;
-    const prefixRegex = new RegExp(`^app${appId}_`);
+    if (appCode === "sys") return fullName;
+    const prefixRegex = new RegExp(`^app_${appCode}_`);
     return fullName.replace(prefixRegex, '');
   };
 
@@ -20,7 +20,7 @@ const BasicInfo: React.FC<TabComponentProps> = ({ elementId, appId, config, onRe
       display_name: config.display_name,
       description: config.description,
     });
-  }, [config, appId]);
+  }, [config, appCode]);
 
   const handleSave = async () => {
     try {
@@ -28,7 +28,7 @@ const BasicInfo: React.FC<TabComponentProps> = ({ elementId, appId, config, onRe
       // 保存时加上前缀
       const submitValues = {
         ...values,
-        table_name: appId !== "1" ? `${prefix}${values.table_name}` : values.table_name,
+        table_name: appCode !== "sys" ? `${prefix}${values.table_name}` : values.table_name,
       };
       const res = await updateTableConfig(elementId, submitValues);
       if (res.code === 200) {

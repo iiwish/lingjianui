@@ -10,10 +10,10 @@ import FuncConfig from './table/FuncConfig';
 
 interface Props {
   elementId: string;
-  appId: string;
+  appCode: string;
 }
 
-const TableConfig: React.FC<Props> = ({ elementId, appId }) => {
+const TableConfig: React.FC<Props> = ({ elementId, appCode }) => {
   const [config, setConfig] = useState<ITableConfig | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -21,13 +21,13 @@ const TableConfig: React.FC<Props> = ({ elementId, appId }) => {
 
   useEffect(() => {
     loadConfig();
-  }, [elementId, appId]);
+  }, [elementId, appCode]);
 
   const loadConfig = async () => {
     try {
       setLoading(true);
       setError(null);
-      console.log('Loading config for:', { elementId, appId });
+      console.log('Loading config for:', { elementId, appCode });
       const res = await getTableConfig(elementId);
       console.log('Config response:', res);
       
@@ -89,22 +89,22 @@ const TableConfig: React.FC<Props> = ({ elementId, appId }) => {
     {
       key: '1',
       label: '基础信息',
-      children: <BasicInfo elementId={elementId} appId={appId} config={config} onReload={loadConfig} />,
+      children: <BasicInfo elementId={elementId} appCode={appCode} config={config} onReload={loadConfig} />,
     },
     {
       key: '2',
       label: '字段信息',
-      children: <FieldInfo elementId={elementId} appId={appId} config={config} onReload={loadConfig} />,
+      children: <FieldInfo elementId={elementId} appCode={appCode} config={config} onReload={loadConfig} />,
     },
     {
       key: '3',
       label: '索引',
-      children: <IndexInfo elementId={elementId} appId={appId} config={config} onReload={loadConfig} />,
+      children: <IndexInfo elementId={elementId} appCode={appCode} config={config} onReload={loadConfig} />,
     },
     {
       key: '4',
       label: 'Func配置',
-      children: <FuncConfig elementId={elementId} appId={appId} config={config} onReload={loadConfig} />,
+      children: <FuncConfig elementId={elementId} appCode={appCode} config={config} onReload={loadConfig} />,
     },
   ];
 

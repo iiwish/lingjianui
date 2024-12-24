@@ -8,6 +8,7 @@ import { useDispatch } from 'react-redux';
 import { addTab } from '~/stores/slices/tabSlice';
 import { Authorized } from '~/utils/permission';
 import { useNavigate } from '@remix-run/react';
+import { menuTypeToRouteType } from '~/constants/elementType';
 
 export interface Condition {
   field: string;
@@ -41,7 +42,7 @@ interface DataType {
   [key: string]: any;
 }
 
-const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
+const Table: React.FC<ElementProps> = ({ elementId, appCode, elementType }) => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<TableConfig | null>(null);
   const [func, setFunc] = useState<TableFunc | null>(null);
@@ -89,10 +90,10 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
   // 加载表格配置和数据
   useEffect(() => {
     loadData(currentPage, pageSize, conditions);
-  }, [elementId, appId, currentPage, pageSize, conditions]);
+  }, [elementId, appCode, currentPage, pageSize, conditions]);
 
   const loadData = async (page = 1, size = 10, conditions?: any) => {
-    if (!elementId || !appId) {
+    if (!elementId || !appCode) {
       setError('缺少必要参数');
       return;
     }
@@ -240,7 +241,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appId, elementType }) => {
   };
 
   const handleConfig = () => {
-    const configPath = `/dashboard/${appId}/config/${elementType}/${elementId}`;
+    const configPath = `/dashboard/${appCode}/config/${menuTypeToRouteType[elementType]}/${elementId}`;
     // 先导航到新的URL
     navigate(configPath);
     // 然后添加和激活tab

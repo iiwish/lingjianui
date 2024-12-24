@@ -3,7 +3,7 @@ import { Outlet, useLocation } from '@remix-run/react';
 import MainLayout from '~/components/layout/MainLayout';
 import AppList from '~/components/apps/AppList';
 import { useAppDispatch, useAppSelector } from '~/stores';
-import { setCurrentApp } from '~/stores/slices/appSlice';
+import { setCurrentApp, setApps } from '~/stores/slices/appSlice';
 import { AppService } from '~/services/app';
 import { message } from 'antd';
 
@@ -16,13 +16,26 @@ export default function Dashboard() {
 
   // 处理应用信息加载
   useEffect(() => {
-    const loadApp = async (appId: string) => {
+    const loadApp = async (appCode: string) => {
       try {
-        const response = await AppService.getApp(appId);
-        if (response.code === 200) {
-          dispatch(setCurrentApp(response.data));
+        // 先获取所有应用列表
+        const appsResponse = await AppService.getApps();
+        if (appsResponse.code === 200) {
+          const apps = appsResponse.data.items;
+          dispatch(setApps(apps));
+          
+          // 根据code找到对应的app
+          const app = apps.find(app => app.code === appCode);
+          if (app) {
+            // 如果找到了app且与当前不同，设置为当前app
+            if (!currentApp || currentApp.id !== app.id) {
+              dispatch(setCurrentApp(app));
+            }
+          } else {
+            message.error('未找到对应的应用');
+          }
         } else {
-          message.error('获取应用信息失败');
+          message.error('获取应用列表失败');
         }
       } catch (error) {
         console.error('Failed to load app:', error);
@@ -30,14 +43,14 @@ export default function Dashboard() {
       }
     };
 
-    // 从URL中提取appId
+    // 从URL中提取appCode
     const pathParts = location.pathname.split('/');
-    const appIdIndex = pathParts.indexOf('dashboard') + 1;
-    const appId = pathParts[appIdIndex];
+    const appCodeIndex = pathParts.indexOf('dashboard') + 1;
+    const appCode = pathParts[appCodeIndex];
 
-    // 如果URL中有appId且与当前不同,获取应用信息
-    if (appId && appId !== 'undefined' && appId !== currentApp?.id.toString()) {
-      loadApp(appId);
+    // 如果URL中有appCode且与当前不同,获取应用信息
+    if (appCode && appCode !== 'undefined' && appCode !== currentApp?.code) {
+      loadApp(appCode);
     }
   }, [dispatch, location.pathname, currentApp]);
 

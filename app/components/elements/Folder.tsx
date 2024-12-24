@@ -19,10 +19,11 @@ import { MenuService } from '~/services/menu';
 import type { Menu as AppMenu } from '~/types/menu';
 import type { BreadcrumbItem } from '~/types/tab';
 import { Authorized } from '~/utils/permission';
+import { menuTypeToRouteType } from '~/constants/elementType';
 
 interface Props {
   elementId: string;
-  appId: string;
+  appCode: string;
 }
 
 // 图标映射
@@ -35,17 +36,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
   'form': <SnippetsOutlined />,
 };
 
-// 菜单类型到路由类型的映射
-const menuTypeToRouteType: { [key: string]: string } = {
-  "1": "folder",
-  '2': 'table',
-  '3': 'dim',
-  '4': 'menu',
-  '5': 'model',
-  '6': 'form',
-};
-
-const Folder: React.FC<Props> = ({ elementId, appId }) => {
+const Folder: React.FC<Props> = ({ elementId, appCode }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
@@ -54,7 +45,7 @@ const Folder: React.FC<Props> = ({ elementId, appId }) => {
   const [currentFolder, setCurrentFolder] = useState<number | null>(null);
 
   // 获取当前tab的key和状态
-  const tabKey = `/dashboard/${appId}/element/folder/${elementId}`;
+  const tabKey = `/dashboard/${appCode}/element/folder/${elementId}`;
   const tabState = useAppSelector(state => state.tab.tabStates[tabKey]);
 
   // 更新store中的状态
@@ -72,7 +63,7 @@ const Folder: React.FC<Props> = ({ elementId, appId }) => {
   const loadFolderData = async (folderId: number | null) => {
     try {
       setLoading(true);
-      const response = await MenuService.getMenus(appId);
+      const response = await MenuService.getMenus(appCode);
       if (response.code === 200) {
         // 找到当前菜单组
         const currentGroup = response.data.items.find(menu => menu.id === Number(elementId));
@@ -133,7 +124,7 @@ const Folder: React.FC<Props> = ({ elementId, appId }) => {
       // 否则加载根目录
       loadFolderData(null);
     }
-  }, [elementId, appId]);
+  }, [elementId, appCode]);
 
   // 处理双击事件
   const handleDoubleClick = (record: AppMenu) => {
@@ -156,7 +147,7 @@ const Folder: React.FC<Props> = ({ elementId, appId }) => {
 
     // 构建路由路径
     const routeType = record.menu_type === 'config' ? 'config' : 'element';
-    const path = `/dashboard/${appId}/${routeType}/${record.menu_type}/${record.source_id}`;
+    const path = `/dashboard/${appCode}/${routeType}/${menuTypeToRouteType[record.menu_type]}/${record.source_id}`;
 
     // 添加并激活tab
     dispatch(addTab({
@@ -198,7 +189,7 @@ const Folder: React.FC<Props> = ({ elementId, appId }) => {
   // 处理编辑按钮点击
   const handleEdit = (record: AppMenu) => {
     // 构建配置路由路径
-    const path = `/dashboard/${appId}/config/${record.menu_type}/${record.source_id}`;
+    const path = `/dashboard/${appCode}/config/${menuTypeToRouteType[record.menu_type]}/${record.source_id}`;
 
     // 添加并激活tab
     dispatch(addTab({

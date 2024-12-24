@@ -1,5 +1,7 @@
 import React, { Suspense } from 'react';
 import { Result, Spin } from 'antd';
+import { menuTypeToRouteType } from '~/constants/elementType';
+import { useAppSelector } from '~/stores';
 
 // 懒加载组件
 const Table = React.lazy(() => import('~/components/elements/Table'));
@@ -7,17 +9,18 @@ const Folder = React.lazy(() => import('~/components/elements/Folder'));
 const TableConfig = React.lazy(() => import('~/components/config/TableConfig'));
 
 interface Props {
-  appId: string;
+  appCode: string;
   elementId: string;
   elementType: string;
   type: 'element' | 'config';
 }
 
-const TabContent: React.FC<Props> = ({ appId, elementId, elementType, type }) => {
+const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type }) => {
   console.log('TabContent render:', {
-    appId,
+    appCode,
     elementId,
     elementType,
+    elementTypeCode: menuTypeToRouteType[elementType],
     type,
     pathname: window.location.pathname
   });
@@ -27,9 +30,9 @@ const TabContent: React.FC<Props> = ({ appId, elementId, elementType, type }) =>
     if (type === 'element') {
       switch (elementType) {
         case '1':
-          return <Folder elementId={elementId} appId={appId} />;
+          return <Folder elementId={elementId} appCode={appCode} />;
         case '2':
-          return <Table elementId={elementId} appId={appId} elementType={elementType} />;
+          return <Table elementId={elementId} appCode={appCode} elementType={elementType} />;
         default:
           return (
             <Result
@@ -43,7 +46,7 @@ const TabContent: React.FC<Props> = ({ appId, elementId, elementType, type }) =>
       console.log('Rendering config component for type:', elementType);
       switch (elementType) {
         case '2':
-          return <TableConfig elementId={elementId} appId={appId} />;
+          return <TableConfig elementId={elementId} appCode={appCode} />;
         default:
           return (
             <Result

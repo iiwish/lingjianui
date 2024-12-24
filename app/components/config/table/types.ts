@@ -19,7 +19,7 @@ export interface IndexConfig {
 
 export interface Props {
   elementId: string;
-  appId: string;
+  appCode: string;
 }
 
 export interface TabComponentProps extends Props {
