@@ -13,9 +13,16 @@ interface Props {
   elementId: string;
   elementType: string;
   type: 'element' | 'config';
+  initialState?: {
+    breadcrumbs: Array<{
+      id: number;
+      name: string;
+      menu_type: string;
+    }>;
+  };
 }
 
-const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type }) => {
+const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, initialState }) => {
   console.log('TabContent render:', {
     appCode,
     elementId,
@@ -30,7 +37,7 @@ const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type }) 
     if (type === 'element') {
       switch (elementType) {
         case '1':
-          return <Folder elementId={elementId} appCode={appCode} />;
+          return <Folder elementId={elementId} appCode={appCode} initialState={initialState} />;
         case '2':
           return <Table elementId={elementId} appCode={appCode} elementType={elementType} />;
         default:

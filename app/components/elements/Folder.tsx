@@ -26,6 +26,13 @@ import { menuTypeToRouteType } from '~/constants/elementType';
 interface Props {
   elementId: string;
   appCode: string;
+  initialState?: {
+    breadcrumbs: Array<{
+      id: number;
+      name: string;
+      menu_type: string;
+    }>;
+  };
 }
 
 // 图标映射
@@ -38,7 +45,7 @@ const iconMap: { [key: string]: React.ReactNode } = {
   'form': <SnippetsOutlined />,
 };
 
-const Folder: React.FC<Props> = ({ elementId, appCode }) => {
+const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
   const navigate = useNavigate();
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(true);
@@ -126,11 +133,16 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
       setBreadcrumbs(tabState.breadcrumbs);
       setCurrentFolder(tabState.currentFolder);
       loadFolderData(tabState.currentFolder);
+    } else if (initialState?.breadcrumbs) {
+      // 使用初始状态
+      setBreadcrumbs(initialState.breadcrumbs);
+      setCurrentFolder(null);
+      loadFolderData(null);
     } else {
       // 否则加载根目录
       loadFolderData(null);
     }
-  }, [elementId, appCode]);
+  }, [elementId, appCode, initialState]);
 
   // 处理双击事件
   const handleDoubleClick = (record: AppMenu) => {
@@ -177,7 +189,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
     const newBreadcrumbs = breadcrumbs.slice(0, index + 1);
     setBreadcrumbs(newBreadcrumbs);
     // 更新当前文件夹
-    const newCurrentFolder = item.id === breadcrumbs[0].id ? null : item.id;
+    const newCurrentFolder = item.id === breadcrumbs[0].id ? null : Number(item.id);
     setCurrentFolder(newCurrentFolder);
     // 更新store中的状态
     updateTabState(newBreadcrumbs, newCurrentFolder);
@@ -218,7 +230,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
       cancelText: '取消',
       onOk: async () => {
         try {
-          const response = await MenuService.deleteMenu(record.id);
+          const response = await MenuService.deleteMenu(record.id.toString());
           if (response.code === 200) {
             message.success('删除成功');
             loadFolderData(currentFolder);
@@ -312,7 +324,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode }) => {
         open={createModalVisible}
         onCancel={() => setCreateModalVisible(false)}
         appCode={appCode}
-        parentId={currentFolder || Number(elementId)}
+        parentId={currentFolder?.toString() || elementId}
         onSuccess={() => loadFolderData(currentFolder)}
       />
     </div>

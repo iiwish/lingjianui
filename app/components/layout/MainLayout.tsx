@@ -65,6 +65,41 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const isAppPage = location.pathname.includes('/dashboard/');
   const appCode = isAppPage ? location.pathname.split('/')[2] : null;
 
+  // 在菜单数据中查找对应的菜单项
+  const findMenuItem = (menus: AppMenu[], typeCode: string, id: string): AppMenu | null => {
+    // 如果是folder类型，直接在顶层查找
+    if (typeCode === 'folder') {
+      for (const menu of menus) {
+        if (menu.id.toString() === id) {
+          return menu;
+        }
+      }
+      return null;
+    }
+
+    // 对于其他类型，在children中查找
+    const findInChildren = (items: AppMenu[]): AppMenu | null => {
+      for (const item of items) {
+        if (item.source_id?.toString() === id && menuTypeToRouteType[item.menu_type] === typeCode) {
+          return item;
+        }
+        if (item.children) {
+          const found = findInChildren(item.children);
+          if (found) return found;
+        }
+      }
+      return null;
+    };
+
+    for (const menu of menus) {
+      if (menu.children) {
+        const found = findInChildren(menu.children);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
   // 加载菜单数据
   useEffect(() => {
     if (appCode && currentApp) {
@@ -76,40 +111,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           const routeType = pathParts[3]; // element或config
           const typeCode = pathParts[4];
           const id = pathParts[5];
-          const menuType = routeTypeToMenuType[typeCode];
           const menuPath = `/dashboard/${appCode}/${routeType}/${typeCode}/${id}`;
 
-          // 在现有菜单中查找对应的菜单项
-          const findMenuItem = (menus: AppMenu[]): AppMenu | null => {
-            for (const menu of menus) {
-              if (menu.source_id?.toString() === id && menuTypeToRouteType[menu.menu_type] === typeCode) {
-                return menu;
-              }
-              if (menu.children) {
-                const found = findMenuItem(menu.children);
-                if (found) return found;
+          const menuItem = findMenuItem(menus, typeCode, id);
+          if (menuItem) {
+            // 如果是folder类型，直接使用它作为当前菜单组
+            if (typeCode === 'folder') {
+              dispatch(setCurrentMenuGroup(menuItem));
+            } else {
+              // 否则找到它所属的菜单组
+              const parentGroup = menus.find(group => 
+                group.children?.some(child => child.id === menuItem.id)
+              );
+              if (parentGroup) {
+                dispatch(setCurrentMenuGroup(parentGroup));
               }
             }
-            return null;
-          };
 
-          // 遍历所有菜单组查找
-          for (const group of menus) {
-            if (group.children) {
-              const menuItem = findMenuItem(group.children);
-              if (menuItem) {
-                // 设置当前菜单组
-                dispatch(setCurrentMenuGroup(group));
-                // 添加tab
-                dispatch(addTab({
-                  key: menuPath,
-                  title: menuItem.menu_name,
-                  closable: true
-                }));
-                dispatch(setActiveTab(menuPath));
-                break;
-              }
-            }
+            // 添加tab
+            dispatch(addTab({
+              key: menuPath,
+              title: menuItem.menu_name,
+              closable: true
+            }));
+            dispatch(setActiveTab(menuPath));
           }
         }
         return;
@@ -133,40 +158,30 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               const routeType = pathParts[3]; // element或config
               const typeCode = pathParts[4];
               const id = pathParts[5];
-              const menuType = routeTypeToMenuType[typeCode];
               const menuPath = `/dashboard/${appCode}/${routeType}/${typeCode}/${id}`;
-              
-              // 在菜单数据中查找对应的菜单项
-              const findMenuItem = (menus: AppMenu[]): AppMenu | null => {
-                for (const menu of menus) {
-                  if (menu.source_id?.toString() === id && menuTypeToRouteType[menu.menu_type] === typeCode) {
-                    return menu;
-                  }
-                  if (menu.children) {
-                    const found = findMenuItem(menu.children);
-                    if (found) return found;
-                  }
-                }
-                return null;
-              };
-              
-              // 遍历所有菜单组查找
-              for (const group of menuData) {
-                if (group.children) {
-                  const menuItem = findMenuItem(group.children);
-                  if (menuItem) {
-                    // 设置当前菜单组
-                    dispatch(setCurrentMenuGroup(group));
-                    // 添加tab
-                    dispatch(addTab({
-                      key: menuPath,
-                      title: menuItem.menu_name,
-                      closable: true
-                    }));
-                    dispatch(setActiveTab(menuPath));
-                    break;
+
+              const menuItem = findMenuItem(menuData, typeCode, id);
+              if (menuItem) {
+                // 如果是folder类型，直接使用它作为当前菜单组
+                if (typeCode === 'folder') {
+                  dispatch(setCurrentMenuGroup(menuItem));
+                } else {
+                  // 否则找到它所属的菜单组
+                  const parentGroup = menuData.find(group => 
+                    group.children?.some(child => child.id === menuItem.id)
+                  );
+                  if (parentGroup) {
+                    dispatch(setCurrentMenuGroup(parentGroup));
                   }
                 }
+
+                // 添加tab
+                dispatch(addTab({
+                  key: menuPath,
+                  title: menuItem.menu_name,
+                  closable: true
+                }));
+                dispatch(setActiveTab(menuPath));
               }
             }
           }

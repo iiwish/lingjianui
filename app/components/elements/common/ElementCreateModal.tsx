@@ -16,7 +16,7 @@ interface Props {
   open: boolean;
   onCancel: () => void;
   appCode: string;
-  parentId: number;
+  parentId: string;
   onSuccess: () => void;
 }
 
@@ -73,11 +73,11 @@ const ElementCreateModal: React.FC<Props> = ({
 
       // 构建创建菜单的参数
       const params = {
-        app_id: state.app.currentApp?.id,
+        app_id: state.app.currentApp?.id?.toString() || '',
         menu_name: values.name,
         menu_code: values.code,
-        menu_type: parseInt(routeTypeToMenuType[selectedType]),
-        parent_id: parentId,
+        menu_type: routeTypeToMenuType[selectedType],
+        parent_id: Number(parentId),
         icon: selectedType,
         status: 1
       };
