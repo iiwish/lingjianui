@@ -225,24 +225,26 @@ export const createTableConfig = async (config: TableConfig): Promise<ApiRespons
   return post('/config/tables', config);
 };
 
-// 更新表格基础信息
-export const updateTableConfig = async (tableId: string, config: Partial<TableConfig>): Promise<ApiResponse<null>> => {
+// 统一更新表格配置
+export interface TableUpdateRequest {
+  table_name?: string;
+  display_name?: string;
+  description?: string;
+  func?: string;
+  fields?: Array<{
+    field: FieldConfig;
+    oldFieldName?: string;
+    updateType: 'add' | 'drop' | 'modify';
+  }>;
+  indexes?: Array<{
+    index: IndexConfig;
+    oldIndexName?: string;
+    updateType: 'add' | 'drop' | 'modify';
+  }>;
+}
+
+export const updateTableConfig = async (tableId: string, config: TableUpdateRequest): Promise<ApiResponse<null>> => {
   return put(`/config/tables/${tableId}`, config);
-};
-
-// 更新表格字段
-export const updateTableFields = async (tableId: string, fields: FieldConfig[]): Promise<ApiResponse<null>> => {
-  return put(`/config/tables/${tableId}/fields`, { fields });
-};
-
-// 更新表格索引
-export const updateTableIndexes = async (tableId: string, indexes: IndexConfig[]): Promise<ApiResponse<null>> => {
-  return put(`/config/tables/${tableId}/indexes`, { indexes });
-};
-
-// 更新表格func配置
-export const updateTableFunc = async (tableId: string, func: string): Promise<ApiResponse<null>> => {
-  return put(`/config/tables/${tableId}/func`, { func });
 };
 
 // 获取表格数据

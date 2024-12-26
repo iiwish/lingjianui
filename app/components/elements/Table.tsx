@@ -9,6 +9,7 @@ import { addTab } from '~/stores/slices/tabSlice';
 import { Authorized } from '~/utils/permission';
 import { useNavigate } from '@remix-run/react';
 import { menuTypeToRouteType } from '~/constants/elementType';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 export interface Condition {
   field: string;
@@ -321,8 +322,18 @@ const Table: React.FC<ElementProps> = ({ elementId, appCode, elementType }) => {
             fixed: 'right',
             render: (_, record) => (
               <Space size="middle">
-                <a onClick={() => handleEdit(record)}>编辑</a>
-                <a onClick={() => handleDelete(record)}>删除</a>
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<EditOutlined />}
+                  onClick={() => handleEdit(record)}
+                />
+                <Button
+                  type="text"
+                  size="small"
+                  icon={<DeleteOutlined />}
+                  onClick={() => handleDelete(record)}
+                />  
               </Space>
             ),
           },

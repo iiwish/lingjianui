@@ -105,13 +105,6 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config }) => {
       delete fieldData.scale;
       delete fieldData.unsigned;
 
-      // 构建符合接口要求的数据格式
-      const updateData = {
-        updateType: editingField ? 'modify' : 'add',
-        field: fieldData,
-        oldFieldName: editingField?.name
-      };
-
       let newFields = [...fields];
       if (editingField) {
         const index = newFields.findIndex(f => f.name === editingField.name);
@@ -125,7 +118,7 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config }) => {
       setFields(newFields);
       dispatch(setFieldsModified({ 
         isModified: true, 
-        data: [updateData] // 传递符合接口要求的数据格式
+        data: newFields // 传递完整的字段列表
       }));
       setEditingField(null);
       form.resetFields();
@@ -138,17 +131,9 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config }) => {
   const handleDelete = async (field: FieldConfig) => {
     const newFields = fields.filter(f => f.name !== field.name);
     setFields(newFields);
-    
-    // 构建删除操作的数据格式
-    const updateData = {
-      updateType: 'drop',
-      field: null,
-      oldFieldName: field.name
-    };
-
     dispatch(setFieldsModified({ 
       isModified: true, 
-      data: [updateData]
+      data: newFields // 传递完整的字段列表
     }));
   };
 

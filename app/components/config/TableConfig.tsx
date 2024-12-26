@@ -8,10 +8,10 @@ import {
   getTableConfig,
   createTableConfig,
   updateTableConfig,
-  updateTableFields,
-  updateTableIndexes,
-  updateTableFunc,
-  TableConfig as ITableConfig
+  TableConfig as ITableConfig,
+  TableUpdateRequest,
+  FieldConfig,
+  IndexConfig
 } from '~/services/element';
 import BasicInfo from './table/BasicInfo';
 import FieldInfo from './table/FieldInfo';
@@ -130,44 +130,159 @@ const TableConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
   const handleSave = async () => {
     try {
       if (isNew) {
-        if (isBasicInfoModified && modifiedBasicInfo) {
-          const res = await createTableConfig(modifiedBasicInfo);
-          if (res.code === 200) {
-            message.success('创建成功');
-            if (res.data?.id) {
-              navigate(`/dashboard/${appCode}/config/table/${res.data.id}`);
-            }
-          } else {
-            throw new Error(res.message);
+        // 确保在新建时必须有基础信息
+        if (!modifiedBasicInfo || !modifiedBasicInfo.table_name) {
+          message.error('请填写表格基本信息');
+          return;
+        }
+
+        // 新建表格时的配置
+        const configToCreate = {
+          ...modifiedBasicInfo,  // 直接使用 modifiedBasicInfo，因为新建时这是必需的
+          parent_id: parentId ? parseInt(parentId) : undefined,
+          fields: modifiedFields || [],
+          indexes: modifiedIndexes || [],
+          func: modifiedFunc || ''
+        };
+
+        const res = await createTableConfig(configToCreate);
+        if (res.code === 200) {
+          message.success('创建成功');
+          if (res.data?.id) {
+            navigate(`/dashboard/${appCode}/config/table/${res.data.id}`);
           }
+        } else {
+          throw new Error(res.message);
         }
       } else {
-        if (isBasicInfoModified && modifiedBasicInfo) {
-          const res = await updateTableConfig(elementId, modifiedBasicInfo);
-          if (res.code !== 200) {
-            throw new Error(res.message);
+        // 更新表格时，始终包含基础信息和func
+        const updateRequest: TableUpdateRequest = {
+          // 始终包含基础信息
+          table_name: modifiedBasicInfo?.table_name || localConfig.table_name,
+          display_name: modifiedBasicInfo?.display_name || localConfig.display_name,
+          description: modifiedBasicInfo?.description || localConfig.description,
+          // 始终包含func
+          func: modifiedFunc || localConfig.func || ''
+        };
+
+        if (isFieldsModified && localConfig) {
+          const originalFields = localConfig.fields || [];
+          const updatedFields = modifiedFields || [];
+          
+          // 找出实际修改的字段
+          const fieldUpdates: Array<{
+            field: FieldConfig;
+            oldFieldName?: string;
+            updateType: 'add' | 'modify' | 'drop';
+          }> = [];
+
+          // 1. 找出新增的字段
+          const addedFields = updatedFields.filter(field => 
+            !originalFields.some(f => f.name === field.name)
+          );
+          addedFields.forEach(field => {
+            fieldUpdates.push({
+              field,
+              updateType: 'add'
+            });
+          });
+
+          // 2. 找出修改的字段
+          updatedFields.forEach(field => {
+            const originalField = originalFields.find(f => f.name === field.name);
+            if (originalField && JSON.stringify(field) !== JSON.stringify(originalField)) {
+              fieldUpdates.push({
+                field,
+                updateType: 'modify',
+                oldFieldName: originalField.name
+              });
+            }
+          });
+
+          // 3. 找出删除的字段 - 只有在modifiedFields中不存在的字段才被视为删除
+          if (updatedFields.length < originalFields.length) {
+            const deletedFields = originalFields.filter(field =>
+              !updatedFields.some(f => f.name === field.name)
+            );
+            deletedFields.forEach(field => {
+              fieldUpdates.push({
+                field,
+                updateType: 'drop',
+                oldFieldName: field.name
+              });
+            });
           }
-        }
-        
-        if (isFieldsModified) {
-          const res = await updateTableFields(elementId, modifiedFields);
-          if (res.code !== 200) {
-            throw new Error(res.message);
+
+          if (fieldUpdates.length > 0) {
+            updateRequest.fields = fieldUpdates;
           }
         }
 
-        if (isIndexesModified) {
-          const res = await updateTableIndexes(elementId, modifiedIndexes);
-          if (res.code !== 200) {
-            throw new Error(res.message);
+        if (isIndexesModified && localConfig) {
+          const originalIndexes = localConfig.indexes || [];
+          const updatedIndexes = modifiedIndexes || [];
+          
+          // 找出实际修改的索引
+          const indexUpdates: Array<{
+            index: IndexConfig;
+            oldIndexName?: string;
+            updateType: 'add' | 'modify' | 'drop';
+          }> = [];
+
+          // 1. 找出新增的索引
+          const addedIndexes = updatedIndexes.filter(index => 
+            !originalIndexes.some(i => i.name === index.name)
+          );
+          addedIndexes.forEach(index => {
+            indexUpdates.push({
+              index,
+              updateType: 'add'
+            });
+          });
+
+          // 2. 找出修改的索引
+          const modifiedIndexNames = updatedIndexes
+            .filter(index => 
+              originalIndexes.some(i => 
+                i.name === index.name && 
+                JSON.stringify(i) !== JSON.stringify(index)
+              )
+            )
+            .map(index => index.name);
+
+          modifiedIndexNames.forEach(name => {
+            const index = updatedIndexes.find(i => i.name === name)!;
+            indexUpdates.push({
+              index,
+              updateType: 'modify',
+              oldIndexName: name
+            });
+          });
+
+          // 3. 找出删除的索引
+          const deletedIndexes = originalIndexes.filter(index =>
+            !updatedIndexes.some(i => i.name === index.name)
+          );
+          deletedIndexes.forEach(index => {
+            indexUpdates.push({
+              index,
+              updateType: 'drop',
+              oldIndexName: index.name
+            });
+          });
+
+          if (indexUpdates.length > 0) {
+            updateRequest.indexes = indexUpdates;
           }
         }
 
-        if (isFuncModified) {
-          const res = await updateTableFunc(elementId, modifiedFunc);
-          if (res.code !== 200) {
-            throw new Error(res.message);
-          }
+        if (isFuncModified && modifiedFunc) {
+          updateRequest.func = modifiedFunc;
+        }
+
+        const res = await updateTableConfig(elementId, updateRequest);
+        if (res.code !== 200) {
+          throw new Error(res.message);
         }
 
         message.success('保存成功');
