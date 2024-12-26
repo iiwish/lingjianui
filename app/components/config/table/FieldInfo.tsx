@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Table, Modal, Form, Input, InputNumber, Switch, Select, Space, message,Row,Col } from 'antd';
-import { updateTableFields } from '~/services/element';
+import { Button, Table, Modal, Form, Input, InputNumber, Switch, Select, Space, Row, Col } from 'antd';
 import { FIELD_TYPES } from './constants';
 import type { TabComponentProps, FieldConfig } from './types';
+import { useAppDispatch } from '~/stores';
+import { setFieldsModified } from '~/stores/slices/tableConfigSlice';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
@@ -35,10 +37,19 @@ const NUMBER_TYPES = ['int', 'bigint', 'tinyint', 'smallint', 'mediumint'];
 // 浮点类型列表
 const FLOAT_TYPES = ['float', 'double', 'decimal'];
 
-const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload }) => {
+const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config }) => {
+  const dispatch = useAppDispatch();
   const [form] = Form.useForm();
   const [editingField, setEditingField] = useState<FieldConfig | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
   const [selectedType, setSelectedType] = useState<string>('');
+  const [fields, setFields] = useState<FieldConfig[]>([]);
+
+  useEffect(() => {
+    if (config?.fields) {
+      setFields(config.fields);
+    }
+  }, [config]);
 
   // 监听类型变化
   useEffect(() => {
@@ -66,13 +77,13 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
       scale: parsed.scale,
       unsigned: parsed.unsigned
     });
+    setIsModalVisible(true);
   };
 
   // 处理保存
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      if (!config) return;
       
       // 构建column_type
       const column_type = buildDataType(
@@ -82,11 +93,10 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
         values.unsigned
       );
 
-      let newFields = [...config.fields];
       const fieldData = {
         ...values,
         column_type,
-        sort: editingField?.sort || newFields.length + 1
+        sort: editingField?.sort || fields.length + 1
       };
 
       // 移除临时字段
@@ -95,6 +105,14 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
       delete fieldData.scale;
       delete fieldData.unsigned;
 
+      // 构建符合接口要求的数据格式
+      const updateData = {
+        updateType: editingField ? 'modify' : 'add',
+        field: fieldData,
+        oldFieldName: editingField?.name
+      };
+
+      let newFields = [...fields];
       if (editingField) {
         const index = newFields.findIndex(f => f.name === editingField.name);
         if (index > -1) {
@@ -104,34 +122,34 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
         newFields.push(fieldData);
       }
 
-      const res = await updateTableFields(elementId, newFields);
-      if (res.code === 200) {
-        message.success('保存成功');
-        setEditingField(null);
-        form.resetFields();
-        onReload();
-      } else {
-        throw new Error(res.message);
-      }
+      setFields(newFields);
+      dispatch(setFieldsModified({ 
+        isModified: true, 
+        data: [updateData] // 传递符合接口要求的数据格式
+      }));
+      setEditingField(null);
+      form.resetFields();
+      setIsModalVisible(false);
     } catch (error) {
-      message.error('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      console.error('保存失败:', error);
     }
   };
 
   const handleDelete = async (field: FieldConfig) => {
-    try {
-      if (!config) return;
-      const newFields = config.fields.filter(f => f.name !== field.name);
-      const res = await updateTableFields(elementId, newFields);
-      if (res.code === 200) {
-        message.success('删除成功');
-        onReload();
-      } else {
-        throw new Error(res.message);
-      }
-    } catch (error) {
-      message.error('删除失败: ' + (error instanceof Error ? error.message : '未知错误'));
-    }
+    const newFields = fields.filter(f => f.name !== field.name);
+    setFields(newFields);
+    
+    // 构建删除操作的数据格式
+    const updateData = {
+      updateType: 'drop',
+      field: null,
+      oldFieldName: field.name
+    };
+
+    dispatch(setFieldsModified({ 
+      isModified: true, 
+      data: [updateData]
+    }));
   };
 
   const columns = [
@@ -176,8 +194,18 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
       key: 'action',
       render: (_: any, record: FieldConfig) => (
         <Space size="middle">
-          <a onClick={() => handleEdit(record)}>编辑</a>
-          <a onClick={() => handleDelete(record)}>删除</a>
+          <Button 
+            type="text" 
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => handleEdit(record)}
+          />
+          <Button
+            type="text"
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+          />  
         </Space>
       ),
     },
@@ -189,28 +217,34 @@ const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
         <Button type="primary" onClick={() => {
           setEditingField(null);
           form.resetFields();
+          setIsModalVisible(true);
         }}>
           新增字段
         </Button>
       </div>
       <Table
         columns={columns}
-        dataSource={config?.fields}
+        dataSource={fields}
         rowKey="name"
         pagination={false}
+        size="small"
       />
       <Modal
         title={editingField ? '编辑字段' : '新增字段'}
-        open={editingField !== null}
+        open={isModalVisible}
         onOk={handleSave}
         onCancel={() => {
           setEditingField(null);
           setSelectedType('');
           form.resetFields();
+          setIsModalVisible(false);
         }}
       >
-        <Form form={form} layout="vertical">
-          {/* 基本字段保持不变 */}
+        <Form 
+          form={form} 
+          layout="vertical"
+          preserve={false}
+        >
           <Form.Item
             label="字段名"
             name="name"

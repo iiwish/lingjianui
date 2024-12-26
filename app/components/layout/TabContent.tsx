@@ -13,6 +13,7 @@ interface Props {
   elementId: string;
   elementType: string;
   type: 'element' | 'config';
+  parentId?: string | null;
   initialState?: {
     breadcrumbs: Array<{
       id: number;
@@ -22,7 +23,7 @@ interface Props {
   };
 }
 
-const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, initialState }) => {
+const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, parentId, initialState }) => {
   console.log('TabContent render:', {
     appCode,
     elementId,
@@ -53,7 +54,7 @@ const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, in
       console.log('Rendering config component for type:', elementType);
       switch (elementType) {
         case '2':
-          return <TableConfig elementId={elementId} appCode={appCode} />;
+          return <TableConfig elementId={elementId} appCode={appCode} parentId={parentId} />;
         default:
           return (
             <Result

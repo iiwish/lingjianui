@@ -270,11 +270,13 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
         <Authorized permission="btn:element_manage">
           <Button 
             type="text" 
+            size="small"
             icon={<EditOutlined />}
             onClick={() => handleEdit(record)}
           />
           <Button
             type="text"
+            size="small"
             icon={<DeleteOutlined />}
             onClick={() => handleDelete(record)}
           />

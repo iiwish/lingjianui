@@ -1,21 +1,38 @@
-import React, { useState } from 'react';
-import { Button, Table, Modal, Form, Input, Select, Space, message } from 'antd';
-import { updateTableIndexes } from '~/services/element';
+import React, { useState, useEffect } from 'react';
+import { Button, Table, Modal, Form, Input, Select, Space } from 'antd';
 import { INDEX_MONTHODS } from './constants';
 import type { TabComponentProps, IndexConfig } from './types';
+import { useAppDispatch } from '~/stores';
+import { setIndexesModified } from '~/stores/slices/tableConfigSlice';
+import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
-const IndexInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload }) => {
+const IndexInfo: React.FC<TabComponentProps> = ({ config }) => {
+  const dispatch = useAppDispatch();
   const [form] = Form.useForm();
   const [editingIndex, setEditingIndex] = useState<IndexConfig | null>(null);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [indexes, setIndexes] = useState<IndexConfig[]>([]);
+
+  useEffect(() => {
+    if (config?.indexes) {
+      setIndexes(config.indexes);
+    }
+  }, [config]);
 
   const handleSave = async () => {
     try {
       const values = await form.validateFields();
-      if (!config) return;
 
-      let newIndexes = [...config.indexes];
+      // 构建符合接口要求的数据格式
+      const updateData = {
+        updateType: editingIndex ? 'modify' : 'add',
+        index: values,
+        oldIndexName: editingIndex?.name
+      };
+
+      let newIndexes = [...indexes];
       if (editingIndex) {
         // 更新索引
         const index = newIndexes.findIndex(i => i.name === editingIndex.name);
@@ -27,34 +44,34 @@ const IndexInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
         newIndexes.push(values);
       }
 
-      const res = await updateTableIndexes(elementId, newIndexes);
-      if (res.code === 200) {
-        message.success('保存成功');
-        setEditingIndex(null);
-        form.resetFields();
-        onReload();
-      } else {
-        throw new Error(res.message);
-      }
+      setIndexes(newIndexes);
+      dispatch(setIndexesModified({ 
+        isModified: true, 
+        data: [updateData]
+      }));
+      setEditingIndex(null);
+      setIsModalVisible(false);
+      form.resetFields();
     } catch (error) {
-      message.error('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      console.error('保存失败:', error);
     }
   };
 
   const handleDelete = async (index: IndexConfig) => {
-    try {
-      if (!config) return;
-      const newIndexes = config.indexes.filter(i => i.name !== index.name);
-      const res = await updateTableIndexes(elementId, newIndexes);
-      if (res.code === 200) {
-        message.success('删除成功');
-        onReload();
-      } else {
-        throw new Error(res.message);
-      }
-    } catch (error) {
-      message.error('删除失败: ' + (error instanceof Error ? error.message : '未知错误'));
-    }
+    const newIndexes = indexes.filter(i => i.name !== index.name);
+    setIndexes(newIndexes);
+    
+    // 构建删除操作的数据格式
+    const updateData = {
+      updateType: 'drop',
+      index: null,
+      oldIndexName: index.name
+    };
+
+    dispatch(setIndexesModified({ 
+      isModified: true, 
+      data: [updateData]
+    }));
   };
 
   const columns = [
@@ -80,11 +97,23 @@ const IndexInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
       key: 'action',
       render: (_: any, record: IndexConfig) => (
         <Space size="middle">
-          <a onClick={() => {
+          <Button 
+            type="text" 
+            size="small"
+            icon={<EditOutlined />}
+            onClick={() => {
             setEditingIndex(record);
             form.setFieldsValue(record);
-          }}>编辑</a>
-          <a onClick={() => handleDelete(record)}>删除</a>
+            setIsModalVisible(true);
+          }}
+
+          />
+          <Button
+            type="text"
+            size="small"
+            icon={<DeleteOutlined />}
+            onClick={() => handleDelete(record)}
+          />  
         </Space>
       ),
     },
@@ -96,26 +125,33 @@ const IndexInfo: React.FC<TabComponentProps> = ({ elementId, config, onReload })
         <Button type="primary" onClick={() => {
           setEditingIndex(null);
           form.resetFields();
+          setIsModalVisible(true);
         }}>
           新增索引
         </Button>
       </div>
       <Table
         columns={columns}
-        dataSource={config?.indexes}
+        dataSource={indexes}
         rowKey="name"
         pagination={false}
+        size="small"
       />
       <Modal
         title={editingIndex ? '编辑索引' : '新增索引'}
-        open={editingIndex !== null}
+        open={isModalVisible}
         onOk={handleSave}
         onCancel={() => {
           setEditingIndex(null);
           form.resetFields();
+          setIsModalVisible(false);
         }}
       >
-        <Form form={form} layout="vertical">
+        <Form 
+          form={form} 
+          layout="vertical"
+          preserve={false}
+        >
           <Form.Item
             label="索引名"
             name="name"

@@ -26,7 +26,7 @@ export default function ElementRoute() {
     return null;
   }
 
-  // 在组件挂载或关键属性变化时更新tab
+  // 在组件挂载或路由变化时更新tab
   useEffect(() => {
     const tabExists = tabs.some(tab => tab.key === location.pathname);
     if (!tabExists) {
@@ -35,9 +35,9 @@ export default function ElementRoute() {
         title: menuName || `${typeCode}-${id}`,
         closable: true
       }));
+      dispatch(setActiveTab(location.pathname));
     }
-    dispatch(setActiveTab(location.pathname));
-  }, [dispatch, location.pathname, menuName, typeCode, id, tabs]);
+  }, [dispatch, location.pathname, menuName, typeCode, id]);
 
   return (
     <TabContent

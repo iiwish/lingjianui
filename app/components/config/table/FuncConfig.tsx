@@ -1,8 +1,9 @@
-import React from 'react';
-import { Form, Select, Button, message, Row, Col, Switch, Radio, Space, Card } from 'antd';
+import React, { useEffect } from 'react';
+import { Form, Select, Radio, Space, Card, Row, Col, Switch, Button } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import { updateTableFunc } from '~/services/element';
 import type { TabComponentProps } from './types';
+import { useAppDispatch } from '~/stores';
+import { setFuncModified } from '~/stores/slices/tableConfigSlice';
 
 const queryTypes = [
   { label: '等于', value: 'eq' },
@@ -132,10 +133,11 @@ const ConditionGroupEditor: React.FC<{
   );
 };
 
-const FuncConfig: React.FC<TabComponentProps> = ({ elementId, config, onReload }) => {
+const FuncConfig: React.FC<TabComponentProps> = ({ config }) => {
   const [form] = Form.useForm();
+  const dispatch = useAppDispatch();
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (config.func) {
       try {
         const funcData = JSON.parse(config.func);
@@ -153,7 +155,7 @@ const FuncConfig: React.FC<TabComponentProps> = ({ elementId, config, onReload }
     }
   }, [config, form]);
 
-  const handleSave = async () => {
+  const handleValuesChange = async () => {
     try {
       const values = await form.validateFields();
       if (!values.queryCondition) {
@@ -164,20 +166,18 @@ const FuncConfig: React.FC<TabComponentProps> = ({ elementId, config, onReload }
         };
       }
       const funcStr = JSON.stringify(values);
-      const res = await updateTableFunc(elementId, funcStr);
-      if (res.code === 200) {
-        message.success('保存成功');
-        onReload();
-      } else {
-        throw new Error(res.message);
-      }
+      dispatch(setFuncModified({ isModified: true, data: funcStr }));
     } catch (error) {
-      message.error('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      console.error('保存失败:', error);
     }
   };
 
   return (
-    <Form form={form} layout="vertical">
+    <Form 
+      form={form} 
+      layout="vertical"
+      onValuesChange={handleValuesChange}
+    >
       <Form.Item label="查询条件">
         <ConditionGroupEditor namePath={['queryCondition', 'root']} config={config} />
       </Form.Item>
@@ -206,12 +206,6 @@ const FuncConfig: React.FC<TabComponentProps> = ({ elementId, config, onReload }
             value: field.name,
           }))}
         />
-      </Form.Item>
-
-      <Form.Item>
-        <Button type="primary" onClick={handleSave}>
-          保存
-        </Button>
       </Form.Item>
     </Form>
   );

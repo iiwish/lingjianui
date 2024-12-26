@@ -215,6 +215,16 @@ export const getTableConfig = async (tableId: string): Promise<ApiResponse<Table
   return get(`/config/tables/${tableId}`);
 };
 
+// 创建表格响应
+interface CreateTableResponse {
+  id: number;
+}
+
+// 创建表格
+export const createTableConfig = async (config: TableConfig): Promise<ApiResponse<CreateTableResponse>> => {
+  return post('/config/tables', config);
+};
+
 // 更新表格基础信息
 export const updateTableConfig = async (tableId: string, config: Partial<TableConfig>): Promise<ApiResponse<null>> => {
   return put(`/config/tables/${tableId}`, config);

@@ -50,14 +50,8 @@ const ElementCreateModal: React.FC<Props> = ({
     setSelectedType(type);
 
     if (elementType.needConfig) {
-      // 对于需要配置的类型,直接打开配置tab
+      // 对于需要配置的类型,直接打开配置页面
       const path = `/dashboard/${appCode}/config/${type}/new?parentId=${parentId}`;
-      dispatch(addTab({
-        key: path,
-        title: `新建${elementType.name}`,
-        closable: true
-      }));
-      dispatch(setActiveTab(path));
       navigate(path);
       handleCancel();
     } else {
@@ -84,8 +78,18 @@ const ElementCreateModal: React.FC<Props> = ({
 
       // 调用创建接口
       const res = await MenuService.createMenu(params);
-      if (res.code === 200) {
+      if (res.code === 200 && res.data) {
         message.success('创建成功');
+        // 构建路由路径
+        const path = `/dashboard/${appCode}/element/${selectedType}/${res.data.source_id || res.data.id}`;
+        // 添加并激活tab
+        dispatch(addTab({
+          key: path,
+          title: values.name,
+          closable: true
+        }));
+        dispatch(setActiveTab(path));
+        navigate(path);
         onSuccess();
         handleCancel();
       } else {

@@ -1,9 +1,17 @@
 import React from 'react';
-import { Form, Input, Button, message } from 'antd';
-import { updateTableConfig } from '~/services/element';
+import { Form, Input } from 'antd';
 import type { TabComponentProps } from './types';
+import { useAppSelector, useAppDispatch } from '~/stores';
+import { setBasicInfoModified } from '~/stores/slices/tableConfigSlice';
 
-const BasicInfo: React.FC<TabComponentProps> = ({ elementId, appCode, config, onReload }) => {
+interface Props extends TabComponentProps {
+  isNew?: boolean;
+  parentId?: string;
+}
+
+const BasicInfo: React.FC<Props> = ({ elementId, appCode, config, isNew, parentId }) => {
+  const { currentApp } = useAppSelector(state => state.app);
+  const dispatch = useAppDispatch();
   const [form] = Form.useForm();
   const prefix = appCode !== "sys" ? `app_${appCode}_` : '';
 
@@ -22,28 +30,38 @@ const BasicInfo: React.FC<TabComponentProps> = ({ elementId, appCode, config, on
     });
   }, [config, appCode]);
 
-  const handleSave = async () => {
+  const handleValuesChange = async () => {
     try {
       const values = await form.validateFields();
-      // 保存时加上前缀
-      const submitValues = {
-        ...values,
-        table_name: appCode !== "sys" ? `${prefix}${values.table_name}` : values.table_name,
-      };
-      const res = await updateTableConfig(elementId, submitValues);
-      if (res.code === 200) {
-        message.success('保存成功');
-        onReload();
+      const tableName = appCode !== "sys" ? `${prefix}${values.table_name}` : values.table_name;
+      
+      if (isNew) {
+        const submitValues = {
+          ...config,
+          ...values,
+          table_name: tableName,
+          app_id: currentApp?.id || 0,
+          parent_id: Number(parentId)
+        };
+        dispatch(setBasicInfoModified({ isModified: true, data: submitValues }));
       } else {
-        throw new Error(res.message);
+        const submitValues = {
+          ...values,
+          table_name: tableName,
+        };
+        dispatch(setBasicInfoModified({ isModified: true, data: submitValues }));
       }
     } catch (error) {
-      message.error('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
+      console.error('表单验证失败:', error);
     }
   };
 
   return (
-    <Form form={form} layout="vertical">
+    <Form 
+      form={form} 
+      layout="vertical"
+      onValuesChange={handleValuesChange}
+    >
       <Form.Item
         label="表名"
         name="table_name"
@@ -62,11 +80,6 @@ const BasicInfo: React.FC<TabComponentProps> = ({ elementId, appCode, config, on
       </Form.Item>
       <Form.Item label="备注" name="description">
         <Input.TextArea />
-      </Form.Item>
-      <Form.Item>
-        <Button type="primary" onClick={handleSave}>
-          保存
-        </Button>
       </Form.Item>
     </Form>
   );
