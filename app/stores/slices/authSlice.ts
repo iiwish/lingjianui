@@ -18,17 +18,6 @@ const initialState: AuthState = {
   error: null,
 };
 
-// 设置cookie的辅助函数
-const setCookie = (name: string, value: string, days = 7) => {
-  const expires = new Date(Date.now() + days * 864e5).toUTCString();
-  document.cookie = `${name}=${encodeURIComponent(value)}; expires=${expires}; path=/`;
-};
-
-// 删除cookie的辅助函数
-const deleteCookie = (name: string) => {
-  document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 GMT; path=/`;
-};
-
 // 获取权限列表
 export const fetchPermissions = createAsyncThunk<string[]>(
   'auth/fetchPermissions',
@@ -90,10 +79,6 @@ export const login = createAsyncThunk<LoginResult, LoginParams>(
       refreshToken: result.refresh_token
     }));
     
-    // 设置cookie
-    setCookie('token', result.access_token);
-    setCookie('refreshToken', result.refresh_token);
-    
     // 获取用户信息和权限
     await dispatch(fetchUserInfo()).unwrap();
     
@@ -116,10 +101,6 @@ export const refreshTokenAction = createAsyncThunk(
     if (response.code === 200) {
       const { access_token, refresh_token } = response.data;
       
-      // 更新cookie
-      setCookie('token', access_token);
-      setCookie('refreshToken', refresh_token);
-      
       return { token: access_token, refreshToken: refresh_token };
     }
     
@@ -139,16 +120,10 @@ const authSlice = createSlice({
       state.token = null;
       state.refreshToken = null;
       state.error = null;
-      // 清除cookie
-      deleteCookie('token');
-      deleteCookie('refreshToken');
     },
     setToken: (state: AuthState, action: PayloadAction<{ token: string; refreshToken: string }>) => {
       state.token = action.payload.token;
       state.refreshToken = action.payload.refreshToken;
-      // 更新cookie
-      setCookie('token', action.payload.token);
-      setCookie('refreshToken', action.payload.refreshToken);
     },
     clearError: (state: AuthState) => {
       state.error = null;
