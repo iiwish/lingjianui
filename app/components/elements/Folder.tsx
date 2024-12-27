@@ -22,6 +22,7 @@ import type { Menu as AppMenu } from '~/types/menu';
 import type { BreadcrumbItem } from '~/types/tab';
 import { Authorized } from '~/utils/permission';
 import { menuTypeToRouteType } from '~/constants/elementType';
+import MenuEditModal from './common/MenuEditModal';
 
 interface Props {
   elementId: string;
@@ -30,7 +31,7 @@ interface Props {
     breadcrumbs: Array<{
       id: number;
       name: string;
-      menu_type: string;
+      menu_type: number;
     }>;
   };
 }
@@ -53,6 +54,8 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
   const [breadcrumbs, setBreadcrumbs] = useState<BreadcrumbItem[]>([]);
   const [currentFolder, setCurrentFolder] = useState<number | null>(null);
   const [createModalVisible, setCreateModalVisible] = useState(false);
+  const [editModalVisible, setEditModalVisible] = useState(false);
+  const [currentEditMenu, setCurrentEditMenu] = useState<AppMenu | null>(null);
 
   // 获取当前tab的key和状态
   const tabKey = `/dashboard/${appCode}/element/folder/${elementId}`;
@@ -87,7 +90,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
               key: `${item.id}_${item.menu_code}` // 使用id和menu_code组合作为唯一key
             };
           }));
-          const newBreadcrumbs = [{ id: currentGroup.id, name: 'sys', menu_type: '1' }];
+          const newBreadcrumbs = [{ id: currentGroup.id, name: 'sys', menu_type: 1 }];
           setBreadcrumbs(newBreadcrumbs);
           updateTabState(newBreadcrumbs, null);
           return;
@@ -146,7 +149,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
 
   // 处理双击事件
   const handleDoubleClick = (record: AppMenu) => {
-    if (record.menu_type === '1') {
+    if (record.menu_type === 1) {
       // 更新面包屑
       const newBreadcrumbs = [...breadcrumbs, {
         id: record.id,
@@ -164,8 +167,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
     }
 
     // 构建路由路径
-    const routeType = record.menu_type === 'config' ? 'config' : 'element';
-    const path = `/dashboard/${appCode}/${routeType}/${menuTypeToRouteType[record.menu_type]}/${record.source_id}`;
+    const path = `/dashboard/${appCode}/element/${menuTypeToRouteType[record.menu_type]}/${record.source_id}`;
 
     // 添加并激活tab
     dispatch(addTab({
@@ -206,6 +208,12 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
 
   // 处理编辑按钮点击
   const handleEdit = (record: AppMenu) => {
+    if (record.menu_type === 1) {
+      setCurrentEditMenu(record);
+      setEditModalVisible(true);
+      return;
+    }
+
     // 构建配置路由路径
     const path = `/dashboard/${appCode}/config/${menuTypeToRouteType[record.menu_type]}/${record.source_id}`;
 
@@ -330,6 +338,17 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
         onSuccess={() => loadFolderData(currentFolder)}
       />
     </div>
+    <MenuEditModal
+        open={editModalVisible}
+        onCancel={() => {
+          setEditModalVisible(false);
+          setCurrentEditMenu(null);
+        }}
+        menu={currentEditMenu}
+        onSuccess={() => {
+          loadFolderData(currentFolder);
+        }}
+      />
     </App>
   );
 };

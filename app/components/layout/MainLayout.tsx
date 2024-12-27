@@ -198,14 +198,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
 
   // 生成菜单路径
   const generateMenuPath = (menu: AppMenu): string | null => {
-    if (menu.menu_type === '1') {
+    if (menu.menu_type === 1) {
       // 目录类型不生成路径
       return null;
     }
     // 根据menu_type决定使用element还是config路由
-    const routeType = menu.menu_type === 'config' ? 'config' : 'element';
     const typeCode = menuTypeToRouteType[menu.menu_type];
-    return `/dashboard/${currentApp?.code}/${routeType}/${typeCode}/${menu.source_id}`;
+    return `/dashboard/${currentApp?.code}/element/${typeCode}/${menu.source_id}`;
   };
 
   // 递归构建菜单项
@@ -222,7 +221,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
           ? buildMenuItems(menu.children) 
           : undefined,
         // 如果不是目录且有menuPath,则可以点击
-        onClick: menu.menu_type !== '1' && menuPath ? () => {
+        onClick: menu.menu_type !== 1 && menuPath ? () => {
           navigate(menuPath);
           dispatch(addTab({
             key: menuPath,

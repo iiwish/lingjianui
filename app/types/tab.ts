@@ -7,7 +7,7 @@ export interface Tab {
 export interface BreadcrumbItem {
   id: number;
   name: string;
-  menu_type: string;
+  menu_type: number;
 }
 
 export interface FolderTabState {

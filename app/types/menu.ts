@@ -3,10 +3,10 @@ export interface Menu {
   app_id: number;
   menu_name: string;
   menu_code: string;
-  menu_type: string;
+  menu_type: number;
   icon: string;
   path: string;
-  source_id: string;
+  source_id: number;
   parent_id: number;
   level: number;
   sort: number;

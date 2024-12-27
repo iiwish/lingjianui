@@ -33,6 +33,16 @@ export const MenuService = {
   },
 
   /**
+   * 更新菜单
+   * @param id 菜单ID
+   * @param params 更新参数
+   */
+  updateMenu: async (id: string, params: Partial<Menu>) => {
+    const response = await http.put<MenuResponse>(`${BASE_URL}/${id}`, params);
+    return response.data;
+  },
+
+  /**
    * 删除菜单
    */ 
   deleteMenu: async (id: string) => {
