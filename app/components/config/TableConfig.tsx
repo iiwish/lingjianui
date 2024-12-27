@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Tabs, Spin, Button, Result, message, Space } from 'antd';
 import type { TabsProps } from 'antd';
 import { useAppDispatch, useAppSelector } from '~/stores';
-import { setConfig, resetModifiedState } from '~/stores/slices/tableConfigSlice';
+import { setConfig, resetModifiedState, setParentId } from '~/stores/slices/tableConfigSlice';
 import { useNavigate, useLocation } from '@remix-run/react';
 import { 
   getTableConfig,
@@ -36,7 +36,8 @@ const TableConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
     modifiedBasicInfo,
     modifiedFields,
     modifiedIndexes,
-    modifiedFunc
+    modifiedFunc,
+    parentId: storeParentId
   } = useAppSelector(state => state.tableConfig);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -47,7 +48,6 @@ const TableConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
 
   // 空的初始配置
   const emptyConfig: ITableConfig = {
-    app_id: 0,
     table_name: '',
     display_name: '',
     description: '',
@@ -57,6 +57,11 @@ const TableConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
   };
 
   useEffect(() => {
+    // 保存parentId到redux中
+    if (parentId) {
+      dispatch(setParentId(parentId));
+    }
+
     if (isNew) {
       setLocalConfig(emptyConfig);
       dispatch(setConfig(emptyConfig));
@@ -64,7 +69,7 @@ const TableConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
     } else {
       loadConfig();
     }
-  }, [elementId, appCode, isNew]);
+  }, [elementId, appCode, isNew, parentId]);
 
   const loadConfig = async () => {
     try {
@@ -139,7 +144,7 @@ const TableConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
         // 新建表格时的配置
         const configToCreate = {
           ...modifiedBasicInfo,  // 直接使用 modifiedBasicInfo，因为新建时这是必需的
-          parent_id: parentId ? parseInt(parentId) : undefined,
+          parent_id: storeParentId ? parseInt(storeParentId) : undefined,
           fields: modifiedFields || [],
           indexes: modifiedIndexes || [],
           func: modifiedFunc || ''
@@ -152,7 +157,7 @@ const TableConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
             navigate(`/dashboard/${appCode}/config/table/${res.data.id}`);
           }
         } else {
-          throw new Error(res.message);
+          throw new Error(res.message || '创建失败');
         }
       } else {
         // 更新表格时，始终包含基础信息和func
@@ -289,8 +294,12 @@ const TableConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
         dispatch(resetModifiedState());
         loadConfig();
       }
-    } catch (error) {
-      message.error('保存失败: ' + (error instanceof Error ? error.message : '未知错误'));
+    } catch (error: any) {
+      if (error.response?.data) {
+        message.error('保存失败: ' + (error.response.data.message || '未知错误'));
+      } else {
+        message.error('保存失败: ' + (error.message || '未知错误'));
+      }
     }
   };
 

@@ -2,7 +2,6 @@ import { get,put,post,del } from '~/utils/http';
 
 // 数据表配置信息
 export interface TableConfig {
-  app_id: number;
   table_name: string;
   display_name: string;
   description: string;
@@ -217,7 +216,7 @@ export const getTableConfig = async (tableId: string): Promise<ApiResponse<Table
 
 // 创建表格响应
 interface CreateTableResponse {
-  id: number;
+  id: string; // 表格ID
 }
 
 // 创建表格

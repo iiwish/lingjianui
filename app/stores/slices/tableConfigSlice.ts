@@ -11,6 +11,7 @@ interface TableConfigState {
   modifiedFields: any[];
   modifiedIndexes: any[];
   modifiedFunc: string;
+  parentId: string | null;
 }
 
 const initialState: TableConfigState = {
@@ -22,13 +23,17 @@ const initialState: TableConfigState = {
   modifiedBasicInfo: null,
   modifiedFields: [],
   modifiedIndexes: [],
-  modifiedFunc: ''
+  modifiedFunc: '',
+  parentId: null
 };
 
 const tableConfigSlice = createSlice({
   name: 'tableConfig',
   initialState,
   reducers: {
+    setParentId: (state, action: PayloadAction<string | null>) => {
+      state.parentId = action.payload;
+    },
     setConfig: (state, action: PayloadAction<TableConfig | null>) => {
       state.config = action.payload;
     },
@@ -65,6 +70,7 @@ const tableConfigSlice = createSlice({
       state.modifiedFields = [];
       state.modifiedIndexes = [];
       state.modifiedFunc = '';
+      state.parentId = null;
     }
   }
 });
@@ -75,7 +81,8 @@ export const {
   setFieldsModified,
   setIndexesModified,
   setFuncModified,
-  resetModifiedState
+  resetModifiedState,
+  setParentId
 } = tableConfigSlice.actions;
 
 export default tableConfigSlice.reducer;

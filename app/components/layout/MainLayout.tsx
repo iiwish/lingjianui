@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Layout, Menu as AntMenu, Button, Avatar, Dropdown, Tabs, Select, Result } from 'antd';
+import { Layout, Menu as AntMenu, Button, Avatar, Dropdown, Tabs, Select, Result, App } from 'antd';
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
@@ -339,8 +339,9 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const filteredTabs = tabs.filter(tab => tab.key !== '/dashboard');
 
   return (
-    <Layout style={{ minHeight: '100vh', height: '100vh' }}>
-      <Sider 
+    <App>
+      <Layout style={{ minHeight: '100vh', height: '100vh' }}>
+        <Sider 
         trigger={null} 
         collapsible 
         collapsed={collapsed}
@@ -502,13 +503,13 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             </>
           )}
         </Content>
+        </Layout>
+        <UserProfileModal
+          visible={profileModalVisible}
+          onClose={() => setProfileModalVisible(false)}
+        />
       </Layout>
-
-      <UserProfileModal
-        visible={profileModalVisible}
-        onClose={() => setProfileModalVisible(false)}
-      />
-    </Layout>
+    </App>
   );
 };
 

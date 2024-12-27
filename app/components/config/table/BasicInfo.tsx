@@ -30,29 +30,24 @@ const BasicInfo: React.FC<Props> = ({ elementId, appCode, config, isNew, parentI
     });
   }, [config, appCode]);
 
-  const handleValuesChange = async () => {
-    try {
-      const values = await form.validateFields();
-      const tableName = appCode !== "sys" ? `${prefix}${values.table_name}` : values.table_name;
-      
-      if (isNew) {
-        const submitValues = {
-          ...config,
-          ...values,
-          table_name: tableName,
-          app_id: currentApp?.id || 0,
-          parent_id: Number(parentId)
-        };
-        dispatch(setBasicInfoModified({ isModified: true, data: submitValues }));
-      } else {
-        const submitValues = {
-          ...values,
-          table_name: tableName,
-        };
-        dispatch(setBasicInfoModified({ isModified: true, data: submitValues }));
-      }
-    } catch (error) {
-      console.error('表单验证失败:', error);
+  const handleValuesChange = () => {
+    const values = form.getFieldsValue();
+    const tableName = appCode !== "sys" ? `${prefix}${values.table_name}` : values.table_name;
+    
+    if (isNew) {
+      const submitValues = {
+        ...config,
+        ...values,
+        table_name: tableName,
+        parent_id: Number(parentId)
+      };
+      dispatch(setBasicInfoModified({ isModified: true, data: submitValues }));
+    } else {
+      const submitValues = {
+        ...values,
+        table_name: tableName,
+      };
+      dispatch(setBasicInfoModified({ isModified: true, data: submitValues }));
     }
   };
 
