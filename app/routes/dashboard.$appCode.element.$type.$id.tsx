@@ -51,7 +51,7 @@ export default function ElementRoute() {
 }
 
 // 添加loader函数来处理数据加载
-export async function loader({ params }: { params: { type: string; id: string; appCode: string } }) {
+export async function loader({ params }: { params: { type: string; id: number; appCode: string } }) {
   console.log('ElementRoute loader params:', params);
   
   try {
@@ -73,7 +73,7 @@ export async function loader({ params }: { params: { type: string; id: string; a
       };
 
       // 构建面包屑路径
-      const buildBreadcrumbs = (items: AppMenu[], targetId: number): Array<{id: number, name: string, menu_type: string}> | null => {
+      const buildBreadcrumbs = (items: AppMenu[], targetId: number): Array<{id: number, name: string, menu_type: number}> | null => {
         for (const item of items) {
           if (item.id === targetId) {
             return [{ id: item.id, name: item.menu_name, menu_type: item.menu_type }];

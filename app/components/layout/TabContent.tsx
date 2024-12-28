@@ -4,8 +4,9 @@ import { menuTypeToRouteType, routeTypeToMenuType } from '~/constants/elementTyp
 import { useAppSelector } from '~/stores';
 
 // 懒加载组件
-const Table = React.lazy(() => import('~/components/elements/Table'));
 const Folder = React.lazy(() => import('~/components/elements/Folder'));
+const Table = React.lazy(() => import('~/components/elements/Table'));
+const Dimension = React.lazy(() => import('~/components/elements/Dimension'));
 const TableConfig = React.lazy(() => import('~/components/config/TableConfig'));
 
 interface Props {
@@ -18,7 +19,7 @@ interface Props {
     breadcrumbs: Array<{
       id: number;
       name: string;
-      menu_type: string;
+      menu_type: number;
     }>;
   };
 }
@@ -41,6 +42,8 @@ const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, pa
           return <Folder elementId={elementId} appCode={appCode} initialState={initialState} />;
         case '2':
           return <Table elementId={elementId} appCode={appCode} elementType={elementType} />;
+        case '3':
+          return <Dimension elementId={elementId} appCode={appCode}/>;
         default:
           return (
             <Result

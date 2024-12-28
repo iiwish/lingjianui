@@ -57,6 +57,13 @@ export interface DimensionConfig {
   updater_id: number;
 }
 
+export interface DimensionConfigRequest {
+  display_name: string;
+  description: string;
+  table_name: string;
+  parent_id: number;
+}
+
 export interface DimensionItem {
   id: number;
   name: string;
@@ -215,12 +222,12 @@ export const getTableConfig = async (tableId: string): Promise<ApiResponse<Table
 };
 
 // 创建表格响应
-interface CreateTableResponse {
+interface OneID {
   id: string; // 表格ID
 }
 
 // 创建表格
-export const createTableConfig = async (config: TableConfig): Promise<ApiResponse<CreateTableResponse>> => {
+export const createTableConfig = async (config: TableConfig): Promise<ApiResponse<OneID>> => {
   return post('/config/tables', config);
 };
 
@@ -275,15 +282,55 @@ export const deleteTableItems = async (tableId: string, request: CreateTableItem
   return del(`/table/${tableId}`, request);
 };
 
-
-// 获取维度配置
-export const getDimensionConfig = async (appId: string, dimId: string): Promise<ApiResponse<DimensionConfig>> => {
-  return get(`/config/dimensions/${dimId}`,);
+export const createDimensionConfig = async (config: DimensionConfigRequest): Promise<ApiResponse<OneID>> => {
+  return post('/config/dimensions', config);
 };
 
-// 获取维度数据
-export const getDimensionData = async (appId: string, dimId: string): Promise<ApiResponse<DimensionItem[]>> => {
-  return get(`/config/dimensions/${dimId}/items`,);
+// 获取维度配置
+export const getDimensionConfig = async (dimId: string): Promise<ApiResponse<DimensionConfig>> => {
+  return get(`/config/dimensions/${dimId}`);
+};
+
+// 更新维度配置
+export const updateDimensionConfig = async (dimId: string, config: Omit<DimensionConfigRequest, 'parent_id'>): Promise<ApiResponse<null>> => {
+  return put(`/config/dimensions/${dimId}`, config);
+};
+
+// 删除维度配置
+export const deleteDimensionConfig = async (dimId: string): Promise<ApiResponse<null>> => {
+  return del(`/config/dimensions/${dimId}`);
+};
+
+// 获取维度树
+export const getDimensionTree = async (dimId: string, params?: {
+  id?: number;
+  type?: 'children' | 'descendants' | 'leaves';
+  level?: 0 | 1 | 2 | 3;
+}): Promise<ApiResponse<DimensionItem[]>> => {
+  return get(`/dimension/${dimId}`, { params });
+};
+
+// 更新维度节点
+export const updateDimensionNode = async (dimId: string, id: string, params: {
+  parent?: number;
+  sort?: number;
+}): Promise<ApiResponse<null>> => {
+  return put(`/dimension/${dimId}/${id}`, null, { params });
+};
+
+// 更新维度节点信息
+export const updateDimensionItem = async (dimId: string, id: string, item: Partial<DimensionItem>): Promise<ApiResponse<DimensionItem>> => {
+  return put(`/dimension/${dimId}`, item);
+};
+
+// 批量创建维度节点
+export const createDimensionItems = async (dimId: string, items: Omit<DimensionItem, 'id' | 'children'>[]): Promise<ApiResponse<null>> => {
+  return post(`/dimension/${dimId}`, items);
+};
+
+// 批量删除维度节点
+export const deleteDimensionItems = async (dimId: string, ids: number[]): Promise<ApiResponse<null>> => {
+  return del(`/dimension/${dimId}`, ids);
 };
 
 // 获取菜单配置
