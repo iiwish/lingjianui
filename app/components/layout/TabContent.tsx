@@ -8,6 +8,7 @@ const Folder = React.lazy(() => import('~/components/elements/Folder'));
 const Table = React.lazy(() => import('~/components/elements/Table'));
 const Dimension = React.lazy(() => import('~/components/elements/Dimension'));
 const TableConfig = React.lazy(() => import('~/components/config/TableConfig'));
+const Menu = React.lazy(() => import('~/components/elements/Menu'));
 
 interface Props {
   appCode: string;
@@ -44,6 +45,8 @@ const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, pa
           return <Table elementId={elementId} appCode={appCode} elementType={elementType} />;
         case '3':
           return <Dimension elementId={elementId} appCode={appCode}/>;
+        case '4': 
+          return <Menu elementId={elementId} appCode={appCode}/>;
         default:
           return (
             <Result

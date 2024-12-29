@@ -7,10 +7,12 @@ export const MenuService = {
   /**
    * 获取菜单列表
    */
-  getMenus: async (appId: string) => {
+  getMenus: async (type: string = 'descendants', parent_id?: string, level?: number) => {
     const response = await http.get<MenusResponse>(BASE_URL, {
       params: {
-        type: 'descendants'
+        type,
+        parent_id,
+        level
       }
     });
     return response.data;
@@ -19,8 +21,16 @@ export const MenuService = {
   /**
    * 获取菜单详情
    */
-  getMenu: async (id: string, appId: string) => {
+  getMenu: async (id: string) => {
     const response = await http.get<MenuResponse>(`${BASE_URL}/${id}`);
+    return response.data;
+  },
+
+  /**
+   * 获取系统菜单id
+   */
+  getSystemMenuId: async () => {
+    const response = await http.get<MenuResponse>(`${BASE_URL}/sysid`);
     return response.data;
   },
 

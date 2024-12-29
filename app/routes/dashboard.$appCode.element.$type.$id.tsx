@@ -55,7 +55,7 @@ export async function loader({ params }: { params: { type: string; id: number; a
   console.log('ElementRoute loader params:', params);
   
   try {
-    const response = await MenuService.getMenus(params.appCode);
+    const response = await MenuService.getMenus();
     if (response.code === 200) {
       const findMenu = (items: AppMenu[]): AppMenu | null => {
         for (const item of items) {

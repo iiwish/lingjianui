@@ -76,7 +76,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
   const loadFolderData = async (folderId: number | null) => {
     try {
       setLoading(true);
-      const response = await MenuService.getMenus(appCode);
+      const response = await MenuService.getMenus();
       if (response.code === 200) {
         const currentGroup = response.data.items.find(menu => menu.id === Number(elementId));
         if (!currentGroup) return;
@@ -208,7 +208,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
 
   // 处理编辑按钮点击
   const handleEdit = (record: AppMenu) => {
-    if (record.menu_type === 1) {
+    if (record.menu_type === 1 || record.menu_type === 4) {
       setCurrentEditMenu(record);
       setEditModalVisible(true);
       return;

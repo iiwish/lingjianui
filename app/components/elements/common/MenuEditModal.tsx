@@ -48,9 +48,21 @@ const MenuEditModal: React.FC<Props> = ({
     }
   };
 
+  const getTitle = () => {
+    if (!menu) return '编辑';
+    switch (menu.menu_type) {
+      case 1:
+        return '编辑文件夹';
+      case 4:
+        return '编辑菜单信息';
+      default:
+        return '编辑';
+    }
+  };
+
   return (
     <Modal
-      title="编辑文件夹"
+      title={getTitle()}
       open={open}
       onCancel={onCancel}
       onOk={() => form.submit()}

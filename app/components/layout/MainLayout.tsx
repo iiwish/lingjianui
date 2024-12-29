@@ -141,7 +141,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       }
 
       dispatch(setLoading(true));
-      MenuService.getMenus(currentApp.id.toString())
+      MenuService.getMenus()
         .then(response => {
           if (response.code === 200) {
             const menuData = response.data.items;
@@ -265,7 +265,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       dispatch(setCurrentMenuGroup(selectedMenu));
       
       // 如果是系统菜单,自动打开folder tab
-      if (selectedMenu.menu_code === '_sys') {
+      if (selectedMenu.menu_code === 'system') {
         const path = `/dashboard/${currentApp?.code}/element/folder/${selectedMenu.id}`;
         dispatch(addTab({
           key: path,

@@ -44,15 +44,15 @@ export interface MenusResponse {
 }
 
 export interface CreateMenuRequest {
-  app_id: string;
+  app_id: number;
   menu_name: string;
   menu_code: string;
-  menu_type: string;
+  menu_type: number;
   parent_id: number;
   status: number;
   icon?: string;
   path?: string;
-  source_id?: string;
+  source_id?: number;
   level?: number;
   sort?: number;
   node_id?: string;

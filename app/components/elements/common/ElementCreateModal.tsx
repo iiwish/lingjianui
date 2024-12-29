@@ -105,10 +105,10 @@ const ElementCreateModal: React.FC<Props> = ({
 
       // 构建创建菜单的参数
       const params = {
-        app_id: state.app.currentApp?.id?.toString() || '',
+        app_id: state.app.currentApp?.id || 0,
         menu_name: values.name,
         menu_code: values.code,
-        menu_type: routeTypeToMenuType[selectedType],
+        menu_type: Number(routeTypeToMenuType[selectedType]),
         parent_id: Number(parentId),
         icon: selectedType,
         status: 1
@@ -116,20 +116,12 @@ const ElementCreateModal: React.FC<Props> = ({
 
       // 调用创建接口
       const res = await MenuService.createMenu(params);
-      if (res.code === 200 && res.data) {
+      if (res.code === 200) {
         message.success('创建成功');
-        // 构建路由路径
-        const path = `/dashboard/${appCode}/element/${selectedType}/${res.data.source_id || res.data.id}`;
-        // 添加并激活tab
-        dispatch(addTab({
-          key: path,
-          title: values.name,
-          closable: true
-        }));
-        dispatch(setActiveTab(path));
-        navigate(path);
         onSuccess();
         handleCancel();
+        // 清空表单
+        formRef.current?.resetFields();
       } else {
         message.error(res.message || '创建失败');
       }
