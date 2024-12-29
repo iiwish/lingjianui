@@ -323,8 +323,11 @@ export const updateDimensionItem = async (dimId: string, id: string, item: Parti
   return put(`/dimension/${dimId}`, item);
 };
 
+interface IDList {
+  ids: number[];
+}
 // 批量创建维度节点
-export const createDimensionItems = async (dimId: string, items: Omit<DimensionItem, 'id' | 'children'>[]): Promise<ApiResponse<null>> => {
+export const createDimensionItems = async (dimId: string, items: Omit<DimensionItem, 'id' | 'children'>[]): Promise<ApiResponse<IDList>> => {
   return post(`/dimension/${dimId}`, items);
 };
 

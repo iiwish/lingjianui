@@ -55,11 +55,8 @@ const DimensionConfig: React.FC<Props> = ({ elementId, appCode, parentId, visibl
       setError(null);
       const res = await getDimensionConfig(elementId);
       if (res.code === 200 && res.data) {
-        message.success('创建成功');
-        // todo navigate加上之后有一堆报错，先不加了
-        // if (res.data?.id) {
-        //   navigate(`/dashboard/${appCode}/config/dim/${res.data.id}`);
-        // }
+        dispatch(setConfig(res.data));
+        form.setFieldsValue(res.data);
       } else {
         throw new Error(res.message || '加载配置失败');
       }
