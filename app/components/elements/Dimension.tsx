@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useMemo } from 'react';
 import { Layout, Tree, Input, Form, Button, message, Spin, Modal } from 'antd';
 import { SettingOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { TreeProps } from 'antd/es/tree';
@@ -17,7 +17,10 @@ import {
   updateDimensionItem,
   createDimensionItems,
   deleteDimensionItems,
-  DimensionItem
+  getDimensionConfig,
+  DimensionItem,
+  DimensionConfig as IDimensionConfig,
+  CustomColumn
 } from '~/services/element';
 import { PlusOutlined } from '@ant-design/icons';
 
@@ -32,6 +35,7 @@ interface Props {
 const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+  const [dimensionConfig, setDimensionConfig] = useState<IDimensionConfig | null>(null);
   const [treeData, setTreeData] = useState<DataNode[]>([]);
   const [expandedKeys, setExpandedKeys] = useState<React.Key[]>([]);
   const [searchValue, setSearchValue] = useState('');
@@ -42,8 +46,22 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
   const [tempNode, setTempNode] = useState<DimensionItem | null>(null);
 
   useEffect(() => {
+    loadDimensionConfig();
     loadTreeData();
   }, [elementId]);
+
+  // 加载维度配置
+  const loadDimensionConfig = async () => {
+    try {
+      const res = await getDimensionConfig(elementId);
+      if (res.code === 200 && res.data) {
+        setDimensionConfig(res.data);
+      }
+    } catch (error) {
+      console.error('加载维度配置失败:', error);
+      message.error('加载维度配置失败');
+    }
+  };
 
   // 递归查找节点
   const findNodeById = (items: DimensionItem[], id: number): DimensionItem | undefined => {
@@ -83,7 +101,10 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
           if (updatedNode) {
             // 更新选中状态
             setSelectedNode(updatedNode);
-            form.setFieldsValue(updatedNode);
+            form.setFieldsValue({
+              ...updatedNode,
+              custom_data: updatedNode.custom_data || {}
+            });
             setSelectedKeys([updatedNode.id.toString()]);
 
             // 展开到选中节点的路径
@@ -342,7 +363,10 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
       const node = info.node.data;
       setSelectedNode(node);
       setSelectedKeys([node.id.toString()]);
-      form.setFieldsValue(node);
+      form.setFieldsValue({
+        ...node,
+        custom_data: node.custom_data || {}
+      });
     } else {
       setSelectedNode(null);
       setSelectedKeys([]);
@@ -362,7 +386,8 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
           ...values,
           parent_id: tempNode.parent_id,
           level: tempNode.level,
-          sort: tempNode.sort
+          sort: tempNode.sort,
+          custom_data: values.custom_data || {}
         }]);
         if (res.code !== 200) {
           throw new Error(res.message || '保存失败');
@@ -375,7 +400,8 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
           id: newId,
           parent_id: tempNode.parent_id,
           level: tempNode.level,
-          sort: tempNode.sort
+          sort: tempNode.sort,
+          custom_data: values.custom_data || {}
         };
 
         // 先设置选中状态
@@ -392,7 +418,10 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
         return;
       } else {
         // 否则调用更新接口
-        await updateDimensionItem(elementId, selectedNode.id.toString(), values);
+        await updateDimensionItem(elementId, selectedNode.id.toString(), {
+          ...values,
+          custom_data: values.custom_data || {}
+        });
       }
       
       message.success('保存成功');
@@ -427,7 +456,8 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
       level: parentLevel + 1,
       node_id: '',
       status: 1,
-      sort: 0
+      sort: 0,
+      custom_data: {}
     };
 
     setTempNode(newNode);
@@ -436,7 +466,8 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
     form.setFieldsValue({
       ...newNode,
       name: '新建维度',
-      code: ''
+      code: '',
+      custom_data: {}
     });
 
     // 添加到树中
@@ -575,18 +606,16 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
             >
               <Input placeholder="请输入编码" />
             </Form.Item>
-            <Form.Item name="custom1" label="自定义字段1">
-              <Input placeholder="请输入自定义字段1" />
-            </Form.Item>
-            <Form.Item name="custom2" label="自定义字段2">
-              <Input placeholder="请输入自定义字段2" />
-            </Form.Item>
-            <Form.Item name="custom3" label="自定义字段3">
-              <Input placeholder="请输入自定义字段3" />
-            </Form.Item>
-            {/* <Form.Item name="status" label="状态">
-              <Input placeholder="请输入状态" />
-            </Form.Item> */}
+            {/* 动态生成自定义列表单项 */}
+            {Array.isArray(dimensionConfig?.custom_columns) && dimensionConfig.custom_columns.map((column: CustomColumn) => (
+              <Form.Item
+                key={column.name}
+                name={['custom_data', column.name]}
+                label={column.comment}
+              >
+                <Input placeholder={`请输入${column.comment}`} maxLength={column.length} />
+              </Form.Item>
+            ))}
             <Form.Item style={{ textAlign: 'right', gap: 8, marginBottom: 0 }}>
               <Button 
                 danger
@@ -612,6 +641,10 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
           appCode={appCode}
           visible={configVisible}
           onCancel={() => setConfigVisible(false)}
+          onSuccess={() => {
+            loadDimensionConfig();
+            loadTreeData();
+          }}
         />
     </Layout>
   );

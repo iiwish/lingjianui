@@ -44,6 +44,12 @@ export interface UpdateTableItemsRequest {
   items: Array<Record<string, any>>; // 要更新的数据表记录
 }
 
+export interface CustomColumn {
+  name: string;
+  length: number;
+  comment: string;
+}
+
 export interface DimensionConfig {
   id: number;
   display_name: string;
@@ -55,6 +61,7 @@ export interface DimensionConfig {
   updated_at: string;
   creator_id: number;
   updater_id: number;
+  custom_columns?: CustomColumn[];
 }
 
 export interface DimensionConfigRequest {
@@ -62,6 +69,7 @@ export interface DimensionConfigRequest {
   description: string;
   table_name: string;
   parent_id: number;
+  custom_columns?: CustomColumn[];
 }
 
 export interface DimensionItem {
@@ -73,6 +81,7 @@ export interface DimensionItem {
   node_id: string;
   status: number;
   sort: number;
+  custom_data?: Record<string, string>;
   children?: DimensionItem[];
 }
 

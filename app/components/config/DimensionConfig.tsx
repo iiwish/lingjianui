@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { Modal, Form, Input, Button, Spin, Result, message } from 'antd';
+import { Modal, Form, Input, Button, Spin, Result, message, Space, Card, InputNumber } from 'antd';
+import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { setConfig, resetModifiedState, setParentId } from '~/stores/slices/dimensionConfigSlice';
 import {
@@ -32,7 +33,8 @@ const DimensionConfig: React.FC<Props> = ({ elementId, appCode, parentId, visibl
     table_name: '',
     display_name: '',
     description: '',
-    status: 1
+    status: 1,
+    custom_columns: []
   };
 
   useEffect(() => {
@@ -166,6 +168,63 @@ const DimensionConfig: React.FC<Props> = ({ elementId, appCode, parentId, visibl
         >
           <Input.TextArea rows={4} placeholder="请输入描述" />
         </Form.Item>
+
+        <Card title="自定义列" size="small" style={{ marginTop: 24 }}>
+          <Form.List name="custom_columns">
+            {(fields, { add, remove }) => (
+              <>
+                {fields.map(({ key, name, ...restField }) => (
+                  <Space key={key} style={{ display: 'flex', marginBottom: 8 }} align="baseline">
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'name']}
+                      rules={[
+                        { required: true, message: '请输入列名' },
+                        { pattern: /^[A-Za-z][A-Za-z0-9_]*$/, message: '只允许大小写字母、数字和下划线，并且必须以字母开头' }
+                      ]}
+                    >
+                      <Input placeholder="列名" style={{ width: 120 }} />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'length']}
+                      initialValue={30}
+                      rules={[
+                        { required: true, message: '请输入长度' },
+                      ]}
+                    >
+                      <InputNumber min={1} max={255}  type="number" placeholder="长度" style={{ width: 80 }} />
+                    </Form.Item>
+                    <Form.Item
+                      {...restField}
+                      name={[name, 'comment']}
+                      rules={[{ required: true, message: '请输入注释' }]}
+                    >
+                      <Input placeholder="注释" style={{ width: 200 }} />
+                    </Form.Item>
+                    <MinusCircleOutlined onClick={() => remove(name)} />
+                  </Space>
+                ))}
+                <Form.Item>
+                  <Button 
+                    type="dashed" 
+                    onClick={() => {
+                      if (fields.length >= 10) {
+                        message.warning('最多只能添加10个自定义列');
+                        return;
+                      }
+                      add();
+                    }} 
+                    block 
+                    icon={<PlusOutlined />}
+                  >
+                    添加自定义列
+                  </Button>
+                </Form.Item>
+              </>
+            )}
+          </Form.List>
+        </Card>
       </Form>
     );
   };

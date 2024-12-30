@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Tree, Input, Form, Button, message, Spin, Modal } from 'antd';
+import { Layout, Tree, Input, Form, Button, message, Spin, Modal, TreeSelect, App } from 'antd';
 import { SettingOutlined, PlusOutlined } from '@ant-design/icons';
 import type { TreeProps } from 'antd/es/tree';
 import { Authorized } from '~/utils/permission';
@@ -9,6 +9,7 @@ import type { Menu as AppMenu } from '~/types/menu';
 
 interface DataNode {
   key: string;
+  value?: string;
   title: string | React.ReactNode;
   children?: DataNode[];
   data?: AppMenu;
@@ -33,10 +34,81 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
   const [selectedKeys, setSelectedKeys] = useState<React.Key[]>([]);
   const [configVisible, setConfigVisible] = useState(false);
   const [tempNode, setTempNode] = useState<AppMenu | null>(null);
+  const [systemMenuTree, setSystemMenuTree] = useState<DataNode[]>([]);
+  const [systemMenuLoading, setSystemMenuLoading] = useState(false);
 
   useEffect(() => {
     loadTreeData();
+    loadSystemMenuTree();
   }, [elementId]);
+
+  // 加载系统菜单树
+  const loadSystemMenuTree = async () => {
+    try {
+      setSystemMenuLoading(true);
+      // 获取系统菜单id
+      const sysRes = await MenuService.getSystemMenuId();
+      if (sysRes.code === 200 && sysRes.data) {
+        // 获取系统菜单树
+        const treeRes = await MenuService.getMenus('descendants', sysRes.data.id.toString());
+        if (treeRes.code === 200 && treeRes.data) {
+          const data = convertToTreeSelectData(treeRes.data.items);
+          setSystemMenuTree(data);
+        }
+      }
+    } catch (error) {
+      console.error('加载系统菜单失败:', error);
+      message.error('加载系统菜单失败');
+    } finally {
+      setSystemMenuLoading(false);
+    }
+  };
+
+  // 将菜单数据转换为TreeSelect需要的格式
+  const convertToTreeSelectData = (items: AppMenu[]): DataNode[] => {
+    return items.map(item => ({
+      key: item.id.toString(),
+      value: item.id.toString(),
+      title: item.menu_name,
+      children: item.children ? convertToTreeSelectData(item.children) : undefined,
+      selectable: item.menu_type !== 1, // folder类型不可选
+      data: item
+    }));
+  };
+  // 添加查找节点的辅助函数
+  const findTreeNode = (trees: DataNode[], key: string): DataNode | null => {
+    for (const node of trees) {
+      if (node.key === key) {
+        return node;
+      }
+      if (node.children) {
+        const found = findTreeNode(node.children, key);
+        if (found) return found;
+      }
+    }
+    return null;
+  };
+
+  // 处理source选择事件
+  const handleSourceSelect = (value: string) => {
+      if (!value) {
+        form.setFieldsValue({
+          source_id: undefined,
+          menu_type: undefined
+        });
+        return;
+      }
+
+      // 从系统菜单树中查找对应节点
+      const node = findTreeNode(systemMenuTree, value);
+      if (!node?.data) return;
+
+      // 更新表单数据
+      form.setFieldsValue({
+        source_id: node.data.id,
+        menu_type: node.data.menu_type
+      });
+  };
 
   // 递归查找节点
   const findNodeById = (items: AppMenu[], id: number): AppMenu | undefined => {
@@ -284,7 +356,10 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
       const node = info.node.data;
       setSelectedNode(node);
       setSelectedKeys([node.id.toString()]);
-      form.setFieldsValue(node);
+      form.setFieldsValue({
+        ...node,
+        source: node.source_id ? node.source_id.toString() : undefined
+      });
     } else {
       setSelectedNode(null);
       setSelectedKeys([]);
@@ -300,6 +375,10 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
       
       if (tempNode && selectedNode.id === tempNode.id) {
         // 如果是保存临时节点,调用创建接口
+        console.log('Creating menu with parent_id:', tempNode.parent_id);
+        if (tempNode.parent_id === 0) { 
+          tempNode.parent_id = parseInt(elementId); 
+        }
         const res = await MenuService.createMenu({
           ...values,
           parent_id: tempNode.parent_id,
@@ -453,6 +532,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
   };
 
   return (
+    <App>
     <Layout >
       <Header style={{ display: 'flex', justifyContent: 'flex-end', paddingBottom: '0px', background: '#fff' }}> 
         <Authorized permission="btn:element_manage">
@@ -524,8 +604,23 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
             >
               <Input placeholder="请输入编码" />
             </Form.Item>
+            <Form.Item name="source_id" hidden>
+              <Input />
+            </Form.Item>
+            <Form.Item name="menu_type" label="类型">
+              <Input disabled value={selectedNode?.menu_type === 1 ? '文件夹' : selectedNode?.menu_type === 4 ? '菜单' : selectedNode?.menu_type === 2 ? '表格' : selectedNode?.menu_type === 3 ? '维度' : selectedNode?.menu_type === 5 ? '模型' : selectedNode?.menu_type === 6 ? '表单' : ''} />
+            </Form.Item>
             <Form.Item name="source" label="关联资源">
-              <Input placeholder="请输入路径" />
+              <TreeSelect
+                loading={systemMenuLoading}
+                treeData={systemMenuTree}
+                placeholder="请选择关联资源"
+                onChange={handleSourceSelect}
+                allowClear
+                showSearch
+                treeNodeFilterProp="title"
+                treeDefaultExpandAll
+              />
             </Form.Item>
             <Form.Item style={{ textAlign: 'right', gap: 8, marginBottom: 0 }}>
               <Button 
@@ -556,6 +651,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
         }}
       />
     </Layout>
+    </App>
   );
 };
 
