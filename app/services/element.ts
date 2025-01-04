@@ -57,6 +57,7 @@ export interface DimensionConfig {
   table_name: string;
   app_id: number;
   status: number;
+  dimension_type: string;
   created_at: string;
   updated_at: string;
   creator_id: number;
@@ -69,6 +70,7 @@ export interface DimensionConfigRequest {
   description: string;
   table_name: string;
   parent_id: number;
+  dimension_type?: string;
   custom_columns?: CustomColumn[];
 }
 

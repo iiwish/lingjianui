@@ -1,14 +1,58 @@
-import type { Menu, MenuResponse, MenusResponse, CreateMenuRequest } from '~/types/menu';
+import type { Menu, MenuResponse, IDResponse, CreateMenuRequest, UpdateMenuRequest, CreateMenuItemRequest, UpdateMenuItemRequest } from '~/types/menu';
 import http from '~/utils/http';
 
-const BASE_URL = '/config/menus';
+const CONFIG_URL = '/config/menus';
+const ELEMENT_URL = '/menu';
 
 export const MenuService = {
   /**
    * 获取菜单列表
    */
-  getMenus: async (type: string = 'descendants', parent_id?: string, level?: number) => {
-    const response = await http.get<MenusResponse>(BASE_URL, {
+  getMenuList: async () => {
+    const response = await http.get<MenuResponse>(`${CONFIG_URL}`);
+    return response.data;
+  },
+
+  /**
+   * 获取系统菜单id
+   */
+  getSystemMenuId: async () => {
+    const response = await http.get<IDResponse>(`${CONFIG_URL}/sysid`);
+    return response.data;
+  },
+
+  /**
+   * 创建菜单
+   */
+  createMenu: async (params: CreateMenuRequest) => {
+    const response = await http.post<IDResponse>(`${CONFIG_URL}`, params);
+    return response.data;
+  },
+
+  /**
+   * 更新菜单
+   */
+  updateMenu: async (params: UpdateMenuRequest) => {
+    const response = await http.put<IDResponse>(`${CONFIG_URL}`, params);
+    return response.data;
+  },
+
+  /**
+   * 删除菜单
+   */
+  deleteMenu: async (id: string) => {
+    const response = await http.delete<IDResponse>(`${CONFIG_URL}/${id}`);
+    return response.data;
+  },
+
+  /**
+   * 获取菜单详情
+   */
+  getMenus: async (id: string, type?: string, parent_id?: string, level?: number) => {
+    if (!type) {
+      type = 'descendants';
+    }
+    const response = await http.get<MenuResponse>(`${ELEMENT_URL}/${id}`, {
       params: {
         type,
         parent_id,
@@ -18,27 +62,12 @@ export const MenuService = {
     return response.data;
   },
 
-  /**
-   * 获取菜单详情
-   */
-  getMenu: async (id: string) => {
-    const response = await http.get<MenuResponse>(`${BASE_URL}/${id}`);
-    return response.data;
-  },
-
-  /**
-   * 获取系统菜单id
-   */
-  getSystemMenuId: async () => {
-    const response = await http.get<MenuResponse>(`${BASE_URL}/sysid`);
-    return response.data;
-  },
 
   /**
    * 创建菜单
    */
-  createMenu: async (params: CreateMenuRequest) => {
-    const response = await http.post<MenuResponse>(BASE_URL, params);
+  createMenuItem: async (params: CreateMenuItemRequest) => {
+    const response = await http.post<IDResponse>(ELEMENT_URL, params);
     return response.data;
   },
 
@@ -47,16 +76,16 @@ export const MenuService = {
    * @param id 菜单ID
    * @param params 更新参数
    */
-  updateMenu: async (id: string, params: Partial<Menu>) => {
-    const response = await http.put<MenuResponse>(`${BASE_URL}/${id}`, params);
+  updateMenuItem: async (id: string, params: UpdateMenuItemRequest) => {
+    const response = await http.put<IDResponse>(`${ELEMENT_URL}/${id}`, params);
     return response.data;
   },
 
   /**
    * 删除菜单
    */ 
-  deleteMenu: async (id: string) => {
-    const response = await http.delete<MenuResponse>(`${BASE_URL}/${id}`);
+  deleteMenuItem: async (id: string) => {
+    const response = await http.delete<IDResponse>(`${ELEMENT_URL}/${id}`);
     return response.data;
   }
 };

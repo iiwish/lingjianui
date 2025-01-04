@@ -40,12 +40,12 @@ interface SystemMenuItem {
 }
 
 const iconMap: { [key: string]: React.ReactNode } = {
-  'folder': <FolderOutlined />,
-  'table': <TableOutlined />,
-  'model': <ContainerOutlined />,
-  'menu': <MenuOutlined />,
-  'dim': <DatabaseOutlined />,
-  'form': <FormOutlined />,
+  1: <FolderOutlined />,
+  2: <TableOutlined />,
+  5: <ContainerOutlined />,
+  4: <MenuOutlined />,
+  3: <DatabaseOutlined />,
+  6: <FormOutlined />,
 };
 
 import { menuTypeToRouteType, routeTypeToMenuType } from '~/constants/elementType';
@@ -210,11 +210,11 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   // 递归构建菜单项
   const buildMenuItems = (menus: AppMenu[]): MenuItem[] => {
     return menus.map(menu => {
-      const icon = iconMap[menu.icon?.toLowerCase()] || null;
+      const icon = iconMap[menu.menu_type] || null;
       const menuPath = generateMenuPath(menu);
       
       const menuItem: MenuItem = {
-        key: menuPath || menu.path, // 如果没有menuPath就用原始path作为key
+        key: menuPath || menu.node_id, // 如果没有menuPath就用原始path作为key
         icon: icon,
         label: menu.menu_name,
         children: menu.children && menu.children.length > 0 

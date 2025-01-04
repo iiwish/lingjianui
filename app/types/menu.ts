@@ -1,18 +1,15 @@
 export interface Menu {
   id: number;
-  app_id: number;
+  node_id: string;
+  parent_id: number;
   menu_name: string;
   menu_code: string;
   menu_type: number;
-  icon: string;
-  path: string;
+  icon_path: string;
   source_id: number;
-  parent_id: number;
   level: number;
   sort: number;
   status: number;
-  node_id: string;
-  configuration?: string; // 添加配置字段
   created_at?: string;
   updated_at?: string;
   creator_id: number;
@@ -34,27 +31,45 @@ export interface MenuResponse {
   message: string;
 }
 
-export interface MenusResponse {
+export interface IDResponse {
   code: number;
   data: {
-    items: Menu[];
-    total: number;
-  };
+    id?: number;
+  }
   message: string;
 }
 
 export interface CreateMenuRequest {
-  app_id: number;
+  parent_id: number;
+  menu_name: string;  
+  table_name: string;
+  description: string;
+}
+
+export interface UpdateMenuRequest {
+  menu_name: string;
+  table_name: string;
+  description: string;
+}
+
+export interface CreateMenuItemRequest {
+  parent_id: number;
   menu_name: string;
   menu_code: string;
   menu_type: number;
-  parent_id: number;
+  icon_path: string;
+  source_id: number;
   status: number;
-  icon?: string;
-  path?: string;
-  source_id?: number;
-  level?: number;
-  sort?: number;
-  node_id?: string;
-  configuration?: string;
+  description: string;
+}
+
+export interface UpdateMenuItemRequest {
+  id: number;
+  menu_name: string;
+  menu_code: string;
+  menu_type: number;
+  icon_path: string;
+  source_id: number;
+  status: number;
+  description: string;
 }
