@@ -103,19 +103,20 @@ const ElementCreateModal: React.FC<Props> = ({
     try {
       setLoading(true);
 
-      // 构建创建菜单的参数
+      // 构建创建菜单项的参数
       const params = {
-        app_id: state.app.currentApp?.id || 0,
         menu_name: values.name,
         menu_code: values.code,
         menu_type: Number(routeTypeToMenuType[selectedType]),
         parent_id: Number(parentId),
-        icon: selectedType,
-        status: 1
+        icon_path: selectedType,
+        source_id: 0, // 新建时默认为0
+        status: 1,
+        description: values.description || ''
       };
 
-      // 调用创建接口
-      const res = await MenuService.createMenu(params);
+      // 调用创建菜单项接口
+      const res = await MenuService.createMenuItem(params);
       if (res.code === 200) {
         message.success('创建成功');
         onSuccess();
@@ -196,6 +197,13 @@ const ElementCreateModal: React.FC<Props> = ({
           rules={[{ required: true, message: '请输入编码' }]}
         >
           <Input placeholder="请输入编码" />
+        </Form.Item>
+
+        <Form.Item
+          name="description"
+          label="描述"
+        >
+          <Input.TextArea placeholder="请输入描述" />
         </Form.Item>
       </Form>
     );

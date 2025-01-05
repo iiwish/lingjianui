@@ -1,4 +1,4 @@
-import type { Menu, MenuResponse, IDResponse, CreateMenuRequest, UpdateMenuRequest, CreateMenuItemRequest, UpdateMenuItemRequest } from '~/types/menu';
+import type { Menu, MenuResponse, IDResponse, CreateMenuRequest, UpdateMenuRequest, CreateMenuItemRequest, UpdateMenuItemRequest, MenuConfigResponse } from '~/types/menu';
 import http from '~/utils/http';
 
 const CONFIG_URL = '/config/menus';
@@ -9,7 +9,7 @@ export const MenuService = {
    * 获取菜单列表
    */
   getMenuList: async () => {
-    const response = await http.get<MenuResponse>(`${CONFIG_URL}`);
+    const response = await http.get<MenuConfigResponse>(`${CONFIG_URL}`);
     return response.data;
   },
 

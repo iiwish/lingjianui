@@ -18,7 +18,7 @@ import { useNavigate, useLocation } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
 import { addTab, removeTab, setActiveTab } from '~/stores/slices/tabSlice';
-import { setMenus, setCurrentMenuGroup, setLoading, setError } from '~/stores/slices/menuSlice';
+import { setMenuList, setCurrentMenuConfig, setMenus, setCurrentMenuGroup, setLoading, setError, fetchMenuList, fetchMenus } from '~/stores/slices/menuSlice';
 import { MenuService } from '~/services/menu';
 import type { Menu as AppMenu, MenuItem } from '~/types/menu';
 import type { Tab } from '~/types/tab';
@@ -59,7 +59,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const { user } = useAppSelector((state) => state.auth);
   const { currentApp } = useAppSelector((state) => state.app);
   const { tabs, activeKey } = useAppSelector((state) => state.tab);
-  const { menus, currentMenuGroup, loading } = useAppSelector((state) => state.menu);
+  const { menuList, menus, currentMenuConfig, currentMenuGroup, loading } = useAppSelector((state) => state.menu);
 
   // 修改判断逻辑,只要路径包含/dashboard/就认为是应用页面
   const isAppPage = location.pathname.includes('/dashboard/');
@@ -100,111 +100,78 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     return null;
   };
 
-  // 加载菜单数据
+  // 加载菜单列表数据
   useEffect(() => {
-    if (appCode && currentApp) {
-      // 如果已经有菜单数据且appCode没变，就不重新获取
-      if (menus.length > 0 && menus[0]?.app_id === currentApp.id) {
-        // 如果是element或config路由，只更新tab状态
-        const pathParts = location.pathname.split('/');
-        if (pathParts.includes('element') || pathParts.includes('config')) {
-          const routeType = pathParts[3]; // element或config
-          const typeCode = pathParts[4];
-          const id = pathParts[5];
-          const menuPath = `/dashboard/${appCode}/${routeType}/${typeCode}/${id}`;
-
-          const menuItem = findMenuItem(menus, typeCode, id);
-          if (menuItem) {
-            // 如果是folder类型，直接使用它作为当前菜单组
-            if (typeCode === 'folder') {
-              dispatch(setCurrentMenuGroup(menuItem));
+    if (appCode && currentApp && menuList.length === 0) {
+      dispatch(fetchMenuList())
+        .unwrap()
+        .then((response) => {
+          if (response.data.length > 0) {
+            // 加载第一个菜单的详细信息
+            const firstMenu = response.data[0];
+            if (firstMenu?.id) {
+              dispatch(setCurrentMenuConfig(firstMenu));
+              console.log('First menu:', firstMenu);
+              dispatch(fetchMenus(firstMenu.id.toString()));
             } else {
-              // 否则找到它所属的菜单组
-              const parentGroup = menus.find(group => 
-                group.children?.some(child => child.id === menuItem.id)
-              );
-              if (parentGroup) {
-                dispatch(setCurrentMenuGroup(parentGroup));
-              }
-            }
-
-            // 添加tab
-            dispatch(addTab({
-              key: menuPath,
-              title: menuItem.menu_name,
-              closable: true
-            }));
-            dispatch(setActiveTab(menuPath));
-          }
-        }
-        return;
-      }
-
-      dispatch(setLoading(true));
-      MenuService.getMenus()
-        .then(response => {
-          if (response.code === 200) {
-            const menuData = response.data.items;
-            dispatch(setMenus(menuData));
-            
-            // 如果没有当前菜单组,设置第一个为默认
-            if (menuData.length > 0 && !currentMenuGroup) {
-              dispatch(setCurrentMenuGroup(menuData[0]));
-            }
-            
-            // 如果是element或config路由,自动打开对应的tab
-            const pathParts = location.pathname.split('/');
-            if (pathParts.includes('element') || pathParts.includes('config')) {
-              const routeType = pathParts[3]; // element或config
-              const typeCode = pathParts[4];
-              const id = pathParts[5];
-              const menuPath = `/dashboard/${appCode}/${routeType}/${typeCode}/${id}`;
-
-              const menuItem = findMenuItem(menuData, typeCode, id);
-              if (menuItem) {
-                // 如果是folder类型，直接使用它作为当前菜单组
-                if (typeCode === 'folder') {
-                  dispatch(setCurrentMenuGroup(menuItem));
-                } else {
-                  // 否则找到它所属的菜单组
-                  const parentGroup = menuData.find(group => 
-                    group.children?.some(child => child.id === menuItem.id)
-                  );
-                  if (parentGroup) {
-                    dispatch(setCurrentMenuGroup(parentGroup));
-                  }
-                }
-
-                // 添加tab
-                dispatch(addTab({
-                  key: menuPath,
-                  title: menuItem.menu_name,
-                  closable: true
-                }));
-                dispatch(setActiveTab(menuPath));
-              }
+              console.error('Invalid menu id:', firstMenu);
+              dispatch(setError('Invalid menu configuration'));
             }
           }
         })
-        .catch(err => {
-          console.error('Failed to load app menus:', err);
-          dispatch(setError(err.message));
-        })
-        .finally(() => {
-          dispatch(setLoading(false));
+        .catch((error) => {
+          console.error('Failed to load menu list:', error);
+          dispatch(setError(error.message));
         });
     }
-  }, [appCode, currentApp]); // 只在appCode或currentApp变化时重新获取菜单
+  }, [appCode, currentApp, menuList.length]);
+
+  // 处理路由变化，更新tab状态
+  useEffect(() => {
+    if (appCode && currentApp && menus.length > 0) {
+      const pathParts = location.pathname.split('/');
+      if (pathParts.includes('element') || pathParts.includes('config')) {
+        const routeType = pathParts[3]; // element或config
+        const typeCode = pathParts[4];
+        const id = pathParts[5];
+        const menuPath = `/dashboard/${appCode}/${routeType}/${typeCode}/${id}`;
+
+        const menuItem = findMenuItem(menus, typeCode, id);
+        if (menuItem) {
+          // 如果是folder类型，直接使用它作为当前菜单组
+          if (typeCode === 'folder') {
+            dispatch(setCurrentMenuGroup(menuItem));
+          } else {
+            // 否则找到它所属的菜单组
+            const parentGroup = menus.find(group => 
+              group.children?.some(child => child.id === menuItem.id)
+            );
+            if (parentGroup) {
+              dispatch(setCurrentMenuGroup(parentGroup));
+            }
+          }
+
+          // 添加tab
+          dispatch(addTab({
+            key: menuPath,
+            title: menuItem.menu_name,
+            closable: true
+          }));
+          dispatch(setActiveTab(menuPath));
+        }
+      }
+    }
+  }, [location.pathname, menus]);
 
   // 生成菜单路径
   const generateMenuPath = (menu: AppMenu): string | null => {
     if (menu.menu_type === 1) {
-      // 目录类型不生成路径
-      return null;
+      // 目录类型使用folder路径
+      return `/dashboard/${currentApp?.code}/element/folder/${menu.id}`;
     }
     // 根据menu_type决定使用element还是config路由
     const typeCode = menuTypeToRouteType[menu.menu_type];
-    return `/dashboard/${currentApp?.code}/element/${typeCode}/${menu.source_id}`;
+    return `/dashboard/${currentApp?.code}/element/${typeCode}/${menu.source_id?.toString()}`;
   };
 
   // 递归构建菜单项
@@ -214,7 +181,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       const menuPath = generateMenuPath(menu);
       
       const menuItem: MenuItem = {
-        key: menuPath || menu.node_id, // 如果没有menuPath就用原始path作为key
+        key: menuPath || (menu.node_id || menu.id.toString()), // 优先使用menuPath作为key
         icon: icon,
         label: menu.menu_name,
         children: menu.children && menu.children.length > 0 
@@ -259,28 +226,37 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const systemMenuItems: SystemMenuItem[] = [];
 
   // 处理菜单组切换
-  const handleMenuGroupChange = (menuId: string) => {
-    const selectedMenu = menus.find(menu => menu.id === Number(menuId));
+  const handleMenuGroupChange = (selectedOption: { value: string; label: string }) => {
+    const menuId = selectedOption.value;
+    const selectedMenu = menuList.find(menu => menu.id === Number(menuId));
+    console.log('Selected menu:', selectedMenu);
     if (selectedMenu) {
-      dispatch(setCurrentMenuGroup(selectedMenu));
-      
-      // 如果是系统菜单,自动打开folder tab
-      if (selectedMenu.menu_code === 'system') {
-        const path = `/dashboard/${currentApp?.code}/element/folder/${selectedMenu.id}`;
-        dispatch(addTab({
-          key: path,
-          title: selectedMenu.menu_name,
-          closable: true
-        }));
-        dispatch(setActiveTab(path));
-        navigate(path);
+      const tableNamePattern = /^(app\d+_menu_system|sys_menu_system)$/;
+      if (tableNamePattern.test(selectedMenu.table_name)) {
+        if (selectedMenu.id) {
+          const menuPath = `/dashboard/${currentApp?.code}/element/folder/${selectedMenu.id}`;
+          navigate(menuPath);
+          dispatch(addTab({
+            key: menuPath,
+            title: selectedMenu.display_name,
+            closable: true
+          }));
+          dispatch(setActiveTab(menuPath));
+        } else {
+          console.error('Invalid menu id:', selectedMenu);
+          dispatch(setError('Invalid menu configuration'));
+        }
+      } else {
+        dispatch(setCurrentMenuConfig(selectedMenu));
+        console.log('Selected menu:', selectedMenu);
+        dispatch(fetchMenus(selectedMenu.id.toString()));
       }
     }
   };
 
   // 根据当前选择显示的菜单
   const menuItems = isAppPage 
-    ? (currentMenuGroup ? buildMenuItems(currentMenuGroup.children || []) : [])
+    ? buildMenuItems(menus)
     : systemMenuItems;
 
   // 处理tab切换
@@ -380,13 +356,14 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
               <div style={{ padding: '8px' }}>
                 <Select
                   style={{ width: '100%' }}
-                  value={currentMenuGroup?.menu_name}
+                  value={currentMenuConfig ? { value: currentMenuConfig.id.toString(), label: currentMenuConfig.display_name } : undefined}
                   onChange={handleMenuGroupChange}
                   loading={loading}
+                  labelInValue
                 >
-                  {menus.map(menu => (
+                  {menuList.map(menu => (
                     <Option key={menu.id} value={menu.id}>
-                      {menu.menu_name}
+                      {menu.display_name}
                     </Option>
                   ))}
                 </Select>
@@ -395,7 +372,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
             <AntMenu
               theme="dark"
               mode="inline"
-              selectedKeys={[location.pathname]}
+              selectedKeys={[activeKey]}
               items={menuItems}
             />
           </div>

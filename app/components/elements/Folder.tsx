@@ -76,48 +76,15 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
   const loadFolderData = async (folderId: number | null) => {
     try {
       setLoading(true);
-      const response = await MenuService.getMenus();
-      if (response.code === 200) {
-        const currentGroup = response.data.items.find(menu => menu.id === Number(elementId));
-        if (!currentGroup) return;
-  
-        if (!folderId) {
-          // 添加唯一key
-          setData((currentGroup.children || []).map(item => {
-            const { children, ...rest } = item;
-            return {
-              ...rest,
-              key: `${item.id}_${item.menu_code}` // 使用id和menu_code组合作为唯一key
-            };
-          }));
-          const newBreadcrumbs = [{ id: currentGroup.id, name: 'sys', menu_type: 1 }];
-          setBreadcrumbs(newBreadcrumbs);
-          updateTabState(newBreadcrumbs, null);
-          return;
-        }
-  
-        const findFolder = (items: AppMenu[]): AppMenu | null => {
-          for (const item of items) {
-            if (item.id === folderId) return item;
-            if (item.children) {
-              const found = findFolder(item.children);
-              if (found) return found;
-            }
-          }
-          return null;
-        };
-  
-        const folder = findFolder(currentGroup.children || []);
-        if (folder && folder.children) {
-          // 添加唯一key
-          setData((folder.children || []).map(item => {
-            const { children, ...rest } = item;
-            return {
-              ...rest,
-              key: `${item.id}_${item.menu_code}` // 使用id和menu_code组合作为唯一key
-            };
-          }));
-        }
+      // 加载指定文件夹的子菜单
+      const response = await MenuService.getMenus(
+        elementId,
+        'children', // 只获取直接子级
+        folderId?.toString() || '0' // 使用当前文件夹ID作为parent_id
+      );
+      if (response.code === 200 && response.data) {
+        // API直接返回菜单列表
+        setData(response.data);
       } else {
         message.error('获取菜单数据失败');
       }
@@ -131,21 +98,47 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
 
   // 初始加载
   useEffect(() => {
-    if (tabState) {
-      // 如果有保存的状态,恢复它
-      setBreadcrumbs(tabState.breadcrumbs);
-      setCurrentFolder(tabState.currentFolder);
-      loadFolderData(tabState.currentFolder);
-    } else if (initialState?.breadcrumbs) {
-      // 使用初始状态
-      setBreadcrumbs(initialState.breadcrumbs);
-      setCurrentFolder(null);
-      loadFolderData(null);
-    } else {
-      // 否则加载根目录
-      loadFolderData(null);
-    }
+    const initializeState = async () => {
+      // 默认面包屑
+      const defaultBreadcrumbs = [{ 
+        id: 0, 
+        name: '目录', 
+        menu_type: 1 
+      }];
+
+      if (tabState) {
+        // 如果有保存的状态,恢复它
+        setBreadcrumbs(tabState.breadcrumbs);
+        setCurrentFolder(tabState.currentFolder);
+        await loadFolderData(tabState.currentFolder);
+      } else if (initialState?.breadcrumbs) {
+        // 使用初始状态
+        setBreadcrumbs(initialState.breadcrumbs);
+        setCurrentFolder(null);
+        await loadFolderData(null);
+      } else {
+        // 使用默认状态
+        setBreadcrumbs(defaultBreadcrumbs);
+        updateTabState(defaultBreadcrumbs, null);
+        await loadFolderData(null);
+      }
+    };
+
+    initializeState();
   }, [elementId, appCode, initialState]);
+
+  // 确保面包屑始终包含根目录
+  useEffect(() => {
+    if (breadcrumbs.length === 0) {
+      const rootBreadcrumb = { 
+        id: Number(elementId), 
+        name: '目录', 
+        menu_type: 1 
+      };
+      setBreadcrumbs([rootBreadcrumb]);
+      updateTabState([rootBreadcrumb], null);
+    }
+  }, [breadcrumbs, elementId]);
 
   // 处理双击事件
   const handleDoubleClick = (record: AppMenu) => {
@@ -190,11 +183,15 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
     // 更新面包屑
     const newBreadcrumbs = breadcrumbs.slice(0, index + 1);
     setBreadcrumbs(newBreadcrumbs);
+    
     // 更新当前文件夹
-    const newCurrentFolder = item.id === breadcrumbs[0].id ? null : Number(item.id);
+    // 如果点击的是根目录（第一个面包屑），则设置为 null
+    const newCurrentFolder = index === 0 ? null : Number(item.id);
     setCurrentFolder(newCurrentFolder);
+    
     // 更新store中的状态
     updateTabState(newBreadcrumbs, newCurrentFolder);
+    
     // 加载文件夹数据
     loadFolderData(newCurrentFolder);
   };
@@ -238,7 +235,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
       cancelText: '取消',
       onOk: async () => {
         try {
-          const response = await MenuService.deleteMenu(record.id.toString());
+          const response = await MenuService.deleteMenuItem(record.id.toString());
           if (response.code === 200) {
             message.success('删除成功');
             loadFolderData(currentFolder);

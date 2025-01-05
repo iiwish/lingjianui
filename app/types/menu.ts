@@ -17,6 +17,26 @@ export interface Menu {
   children?: Menu[];
 }
 
+export interface MenuConfig {
+  id: number;
+  table_name: string;
+  display_name: string;
+  description: string;
+  dimension_type: string;
+  app_id: number;
+  status: number;
+  created_at: string;
+  updated_at: string;
+  creator_id: number;
+  updater_id: number;
+}
+
+export interface MenuConfigResponse {
+  code: number;
+  data: MenuConfig[];
+  message: string;
+}
+
 export interface MenuItem {
   key: string;
   icon: React.ReactNode;
@@ -27,7 +47,7 @@ export interface MenuItem {
 
 export interface MenuResponse {
   code: number;
-  data: Menu;
+  data: Menu[];
   message: string;
 }
 

@@ -55,71 +55,52 @@ export async function loader({ params }: { params: { type: string; id: number; a
   console.log('ElementRoute loader params:', params);
   
   try {
-    const response = await MenuService.getMenus();
-    if (response.code === 200) {
-      const findMenu = (items: AppMenu[]): AppMenu | null => {
-        for (const item of items) {
-          // 对于folder类型，使用id匹配；对于其他类型，使用source_id匹配
-          if ((params.type === 'folder' && item.id === Number(params.id)) || 
-              (params.type !== 'folder' && item.source_id === params.id)) {
-            return item;
-          }
-          if (item.children) {
-            const found = findMenu(item.children);
-            if (found) return found;
-          }
+    // 先获取菜单列表
+    const menuListResponse = await MenuService.getMenuList();
+    if (menuListResponse.code === 200) {
+      // 如果是folder类型，直接获取对应的菜单详情
+      if (params.type === 'folder' && params.id) {
+        const menuResponse = await MenuService.getMenus(params.id.toString());
+        if (menuResponse.code === 200 && menuResponse.data) {
+          return {
+            breadcrumbs: [{ 
+              id: menuResponse.data.id, 
+              name: menuResponse.data.menu_name, 
+              menu_type: menuResponse.data.menu_type 
+            }],
+            menuName: menuResponse.data.menu_name
+          };
         }
-        return null;
-      };
+      } else {
+        // 对于其他类型，需要遍历菜单列表找到对应的菜单配置
+        for (const menuConfig of menuListResponse.data) {
+          const menuResponse = await MenuService.getMenus(menuConfig.id.toString());
+          if (menuResponse.code === 200 && menuResponse.data) {
+            // 在菜单树中查找匹配的项
+            const findMenu = (items: AppMenu[]): AppMenu | null => {
+              for (const item of items) {
+                if (item.source_id === params.id) {
+                  return item;
+                }
+                if (item.children) {
+                  const found = findMenu(item.children);
+                  if (found) return found;
+                }
+              }
+              return null;
+            };
 
-      // 构建面包屑路径
-      const buildBreadcrumbs = (items: AppMenu[], targetId: number): Array<{id: number, name: string, menu_type: number}> | null => {
-        for (const item of items) {
-          if (item.id === targetId) {
-            return [{ id: item.id, name: item.menu_name, menu_type: item.menu_type }];
-          }
-          if (item.children) {
-            const childPath = buildBreadcrumbs(item.children, targetId);
-            if (childPath) {
-              return [{ id: item.id, name: item.menu_name, menu_type: item.menu_type }, ...childPath];
+            const currentMenu = findMenu([menuResponse.data]);
+            if (currentMenu) {
+              return {
+                breadcrumbs: [],
+                menuName: currentMenu.menu_name
+              };
             }
-          }
-        }
-        return null;
-      };
-
-      // 在所有菜单组中查找
-      let currentMenu = null;
-      let breadcrumbPath = null;
-      for (const group of response.data.items) {
-        // 先检查组本身
-        if (params.type === 'folder' && group.id === Number(params.id)) {
-          currentMenu = group;
-          breadcrumbPath = [{ id: group.id, name: group.menu_name, menu_type: group.menu_type }];
-          break;
-        }
-        // 然后在组的子项中查找
-        if (group.children) {
-          currentMenu = findMenu(group.children);
-          if (currentMenu) {
-            breadcrumbPath = buildBreadcrumbs(group.children, currentMenu.id);
-            if (breadcrumbPath) {
-              breadcrumbPath = [
-                { id: group.id, name: group.menu_name, menu_type: group.menu_type },
-                ...breadcrumbPath
-              ];
-            }
-            break;
           }
         }
       }
 
-      if (currentMenu) {
-        return {
-          breadcrumbs: params.type === 'folder' ? (breadcrumbPath || []) : [],
-          menuName: currentMenu.menu_name
-        };
-      }
     }
   } catch (error) {
     console.error('Failed to load menu data:', error);
