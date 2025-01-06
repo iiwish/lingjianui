@@ -105,7 +105,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
 
       // 更新表单数据
       form.setFieldsValue({
-        source_id: node.data.id,
+        source_id: node.data.source_id,
         menu_type: node.data.menu_type
       });
   };
