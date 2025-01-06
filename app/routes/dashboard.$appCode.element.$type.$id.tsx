@@ -5,7 +5,7 @@ import { routeTypeToMenuType } from '~/constants/elementType';
 import { MenuService } from '~/services/menu';
 import type { Menu as AppMenu } from '~/types/menu';
 import { useAppDispatch, useAppSelector } from '~/stores';
-import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
+import { addTab, setActiveTab, updateFolderState } from '~/stores/slices/tabSlice';
 
 export default function ElementRoute() {
   const params = useParams();
@@ -17,6 +17,48 @@ export default function ElementRoute() {
   
   console.log('ElementRoute params:', params);
 
+  // 在组件挂载或路由变化时更新tab
+  useEffect(() => {
+    if (!typeCode || !id || !appCode) {
+      return;
+    }
+
+    const type = routeTypeToMenuType[typeCode];
+    if (!type) {
+      return;
+    }
+
+    // 确保menuName已经加载
+    if (menuName === undefined) {
+      return;
+    }
+
+    // 每次都尝试添加tab，让reducer处理存在性检查
+    const title = menuName && menuName.trim() !== '' ? menuName : `${typeCode}-${id}`;
+    
+    // 先添加或更新tab
+    dispatch(addTab({
+      key: location.pathname,
+      title,
+      closable: true
+    }));
+
+    // 如果是folder类型，更新tabState
+    if (typeCode === 'folder' && breadcrumbs) {
+      dispatch(updateFolderState({
+        key: location.pathname,
+        state: {
+          currentFolder: Number(id),
+          breadcrumbs
+        }
+      }));
+    }
+    
+    // 最后设置为激活状态
+    dispatch(setActiveTab(location.pathname));
+  }, [dispatch, location.pathname, menuName, typeCode, id, appCode]);
+
+  // 如果基本参数缺失，不渲染内容
   if (!typeCode || !id || !appCode) {
     return null;
   }
@@ -26,24 +68,11 @@ export default function ElementRoute() {
     return null;
   }
 
-  // 在组件挂载或路由变化时更新tab
-  useEffect(() => {
-    const tabExists = tabs.some(tab => tab.key === location.pathname);
-    if (!tabExists) {
-      dispatch(addTab({
-        key: location.pathname,
-        title: menuName || `${typeCode}-${id}`,
-        closable: true
-      }));
-      dispatch(setActiveTab(location.pathname));
-    }
-  }, [dispatch, location.pathname, menuName, typeCode, id]);
-
   return (
     <TabContent
       type="element"
       elementType={type}
-      elementId={id}
+      elementId={id.toString()}
       appCode={appCode}
       initialState={typeCode === 'folder' ? { breadcrumbs } : undefined}
     />
@@ -55,23 +84,30 @@ export async function loader({ params }: { params: { type: string; id: number; a
   console.log('ElementRoute loader params:', params);
   
   try {
-    // 先获取菜单列表
-    const menuListResponse = await MenuService.getMenuList();
-    if (menuListResponse.code === 200) {
-      // 如果是folder类型，直接获取对应的菜单详情
-      if (params.type === 'folder' && params.id) {
-        const menuResponse = await MenuService.getMenus(params.id.toString());
-        if (menuResponse.code === 200 && menuResponse.data) {
-          return {
-            breadcrumbs: [{ 
-              id: menuResponse.data.id, 
-              name: menuResponse.data.menu_name, 
-              menu_type: menuResponse.data.menu_type 
-            }],
-            menuName: menuResponse.data.menu_name
-          };
-        }
-      } else {
+    // 如果是folder类型，直接获取对应的菜单配置
+    if (params.type === 'folder' && params.id) {
+      const menuConfigResponse = await MenuService.getMenuConfigByID(params.id.toString());
+      if (menuConfigResponse.code === 200 && menuConfigResponse.data) {
+        return {
+          breadcrumbs: [
+            { 
+              id: 0, 
+              name: '目录', 
+              menu_type: Number(routeTypeToMenuType['folder'])
+            },
+            { 
+              id: Number(menuConfigResponse.data.id), 
+              name: menuConfigResponse.data.display_name, 
+              menu_type: Number(routeTypeToMenuType['folder'])
+            }
+          ],
+          menuName: menuConfigResponse.data.display_name
+        };
+      }
+    } else {
+      // 先获取菜单列表
+      const menuListResponse = await MenuService.getMenuList();
+      if (menuListResponse.code === 200) {
         // 对于其他类型，需要遍历菜单列表找到对应的菜单配置
         for (const menuConfig of menuListResponse.data) {
           const menuResponse = await MenuService.getMenus(menuConfig.id.toString());
@@ -90,7 +126,7 @@ export async function loader({ params }: { params: { type: string; id: number; a
               return null;
             };
 
-            const currentMenu = findMenu([menuResponse.data]);
+            const currentMenu = findMenu(menuResponse.data);
             if (currentMenu) {
               return {
                 breadcrumbs: [],

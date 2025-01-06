@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import ElementCreateModal from './common/ElementCreateModal';
-import { Table, Button, message, Breadcrumb, Space, Modal, App } from 'antd';
+import { Table, Button, Breadcrumb, Space, Modal, App } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
   FolderOpenTwoTone,
@@ -56,6 +56,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
   const [createModalVisible, setCreateModalVisible] = useState(false);
   const [editModalVisible, setEditModalVisible] = useState(false);
   const [currentEditMenu, setCurrentEditMenu] = useState<AppMenu | null>(null);
+  const { message } = App.useApp();
 
   // 获取当前tab的key和状态
   const tabKey = `/dashboard/${appCode}/element/folder/${elementId}`;
@@ -82,7 +83,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
         'children', // 只获取直接子级
         folderId?.toString() || '0' // 使用当前文件夹ID作为parent_id
       );
-      if (response.code === 200 && response.data) {
+      if (response.code === 200) {
         // API直接返回菜单列表
         setData(response.data);
       } else {
@@ -235,7 +236,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
       cancelText: '取消',
       onOk: async () => {
         try {
-          const response = await MenuService.deleteMenuItem(record.id.toString());
+          const response = await MenuService.deleteMenuItem(elementId, record.id.toString());
           if (response.code === 200) {
             message.success('删除成功');
             loadFolderData(currentFolder);
@@ -331,11 +332,11 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
         open={createModalVisible}
         onCancel={() => setCreateModalVisible(false)}
         appCode={appCode}
-        parentId={currentFolder?.toString() || elementId}
+        parentId={currentFolder === null ? '0' : currentFolder.toString()}
         onSuccess={() => loadFolderData(currentFolder)}
       />
     </div>
-    <MenuEditModal
+      <MenuEditModal
         open={editModalVisible}
         onCancel={() => {
           setEditModalVisible(false);
@@ -345,6 +346,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
         onSuccess={() => {
           loadFolderData(currentFolder);
         }}
+        elementId={elementId}
       />
     </App>
   );

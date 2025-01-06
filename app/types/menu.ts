@@ -10,6 +10,7 @@ export interface Menu {
   level: number;
   sort: number;
   status: number;
+  description: string;
   created_at?: string;
   updated_at?: string;
   creator_id: number;
@@ -37,6 +38,12 @@ export interface MenuConfigResponse {
   message: string;
 }
 
+export interface OneMenuConfigResponse {
+  code: number;
+  data: MenuConfig;
+  message: string;
+}
+
 export interface MenuItem {
   key: string;
   icon: React.ReactNode;
@@ -54,7 +61,7 @@ export interface MenuResponse {
 export interface IDResponse {
   code: number;
   data: {
-    id?: number;
+    id: number;
   }
   message: string;
 }

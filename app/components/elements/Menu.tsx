@@ -50,9 +50,9 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
       const sysRes = await MenuService.getSystemMenuId();
       if (sysRes.code === 200 && sysRes.data) {
         // 获取系统菜单树
-        const treeRes = await MenuService.getMenus('descendants', sysRes.data.id.toString());
+        const treeRes = await MenuService.getMenus(sysRes.data.id.toString(), 'descendants');
         if (treeRes.code === 200 && treeRes.data) {
-          const data = convertToTreeSelectData(treeRes.data.items);
+          const data = convertToTreeSelectData(treeRes.data);
           setSystemMenuTree(data);
         }
       }
@@ -94,7 +94,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
       if (!value) {
         form.setFieldsValue({
           source_id: undefined,
-          menu_type: undefined
+          menu_type: 1  // 当source为空时，设置为文件夹类型
         });
         return;
       }
@@ -129,22 +129,22 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
   const loadTreeData = async () => {
     try {
       setLoading(true);
-      const res = await MenuService.getMenus('descendants', elementId);
+      const res = await MenuService.getMenus(elementId, 'descendants');
       if (res.code === 200 && res.data) {
-        const data = convertToTreeData(res.data.items);
+        const data = convertToTreeData(res.data);
         setTreeData(data);
 
         // 获取需要展开的节点
         let keysToExpand = new Set<string>();
         
         // 默认展开第一级
-        res.data.items
+        res.data
           .filter(item => item.level === 1)
           .forEach(item => keysToExpand.add(item.id.toString()));
 
         // 如果当前有选中的节点,保持选中状态并更新节点数据
         if (selectedNode) {
-          const updatedNode = findNodeById(res.data.items, selectedNode.id);
+          const updatedNode = findNodeById(res.data, selectedNode.id);
           if (updatedNode) {
             // 更新选中状态
             setSelectedNode(updatedNode);
@@ -154,7 +154,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
             // 展开到选中节点的路径
             let currentNode = updatedNode;
             while (currentNode.parent_id !== 0) {
-              const parentNode = findNodeById(res.data.items, currentNode.parent_id);
+              const parentNode = findNodeById(res.data, currentNode.parent_id);
               if (parentNode) {
                 keysToExpand.add(parentNode.id.toString());
                 currentNode = parentNode;
@@ -332,10 +332,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
     const { parentId, sort } = calculateNewPosition();
 
     try {
-      await MenuService.updateMenu(dragKey, {
-        parent_id: parentId,
-        sort: sort
-      });
+      await MenuService.updateMenuItemSort(elementId, dragKey, { parent: parentId.toString(), sort });
       message.success('移动成功');
       loadTreeData();
     } catch (error) {
@@ -376,10 +373,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
       if (tempNode && selectedNode.id === tempNode.id) {
         // 如果是保存临时节点,调用创建接口
         console.log('Creating menu with parent_id:', tempNode.parent_id);
-        if (tempNode.parent_id === 0) { 
-          tempNode.parent_id = parseInt(elementId); 
-        }
-        const res = await MenuService.createMenu({
+        const res = await MenuService.createMenuItem(elementId, {
           ...values,
           parent_id: tempNode.parent_id,
           menu_type: selectedNode.menu_type,
@@ -413,7 +407,10 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
         return;
       } else {
         // 否则调用更新接口
-        await MenuService.updateMenu(selectedNode.id.toString(), values);
+        await MenuService.updateMenuItem(elementId, selectedNode.id.toString(), {
+          ...selectedNode,
+          ...values
+        });
       }
       
       message.success('保存成功');
@@ -442,12 +439,11 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
     // 创建临时节点
     const newNode: AppMenu = {
       id: -Date.now(), // 使用负数作为临时ID
-      app_id: 0, // 这个值会在保存时从selectedNode中获取
       menu_name: '新建菜单',
       menu_code: '',
-      menu_type: 0, // 这个值会在保存时从selectedNode中获取
-      icon: '',
-      path: '',
+      menu_type: 1, // 默认为文件夹类型
+      icon_path: '',
+      description: '',
       source_id: 0,
       parent_id: parentId,
       level: parentLevel + 1,
@@ -607,8 +603,24 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
             <Form.Item name="source_id" hidden>
               <Input />
             </Form.Item>
-            <Form.Item name="menu_type" label="类型">
-              <Input disabled value={selectedNode?.menu_type === 1 ? '文件夹' : selectedNode?.menu_type === 4 ? '菜单' : selectedNode?.menu_type === 2 ? '表格' : selectedNode?.menu_type === 3 ? '维度' : selectedNode?.menu_type === 5 ? '模型' : selectedNode?.menu_type === 6 ? '表单' : ''} />
+            <Form.Item 
+              name="menu_type" 
+              label="类型"
+              getValueProps={(value: number) => {
+                const typeMap: Record<number, string> = {
+                  1: '文件夹',
+                  2: '表格',
+                  3: '维度',
+                  4: '菜单',
+                  5: '模型',
+                  6: '表单'
+                };
+                return {
+                  value: value ? typeMap[value] || '' : ''
+                };
+              }}
+            >
+              <Input disabled />
             </Form.Item>
             <Form.Item name="source" label="关联资源">
               <TreeSelect
@@ -649,6 +661,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
         onSuccess={() => {
           loadTreeData();
         }}
+        elementId={elementId}
       />
     </Layout>
     </App>

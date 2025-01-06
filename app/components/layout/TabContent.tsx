@@ -2,6 +2,7 @@ import React, { Suspense } from 'react';
 import { Result, Spin } from 'antd';
 import { menuTypeToRouteType, routeTypeToMenuType } from '~/constants/elementType';
 import { useAppSelector } from '~/stores';
+import type { FolderTabState } from '~/types/tab';
 
 // 懒加载组件
 const Folder = React.lazy(() => import('~/components/elements/Folder'));
@@ -26,6 +27,9 @@ interface Props {
 }
 
 const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, parentId, initialState }) => {
+  // 获取当前路径对应的tabState
+  const pathname = window.location.pathname;
+  const tabState = useAppSelector(state => state.tab.tabStates[pathname]) as FolderTabState | undefined;
   console.log('TabContent render:', {
     appCode,
     elementId,
@@ -40,7 +44,7 @@ const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, pa
     if (type === 'element') {
       switch (elementType) {
         case '1':
-          return <Folder elementId={elementId} appCode={appCode} initialState={initialState} />;
+          return <Folder elementId={elementId} appCode={appCode} initialState={tabState || initialState} />;
         case '2':
           return <Table elementId={elementId} appCode={appCode} elementType={elementType} />;
         case '3':

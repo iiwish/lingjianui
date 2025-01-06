@@ -13,9 +13,9 @@ import { Authorized } from '~/utils/permission';
 import DimensionConfig from '../config/DimensionConfig';
 import {
   getDimensionTree,
-  updateDimensionNode,
+  updateDimensionSort,
   updateDimensionItem,
-  createDimensionItems,
+  createDimensionItem,
   deleteDimensionItems,
   getDimensionConfig,
   DimensionItem,
@@ -339,7 +339,7 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
     }
 
     try {
-      await updateDimensionNode(elementId, dragKey, {
+      await updateDimensionSort(elementId, dragKey, {
         parent: parentId,
         sort: sort
       });
@@ -382,18 +382,18 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
       
       if (tempNode && selectedNode.id === tempNode.id) {
         // 如果是保存临时节点,调用创建接口
-        const res = await createDimensionItems(elementId, [{
+        const res = await createDimensionItem(elementId, {
           ...values,
           parent_id: tempNode.parent_id,
           level: tempNode.level,
           sort: tempNode.sort,
           custom_data: values.custom_data || {}
-        }]);
+        });
         if (res.code !== 200) {
           throw new Error(res.message || '保存失败');
         }
 
-        const newId = res.data.ids[0];
+        const newId = res.data.id;
         // 保存成功后,使用表单值创建新节点数据
         const newNode = {
           ...values,
@@ -432,7 +432,7 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
     }
   };
 
-  const createDimensionItem = (rawParentId: string) => {
+  const createTempDimensionItem = (rawParentId: string) => {
     // 如果已有临时节点,先清除
     if (tempNode) {
       const newTreeData = treeData.filter(node => node.key !== tempNode.id.toString());
@@ -559,7 +559,7 @@ const Dimension: React.FC<Props> = ({ elementId, appCode }) => {
               />
               <Button
                 onClick={() => {
-                  createDimensionItem(selectedNode?.id.toString() || '0'); 
+                  createTempDimensionItem(selectedNode?.id.toString() || '0'); 
                 }}
                 icon={<PlusOutlined />}
               >

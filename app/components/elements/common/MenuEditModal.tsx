@@ -8,13 +8,15 @@ interface Props {
   onCancel: () => void;
   menu: AppMenu | null;
   onSuccess: () => void;
+  elementId: string;
 }
 
 const MenuEditModal: React.FC<Props> = ({
   open,
   onCancel,
   menu,
-  onSuccess
+  onSuccess,
+  elementId
 }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = React.useState(false);
@@ -24,6 +26,7 @@ const MenuEditModal: React.FC<Props> = ({
       form.setFieldsValue({
         menu_name: menu.menu_name,
         menu_code: menu.menu_code,
+        description: menu.description || '',
       });
     }
   }, [open, menu]);
@@ -33,10 +36,11 @@ const MenuEditModal: React.FC<Props> = ({
     
     try {
       setLoading(true);
-      const response = await MenuService.updateMenu(menu.id.toString(), {
+      const response = await MenuService.updateMenuItem(elementId,menu.id.toString(), {
         ...menu,
         menu_name: values.menu_name,
         menu_code: values.menu_code,
+        description: values.description || '',
       });
       
       if (response.code === 200) {
@@ -86,6 +90,13 @@ const MenuEditModal: React.FC<Props> = ({
           rules={[{ required: true, message: '请输入编码' }]}
         >
           <Input />
+        </Form.Item>
+
+        <Form.Item
+          name="description"
+          label="描述"
+        >
+          <Input.TextArea />
         </Form.Item>
       </Form>
     </Modal>

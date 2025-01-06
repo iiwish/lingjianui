@@ -87,37 +87,6 @@ export interface DimensionItem {
   children?: DimensionItem[];
 }
 
-export interface MenuConfig {
-  id: number;
-  menu_name: string;
-  menu_code: string;
-  menu_type: string;
-  icon: string;
-  path: string;
-  parent_id: number;
-  level: number;
-  sort: number;
-  status: number;
-  app_id: number;
-  created_at: string;
-  updated_at: string;
-  creator_id: number;
-  updater_id: number;
-}
-
-export interface MenuItem {
-  id: number;
-  menu_name: string;
-  menu_code: string;
-  menu_type: string;
-  icon: string;
-  path: string;
-  parent_id: number;
-  level: number;
-  sort: number;
-  children?: MenuItem[];
-}
-
 export interface ModelConfig {
   id: number;
   model_name: string;
@@ -322,39 +291,33 @@ export const getDimensionTree = async (dimId: string, params?: {
 };
 
 // 更新维度节点
-export const updateDimensionNode = async (dimId: string, id: string, params: {
+export const updateDimensionSort = async (dimId: string, id: string, params: {
   parent?: number;
   sort?: number;
 }): Promise<ApiResponse<null>> => {
-  return put(`/dimension/${dimId}/${id}`, null, { params });
+  return put(`/dimension/${dimId}/${id}/sort`, null, { params });
 };
 
 // 更新维度节点信息
 export const updateDimensionItem = async (dimId: string, id: string, item: Partial<DimensionItem>): Promise<ApiResponse<DimensionItem>> => {
-  return put(`/dimension/${dimId}`, item);
+  return put(`/dimension/${dimId}/${id}`, item);
 };
 
 interface IDList {
   ids: number[];
 }
-// 批量创建维度节点
-export const createDimensionItems = async (dimId: string, items: Omit<DimensionItem, 'id' | 'children'>[]): Promise<ApiResponse<IDList>> => {
-  return post(`/dimension/${dimId}`, items);
+
+interface ID {
+  id: number;
+}
+// 创建维度节点
+export const createDimensionItem = async (dimId: string, item: Partial<DimensionItem>): Promise<ApiResponse<ID>> => {
+  return post(`/dimension/${dimId}`, item);
 };
 
 // 批量删除维度节点
 export const deleteDimensionItems = async (dimId: string, ids: number[]): Promise<ApiResponse<null>> => {
   return del(`/dimension/${dimId}`, ids);
-};
-
-// 获取菜单配置
-export const getMenuConfig = async (appId: string, menuId: string): Promise<ApiResponse<MenuConfig>> => {
-  return get(`/config/menus/${menuId}`,);
-};
-
-// 获取菜单数据
-export const getMenuData = async (appId: string, menuId: string): Promise<ApiResponse<MenuItem[]>> => {
-  return get(`/config/menus/${menuId}`,);
 };
 
 // 获取模型配置

@@ -103,28 +103,50 @@ const ElementCreateModal: React.FC<Props> = ({
     try {
       setLoading(true);
 
-      // 构建创建菜单项的参数
-      const params = {
-        menu_name: values.name,
-        menu_code: values.code,
-        menu_type: Number(routeTypeToMenuType[selectedType]),
-        parent_id: Number(parentId),
-        icon_path: selectedType,
-        source_id: 0, // 新建时默认为0
-        status: 1,
-        description: values.description || ''
-      };
+      if (selectedType === 'folder') {
+        // 构建创建菜单项的参数
+        const params = {
+          menu_name: values.name,
+          menu_code: values.code,
+          menu_type: Number(routeTypeToMenuType[selectedType]),
+          parent_id: Number(parentId),
+          icon_path: selectedType,
+          source_id: 0, // 新建时默认为0
+          status: 1,
+          description: values.description || ''
+        };
 
-      // 调用创建菜单项接口
-      const res = await MenuService.createMenuItem(params);
-      if (res.code === 200) {
-        message.success('创建成功');
-        onSuccess();
-        handleCancel();
-        // 清空表单
-        formRef.current?.resetFields();
-      } else {
-        message.error(res.message || '创建失败');
+        // 调用创建菜单项接口
+        const res = await MenuService.createSysMenuItem(params);
+        if (res.code === 200) {
+          message.success('创建成功');
+          onSuccess();
+          handleCancel();
+          // 清空表单
+          formRef.current?.resetFields();
+        } else {
+          message.error(res.message || '创建失败');
+        }
+      } else if (selectedType === 'menu') {
+        // 构建创建菜单项的参数
+        const params = {
+          parent_id: Number(parentId),
+          menu_name: values.name,
+          table_name: values.code,
+          description: values.description || ''
+        };
+
+        // 调用创建菜单项接口
+        const res = await MenuService.createMenu(params);
+        if (res.code === 200) {
+          message.success('创建成功');
+          onSuccess();
+          handleCancel();
+          // 清空表单
+          formRef.current?.resetFields();
+        } else {
+          message.error(res.message || '创建失败');
+        }
       }
     } catch (error) {
       console.error('创建失败:', error);

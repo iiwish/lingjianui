@@ -1,4 +1,4 @@
-import type { Menu, MenuResponse, IDResponse, CreateMenuRequest, UpdateMenuRequest, CreateMenuItemRequest, UpdateMenuItemRequest, MenuConfigResponse } from '~/types/menu';
+import type { Menu, MenuResponse, IDResponse, CreateMenuRequest, UpdateMenuRequest, CreateMenuItemRequest, UpdateMenuItemRequest, MenuConfigResponse,OneMenuConfigResponse } from '~/types/menu';
 import http from '~/utils/http';
 
 const CONFIG_URL = '/config/menus';
@@ -10,6 +10,15 @@ export const MenuService = {
    */
   getMenuList: async () => {
     const response = await http.get<MenuConfigResponse>(`${CONFIG_URL}`);
+    return response.data;
+  },
+
+  /**
+   * 获取菜单详情
+   * @param id 菜单ID
+   */
+  getMenuConfigByID: async (id: string) => {
+    const response = await http.get<OneMenuConfigResponse>(`${CONFIG_URL}/${id}`);
     return response.data;
   },
 
@@ -64,28 +73,53 @@ export const MenuService = {
 
 
   /**
-   * 创建菜单
+   * 创建系统菜单
    */
-  createMenuItem: async (params: CreateMenuItemRequest) => {
+  createSysMenuItem: async (params: CreateMenuItemRequest) => {
     const response = await http.post<IDResponse>(ELEMENT_URL, params);
     return response.data;
   },
+
+  /**
+     * 创建菜单
+     */
+  createMenuItem: async (menu_id: string, params: CreateMenuItemRequest) => {
+    const response = await http.post<IDResponse>(`${ELEMENT_URL}/${menu_id}`, params);
+    return response.data;
+  },
+
 
   /**
    * 更新菜单
    * @param id 菜单ID
    * @param params 更新参数
    */
-  updateMenuItem: async (id: string, params: UpdateMenuItemRequest) => {
-    const response = await http.put<IDResponse>(`${ELEMENT_URL}/${id}`, params);
+  updateMenuItem: async (menu_id: string, id: string, params: UpdateMenuItemRequest) => {
+    const response = await http.put<IDResponse>(`${ELEMENT_URL}/${menu_id}/${id}`, params);
+    return response.data;
+  },
+
+  /**
+   * 更新菜单排序
+   * @param id 菜单ID
+   * @param params 更新参数
+   * @param params.parent 父级ID
+   * @param params.sort 排序值
+   * @returns
+   * @memberof MenuService
+   */
+  updateMenuItemSort: async (menu_id: string, id: string, params: { parent?: string; sort?: number }) => {
+    const response = await http.put<IDResponse>(`${ELEMENT_URL}/${menu_id}/${id}/sort`, null, {
+      params
+    });
     return response.data;
   },
 
   /**
    * 删除菜单
    */ 
-  deleteMenuItem: async (id: string) => {
-    const response = await http.delete<IDResponse>(`${ELEMENT_URL}/${id}`);
+  deleteMenuItem: async (menu_id: string,id: string) => {
+    const response = await http.delete<IDResponse>(`${ELEMENT_URL}/${menu_id}/${id}`);
     return response.data;
   }
 };
