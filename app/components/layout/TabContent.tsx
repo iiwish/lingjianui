@@ -10,6 +10,7 @@ const Table = React.lazy(() => import('~/components/elements/Table'));
 const Dimension = React.lazy(() => import('~/components/elements/Dimension'));
 const TableConfig = React.lazy(() => import('~/components/config/TableConfig'));
 const Menu = React.lazy(() => import('~/components/elements/Menu'));
+const ModelConfig = React.lazy(() => import('~/components/config/ModelConfig'));
 
 interface Props {
   appCode: string;
@@ -65,6 +66,8 @@ const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, pa
       switch (elementType) {
         case '2':
           return <TableConfig elementId={elementId} appCode={appCode} parentId={parentId} />;
+        case '5':
+          return <ModelConfig elementId={elementId} appCode={appCode} />;
         default:
           return (
             <Result

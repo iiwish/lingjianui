@@ -53,40 +53,41 @@ const ElementCreateModal: React.FC<Props> = ({
     setSelectedType(type);
 
     if (type === 'dim') {
-      // 对于维度类型,打开维度配置弹窗
+      // 对于维度和模型类型,打开对应的配置弹窗
       setSelectedType(type);
       handleCancel();
-      // 打开维度配置弹窗
-      const configModal = document.createElement('div');
-      document.body.appendChild(configModal);
-      const root = createRoot(configModal);
-      root.render(
-        <Provider store={store}>
-          <DimensionConfig
-            elementId="new"
-            appCode={appCode}
-            parentId={parentId}
-            visible={true}
-            onCancel={() => {
-              root.unmount();
-              document.body.removeChild(configModal);
-              onSuccess();
-            }}
-            onSuccess={(path) => {
-              navigate(path);
-              dispatch(addTab({
-                key: path,
-                title: '新建维度',
-                closable: true
-              }));
-              dispatch(setActiveTab(path));
-              root.unmount();
-              document.body.removeChild(configModal);
-              onSuccess();
-            }}
-          />
-        </Provider>
-      );
+      
+        // 打开维度配置弹窗
+        const configModal = document.createElement('div');
+        document.body.appendChild(configModal);
+        const root = createRoot(configModal);
+        root.render(
+          <Provider store={store}>
+            <DimensionConfig
+              elementId="new"
+              appCode={appCode}
+              parentId={parentId}
+              visible={true}
+              onCancel={() => {
+                root.unmount();
+                document.body.removeChild(configModal);
+                onSuccess();
+              }}
+              onSuccess={(path) => {
+                navigate(path);
+                dispatch(addTab({
+                  key: path,
+                  title: '新建维度',
+                  closable: true
+                }));
+                dispatch(setActiveTab(path));
+                root.unmount();
+                document.body.removeChild(configModal);
+                onSuccess();
+              }}
+            />
+          </Provider>
+        );
     } else if (elementType.needConfig) {
       // 对于其他需要配置的类型,直接打开配置页面
       const path = `/dashboard/${appCode}/config/${type}/new?parentId=${parentId}`;
