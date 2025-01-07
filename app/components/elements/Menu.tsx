@@ -4,7 +4,7 @@ import { SettingOutlined, PlusOutlined } from '@ant-design/icons';
 import type { TreeProps } from 'antd/es/tree';
 import { Authorized } from '~/utils/permission';
 import MenuEditModal from './common/MenuEditModal';
-import { MenuService } from '~/services/menu';
+import { MenuService } from '~/services/element_menu';
 import type { Menu as AppMenu } from '~/types/menu';
 
 interface DataNode {

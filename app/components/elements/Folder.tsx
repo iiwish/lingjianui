@@ -17,7 +17,7 @@ import {
 import { useNavigate } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { addTab, setActiveTab, updateFolderState } from '~/stores/slices/tabSlice';
-import { MenuService } from '~/services/menu';
+import { MenuService } from '~/services/element_menu';
 import type { Menu as AppMenu } from '~/types/menu';
 import type { BreadcrumbItem } from '~/types/tab';
 import { Authorized } from '~/utils/permission';

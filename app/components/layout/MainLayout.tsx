@@ -19,7 +19,7 @@ import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
 import { addTab, removeTab, setActiveTab } from '~/stores/slices/tabSlice';
 import { setMenuList, setCurrentMenuConfig, setMenus, setCurrentMenuGroup, setLoading, setError, fetchMenuList, fetchMenus } from '~/stores/slices/menuSlice';
-import { MenuService } from '~/services/menu';
+import { MenuService } from '~/services/element_menu';
 import type { Menu as AppMenu, MenuItem } from '~/types/menu';
 import type { Tab } from '~/types/tab';
 import SidebarFooter from '~/components/common/SidebarFooter';

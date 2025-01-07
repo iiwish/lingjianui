@@ -4,7 +4,7 @@ import { useNavigate } from '@remix-run/react';
 import { useAppDispatch, store } from '~/stores';
 import { Provider } from 'react-redux';
 import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
-import { MenuService } from '~/services/menu';
+import { MenuService } from '~/services/element_menu';
 import { routeTypeToMenuType } from '~/constants/elementType';
 import { elementTypes } from '../assets/element-types';
 import { createRoot } from 'react-dom/client';

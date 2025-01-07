@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import { useParams, useLoaderData, useLocation } from '@remix-run/react';
 import TabContent from '~/components/layout/TabContent';
 import { routeTypeToMenuType } from '~/constants/elementType';
-import { MenuService } from '~/services/menu';
+import { MenuService } from '~/services/element_menu';
 import type { Menu as AppMenu } from '~/types/menu';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { addTab, setActiveTab, updateFolderState } from '~/stores/slices/tabSlice';

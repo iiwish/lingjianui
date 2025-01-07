@@ -1,6 +1,6 @@
 import React from 'react';
 import { Modal, Form, Input } from 'antd';
-import { MenuService } from '~/services/menu';
+import { MenuService } from '~/services/element_menu';
 import type { Menu as AppMenu } from '~/types/menu';
 
 interface Props {

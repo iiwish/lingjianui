@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import type { Menu, MenuConfig } from '~/types/menu';
-import { MenuService } from '~/services/menu';
+import { MenuService } from '~/services/element_menu';
 
 interface MenuState {
   menuList: MenuConfig[];
