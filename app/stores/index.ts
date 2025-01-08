@@ -9,6 +9,7 @@ import tabReducer from './slices/tabSlice';
 import menuReducer from './slices/menuSlice';
 import tableConfigReducer from './slices/tableConfigSlice';
 import dimensionConfigReducer from './slices/dimensionConfigSlice';
+import modelConfigReducer from './slices/modelConfigSlice';
 
 // 配置 auth 持久化
 const authPersistConfig = {
@@ -30,6 +31,7 @@ export const store = configureStore({
     menu: menuReducer,
     tableConfig: tableConfigReducer,
     dimensionConfig: dimensionConfigReducer,
+    modelConfig: modelConfigReducer,
   },
   middleware: (getDefaultMiddleware) =>
     getDefaultMiddleware({
