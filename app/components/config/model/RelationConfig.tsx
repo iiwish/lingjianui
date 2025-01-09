@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Form, Select, Button, Space, Card } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { ModelConfigItemRel } from '~/types/element_model';
+import FieldSelectorModal from './FieldSelectorModal';
 
 const { Option } = Select;
 
@@ -20,6 +21,31 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
   onChange,
   disabled = false,
 }) => {
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editingIndex, setEditingIndex] = useState<number | null>(null);
+
+  const handleModalOk = (selected: { left?: string; right?: string }) => {
+    if (editingIndex !== null) {
+      // 编辑现有字段
+      const newFields = [...(value?.fields || [])];
+      newFields[editingIndex] = {
+        fromField: selected.right || '',
+        toField: selected.left || '',
+      };
+      onChange?.({ ...value, fields: newFields } as ModelConfigItemRel);
+    } else {
+      // 添加新字段
+      const newFields = [
+        ...(value?.fields || []),
+        {
+          fromField: selected.right || '',
+          toField: selected.left || '',
+        },
+      ];
+      onChange?.({ ...value, fields: newFields } as ModelConfigItemRel);
+    }
+    setModalVisible(false);
+  };
   const handleAddField = () => {
     const newFields = [...(value?.fields || []), { fromField: '', toField: '' }];
     onChange?.({ ...value, fields: newFields } as ModelConfigItemRel);
@@ -109,6 +135,18 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
           </Button>
         </Space>
       </Form.Item>
+
+      <FieldSelectorModal
+        visible={modalVisible}
+        leftFields={parentFields}
+        rightFields={fields}
+        selectedFields={{
+          left: editingIndex !== null ? value?.fields[editingIndex]?.toField : undefined,
+          right: editingIndex !== null ? value?.fields[editingIndex]?.fromField : undefined,
+        }}
+        onCancel={() => setModalVisible(false)}
+        onOk={handleModalOk}
+      />
     </Card>
   );
 };

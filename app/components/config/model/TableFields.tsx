@@ -28,8 +28,8 @@ const TableFields: React.FC<TableFieldsProps> = ({
     },
     {
       title: '类型',
-      dataIndex: 'type',
-      key: 'type',
+      dataIndex: 'column_type',
+      key: 'column_type',
       width: '20%',
       render: (type) => <Tag color="blue">{type}</Tag>,
     },

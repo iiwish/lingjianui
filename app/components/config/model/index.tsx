@@ -1,8 +1,9 @@
 import React, { useEffect, useState } from 'react';
-import { Layout, Button, message, Spin, Modal, App, Card, Form, Select } from 'antd';
+import { Layout, Button, message, Spin, Modal, App, Card, Form, Select, TreeSelect } from 'antd';
 import { PlusOutlined, SaveOutlined, DeleteOutlined } from '@ant-design/icons';
 import type { ModelResponse, ModelConfigItem } from '~/types/element_model';
 import { getModel, createModel, updateModel } from '~/services/element_model';
+import { MenuService } from '~/services/element_menu';
 import { getTableConfig } from '~/services/element';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { setParentId, setConfig } from '~/stores/slices/modelConfigSlice';
@@ -10,6 +11,7 @@ import TreeNode from './TreeNode';
 import TableFields from './TableFields';
 import RelationConfig from './RelationConfig';
 import DimensionConfig from './DimensionConfig';
+import type { Menu as AppMenu } from '~/types/menu';
 
 const { Header, Sider, Content } = Layout;
 const { Option } = Select;
@@ -27,6 +29,29 @@ interface NodeState {
   };
 }
 
+interface TreeSelectNode {
+  key: string;
+  value: string;
+  title: string;
+  children?: TreeSelectNode[];
+  selectable?: boolean;
+  disabled?: boolean;
+  data?: AppMenu;
+}
+
+// 将菜单数据转换为TreeSelect需要的格式
+const convertToTreeData = (items: AppMenu[]): TreeSelectNode[] => {
+  return items.map((item) => ({
+    key: item.id.toString(),
+    value: item.id.toString(),
+    title: item.menu_name,
+    children: item.children ? convertToTreeData(item.children) : undefined,
+    selectable: item.menu_type === 2, // 只有表格类型可选
+    disabled: item.menu_type !== 2, // 非表格类型禁用
+    data: item,
+  }));
+};
+
 const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
   const dispatch = useAppDispatch();
   const storeParentId = useAppSelector(state => state.modelConfig.parentId);
@@ -37,7 +62,7 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
     node: ModelConfigItem;
   } | null>(null);
   const [nodeStates, setNodeStates] = useState<NodeState>({});
-  const [tables, setTables] = useState<any[]>([]);
+  const [tables, setTables] = useState<TreeSelectNode[]>([]);
   const [dimensions, setDimensions] = useState<any[]>([]);
   const [parentFields, setParentFields] = useState<any[]>([]);
 
@@ -69,8 +94,16 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
 
   const loadTables = async () => {
     try {
-      // 加载表格列表和维度列表的逻辑
-      // TODO: 实现实际的加载逻辑
+      // 获取系统菜单id
+      const sysRes = await MenuService.getSystemMenuId();
+      if (sysRes.code === 200 && sysRes.data) {
+        // 获取系统菜单树
+        const treeRes = await MenuService.getMenus(sysRes.data.id.toString(), 'descendants');
+        if (treeRes.code === 200 && treeRes.data) {
+          const treeData = convertToTreeData(treeRes.data);
+          setTables(treeData);
+        }
+      }
     } catch (error) {
       console.error('加载表格失败:', error);
       message.error('加载表格失败');
@@ -78,6 +111,16 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
   };
 
   const loadTableFields = async (tableId: number, nodePath: string) => {
+    if (tableId === 0) {
+      setNodeStates(prev => ({
+        ...prev,
+        [nodePath]: {
+          isExpanded: false,
+          fields: [],
+        },
+      }));
+      return;
+    }
     try {
       const res = await getTableConfig(tableId.toString());
       if (res.code === 200 && res.data) {
@@ -240,7 +283,7 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
   };
 
   const handleNodeUpdate = (updatedNode: ModelConfigItem) => {
-    if (!selectedNode) return;
+    if (!selectedNode || !modelData) return;
 
     const updateNodeAtPath = (
       node: ModelConfigItem,
@@ -268,10 +311,7 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
       };
     };
 
-    setModelData((prev) => {
-      if (!prev) return updatedNode;
-      return updateNodeAtPath(prev, selectedNode.path, 0);
-    });
+    setModelData(updateNodeAtPath(modelData, selectedNode.path, 0));
   };
 
   const handleSave = async () => {
@@ -326,6 +366,7 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
           isSelected={
             selectedNode?.path.join('-') === path.join('-')
           }
+          tables={tables}
         />
         {node.childrens?.map((child, index) =>
           renderNode(child, [...path, index.toString()])
@@ -365,21 +406,24 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
           >
             <div style={{ padding: '16px' }}>
               <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
-                <Button
-                  type="primary"
-                  icon={<PlusOutlined />}
-                  onClick={handleAddRootNode}
-                  disabled={!!modelData}
-                >
-                  添加根节点
-                </Button>
-                <Button
-                  icon={<PlusOutlined />}
-                  onClick={handleAddChildNode}
-                  disabled={!selectedNode}
-                >
-                  添加子节点
-                </Button>
+                {!modelData && (
+                  <Button
+                    type="primary"
+                    icon={<PlusOutlined />}
+                    onClick={handleAddRootNode}
+                  >
+                    添加根节点
+                  </Button>
+                )}
+                {modelData && (
+                  <Button
+                    icon={<PlusOutlined />}
+                    onClick={handleAddChildNode}
+                    disabled={!selectedNode}
+                  >
+                    添加子节点
+                  </Button>
+                )}
                 <Button
                   danger
                   icon={<DeleteOutlined />}
@@ -407,23 +451,33 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
                     required
                     tooltip="选择要关联的数据表"
                   >
-                    <Select
-                      value={selectedNode.node.table_id}
-                      onChange={async (value: number) => {
-                        handleNodeUpdate({
-                          ...selectedNode.node,
-                          table_id: value,
-                        });
-                        await loadTableFields(value, selectedNode.path.join('-'));
+                    <TreeSelect
+                      value={selectedNode.node.table_id?.toString()}
+                      onChange={async (value: string | null) => {
+                        if (value) {
+                          const tableId = parseInt(value);
+                          const updatedNode = {
+                            ...selectedNode.node,
+                            table_id: tableId,
+                          };
+                          handleNodeUpdate(updatedNode);
+                          await loadTableFields(tableId, selectedNode.path.join('-'));
+                        } else {
+                          const updatedNode = {
+                            ...selectedNode.node,
+                            table_id: 0,
+                          };
+                          handleNodeUpdate(updatedNode);
+                          await loadTableFields(0, selectedNode.path.join('-'));
+                        }
                       }}
                       style={{ width: '100%' }}
-                    >
-                      {tables.map((table) => (
-                        <Select.Option key={table.id} value={table.id}>
-                          {table.display_name}
-                        </Select.Option>
-                      ))}
-                    </Select>
+                      placeholder="请选择关联表格"
+                      allowClear
+                      showSearch
+                      treeNodeFilterProp="title"
+                      treeData={tables}
+                    />
                   </Form.Item>
 
                   {nodeStates[selectedNode.path.join('-')]?.fields && (
