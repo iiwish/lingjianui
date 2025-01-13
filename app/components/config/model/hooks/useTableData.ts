@@ -75,10 +75,12 @@ export const useTableData = () => {
     try {
       const res = await getTableConfig(tableId.toString());
       if (res.code === 200 && res.data) {
+        // 保持之前的展开状态，如果是新节点则默认展开
+        const prevExpanded = nodeStates[nodePath]?.isExpanded ?? true;
         setNodeStates(prev => ({
           ...prev,
           [nodePath]: {
-            isExpanded: false,
+            isExpanded: prevExpanded,
             fields: res.data.fields,
           },
         }));

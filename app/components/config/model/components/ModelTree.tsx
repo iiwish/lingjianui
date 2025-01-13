@@ -50,9 +50,11 @@ const ModelTree: React.FC<ModelTreeProps> = ({
           isSelected={selectedNode?.path.join('-') === path.join('-')}
           tables={tables}
         />
-        {node.childrens?.map((child, index) =>
-          renderNode(child, [...path, index.toString()])
-        )}
+        {node.childrens?.map((child, index) => (
+          <div key={index} style={{ marginLeft: '24px' }}>
+            {renderNode(child, [...path, index.toString()])}
+          </div>
+        ))}
       </div>
     );
   };
@@ -87,7 +89,7 @@ const ModelTree: React.FC<ModelTreeProps> = ({
           删除节点
         </Button>
       </div>
-      {modelData && renderNode(modelData, ['0'])}
+      {modelData && renderNode(modelData, [])}
     </div>
   );
 };

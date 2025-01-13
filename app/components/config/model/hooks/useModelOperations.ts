@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { message, Modal } from 'antd';
 import type { ModelConfigItem } from '~/types/element_model';
+import { useAppDispatch } from '~/stores';
+import { setConfig } from '~/stores/slices/modelConfigSlice';
 
 export const useModelOperations = (
   modelData: ModelConfigItem | null,
@@ -8,6 +10,7 @@ export const useModelOperations = (
   selectedNode: { path: string[]; node: ModelConfigItem } | null,
   setSelectedNode: (node: { path: string[]; node: ModelConfigItem } | null) => void,
 ) => {
+  const dispatch = useAppDispatch();
   const handleAddRootNode = () => {
     if (modelData) {
       message.error('根节点已存在');
@@ -51,6 +54,13 @@ export const useModelOperations = (
 
       const index = parseInt(path[depth]);
       const newChildren = [...(node.childrens || [])];
+      
+      // 检查节点是否存在
+      if (!newChildren[index]) {
+        console.error(`Node at index ${index} does not exist`);
+        return node;
+      }
+      
       newChildren[index] = updateNodeAtPath(
         newChildren[index],
         path,
@@ -123,33 +133,70 @@ export const useModelOperations = (
   const handleNodeUpdate = (updatedNode: ModelConfigItem) => {
     if (!selectedNode || !modelData) return;
 
-    const updateNodeAtPath = (
-      node: ModelConfigItem,
-      path: string[],
-      depth: number
-    ): ModelConfigItem => {
-      if (depth === path.length) {
+    let newModelData: ModelConfigItem;
+
+    // 如果是根节点，直接更新
+    if (selectedNode.path.length === 0) {
+      newModelData = {
+        ...modelData,
+        ...updatedNode,
+        childrens: modelData.childrens || [],
+      };
+    } else {
+      // 如果是子节点，使用路径更新
+      const updateNodeAtPath = (
+        node: ModelConfigItem,
+        path: string[],
+        depth: number
+      ): ModelConfigItem => {
+        if (depth === path.length) {
+          return {
+            ...node,
+            ...updatedNode,
+            childrens: node.childrens || [],
+          };
+        }
+
+        const index = parseInt(path[depth]);
+        const newChildren = [...(node.childrens || [])];
+        
+        if (!newChildren[index]) {
+          console.error(`Node at index ${index} does not exist in handleNodeUpdate`);
+          return node;
+        }
+        
+        newChildren[index] = updateNodeAtPath(
+          newChildren[index],
+          path,
+          depth + 1
+        );
+
         return {
           ...node,
-          ...updatedNode,
+          childrens: newChildren,
         };
-      }
-
-      const index = parseInt(path[depth]);
-      const newChildren = [...(node.childrens || [])];
-      newChildren[index] = updateNodeAtPath(
-        newChildren[index],
-        path,
-        depth + 1
-      );
-
-      return {
-        ...node,
-        childrens: newChildren,
       };
-    };
 
-    setModelData(updateNodeAtPath(modelData, selectedNode.path, 0));
+      newModelData = updateNodeAtPath(modelData, selectedNode.path, 0);
+    }
+
+    // 更新本地状态
+    setModelData(newModelData);
+
+    // 获取更新后的节点
+    let updatedSelectedNode = newModelData;
+    for (const index of selectedNode.path) {
+      updatedSelectedNode = updatedSelectedNode.childrens?.[parseInt(index)] || updatedSelectedNode;
+    }
+
+    // 更新选中节点
+    setSelectedNode({
+      path: selectedNode.path,
+      node: updatedSelectedNode,
+    });
+
+    // 同步到Redux store
+    dispatch(setConfig(newModelData));
   };
 
   return {

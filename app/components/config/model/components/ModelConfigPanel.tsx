@@ -51,23 +51,33 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
           tooltip="选择要关联的数据表"
         >
           <TreeSelect
-            value={selectedNode.node.table_id?.toString()}
+            value={tables.find(t => t.data?.id === selectedNode.node.table_id)?.value}
             onChange={async (value: string | null) => {
               if (value) {
-                const tableId = parseInt(value);
+                const selectedTable = tables.find(t => t.value === value);
+                if (!selectedTable?.data) return;
+                
+                // 先加载表格字段
+                await onLoadTableFields(selectedTable.data.id, selectedNode.path.join('-'));
+                
+                // 更新节点，使用menu_name作为节点名称
                 const updatedNode = {
                   ...selectedNode.node,
-                  table_id: tableId,
+                  table_id: selectedTable.data.source_id,
+                  name: selectedTable.data.menu_name,
                 };
                 onNodeUpdate(updatedNode);
-                await onLoadTableFields(tableId, selectedNode.path.join('-'));
               } else {
+                // 清空表格字段
+                await onLoadTableFields(0, selectedNode.path.join('-'));
+                
+                // 更新节点，清空表格相关信息
                 const updatedNode = {
                   ...selectedNode.node,
                   table_id: 0,
+                  name: '未选择表格',
                 };
                 onNodeUpdate(updatedNode);
-                await onLoadTableFields(0, selectedNode.path.join('-'));
               }
             }}
             style={{ width: '100%' }}

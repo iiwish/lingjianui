@@ -15,6 +15,11 @@ interface TreeNodeProps {
   tables?: {
     value: string;
     title: string;
+    data?: {
+      id: number;
+      source_id: number;
+      menu_name: string;
+    };
   }[];
 }
 
@@ -43,10 +48,10 @@ const TreeNode: React.FC<TreeNodeProps> = ({
           <Space>
             <DatabaseOutlined style={{ color: '#1890ff' }} />
             <Text strong>
-              {node.table_id 
-                ? (tables.find((t: { value: string; title: string }) => t.value === node.table_id.toString())?.title || `表格 ${node.table_id}`)
+              {node.name || (node.table_id 
+                ? (tables.find(t => t.data?.source_id === node.table_id)?.data?.menu_name || `表格 ${node.table_id}`)
                 : '未选择表格'
-              }
+              )}
             </Text>
           </Space>
           {fields.length > 0 && (

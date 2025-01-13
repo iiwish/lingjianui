@@ -21,7 +21,8 @@ export interface ModelConfigItemDim {
 
 // 模型配置项
 export interface ModelConfigItem {
-  table_id: number;                    // 表格ID
+  table_id: number;                    // 菜单来源ID (source_id)
+  name?: string;                       // 节点显示名称
   relationships?: ModelConfigItemRel;  // 关联关系
   dimensions?: ModelConfigItemDim[];   // 维度配置
   childrens?: ModelConfigItem[];      // 子配置项
