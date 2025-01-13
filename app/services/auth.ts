@@ -65,7 +65,7 @@ export const AuthService = {
    * @param data 用户信息
    */
   updateCurrentUser(data: UserInfo): Promise<ApiResponse<void>> {
-    return put<ApiResponse<void>>('/user/profile', data)
+    return put<void>('/user/profile', data)
       .then(response => {
         console.log('updateCurrentUser response:', response);
         return response;
@@ -81,7 +81,7 @@ export const AuthService = {
    * @param data 密码
    */
   updatePassword(data: ChangePasswordParams): Promise<ApiResponse<void>> {
-    return put<ApiResponse<void>>('/auth/password', data)
+    return put<void>('/auth/password', data)
       .then(response => {
         console.log('updatePassword response:', response);
         return response;
