@@ -43,40 +43,15 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
     setSelectedNode
   );
 
-  const {
-    tables,
-    nodeStates,
-    parentFields,
-    loadTableFields,
-    loadParentFields,
-    toggleNodeExpand,
-  } = useTableData();
+  const { tables, nodeStates, parentFields, loadTableFields } = useTableData();
 
-  const handleNodeSelect = async (node: ModelConfigItem, path: string[]) => {
+  const handleNodeSelect = (node: ModelConfigItem, path: string[]) => {
     setSelectedNode({ node, path });
-    
-    // 加载父节点的字段
-    if (path.length > 0) {
-      const parentPath = path.slice(0, -1);
-      let parentNode: ModelConfigItem | null = modelData;
-      for (const index of parentPath) {
-        const nextNode = parentNode?.childrens?.[parseInt(index)];
-        if (!nextNode) {
-          parentNode = null;
-          break;
-        }
-        parentNode = nextNode;
-      }
-      if (parentNode) {
-        await loadParentFields(parentNode);
-      }
-    }
-
     // 加载当前节点的字段
-    if (node.table_id) {
+    if (node.source_id) {
       const nodePath = path.join('-');
       if (!nodeStates[nodePath]?.fields) {
-        await loadTableFields(node.table_id, nodePath);
+        loadTableFields(node.source_id, nodePath);
       }
     }
   };
@@ -119,13 +94,11 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
                 loading={loading}
                 modelData={modelData}
                 selectedNode={selectedNode}
-                nodeStates={nodeStates}
                 tables={tables}
                 onAddRootNode={handleAddRootNode}
                 onAddChildNode={handleAddChildNode}
                 onDeleteNode={handleDeleteNode}
                 onNodeSelect={handleNodeSelect}
-                onToggleExpand={toggleNodeExpand}
               />
             )}
           </Sider>

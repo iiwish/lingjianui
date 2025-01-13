@@ -2,6 +2,22 @@ import React from 'react';
 import { Card, Form, TreeSelect } from 'antd';
 import type { ModelConfigItem } from '~/types/element_model';
 import type { TreeSelectNode } from '../types';
+
+// 递归查找表格
+const findTableInTree = (tables: TreeSelectNode[], value: string): TreeSelectNode | undefined => {
+  for (const table of tables) {
+    if (table.value === value) {
+      return table;
+    }
+    if (table.children) {
+      const found = findTableInTree(table.children, value);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return undefined;
+};
 import TableFields from '../TableFields';
 import RelationConfig from '../RelationConfig';
 import DimensionConfig from '../DimensionConfig';
@@ -51,14 +67,14 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
           tooltip="选择要关联的数据表"
         >
           <TreeSelect
-            value={tables.find(t => t.data?.id === selectedNode.node.table_id)?.value}
+            value={tables.find(t => t.data?.id === selectedNode.node.source_id || (t.children && t.children.some(child => child.data?.id === selectedNode.node.source_id)))?.value}
             onChange={async (value: string | null) => {
               if (value) {
-                const selectedTable = tables.find(t => t.value === value);
+                const selectedTable = findTableInTree(tables, value);
                 if (!selectedTable?.data) return;
                 
                 // 先加载表格字段
-                await onLoadTableFields(selectedTable.data.id, selectedNode.path.join('-'));
+                await onLoadTableFields(selectedTable.data.source_id, selectedNode.path.join('-'));
                 
                 // 更新节点，使用menu_name作为节点名称
                 const updatedNode = {

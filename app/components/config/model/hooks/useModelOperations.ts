@@ -17,7 +17,7 @@ export const useModelOperations = (
       return;
     }
     setModelData({
-      table_id: 0,
+      source_id: 0,
       relationships: undefined,
       dimensions: [],
       childrens: [],
@@ -31,7 +31,7 @@ export const useModelOperations = (
     }
 
     const newNode: ModelConfigItem = {
-      table_id: 0,
+      source_id: 0,
       relationships: {
         type: '1:1',
         fields: [],

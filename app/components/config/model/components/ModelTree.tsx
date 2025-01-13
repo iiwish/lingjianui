@@ -9,43 +9,28 @@ interface ModelTreeProps {
   loading: boolean;
   modelData: ModelConfigItem | null;
   selectedNode: { path: string[]; node: ModelConfigItem } | null;
-  nodeStates: {
-    [key: string]: {
-      isExpanded: boolean;
-      fields: any[];
-    };
-  };
   tables: TreeSelectNode[];
   onAddRootNode: () => void;
   onAddChildNode: () => void;
   onDeleteNode: () => void;
   onNodeSelect: (node: ModelConfigItem, path: string[]) => void;
-  onToggleExpand: (nodePath: string) => void;
 }
 
 const ModelTree: React.FC<ModelTreeProps> = ({
   loading,
   modelData,
   selectedNode,
-  nodeStates,
   tables,
   onAddRootNode,
   onAddChildNode,
   onDeleteNode,
   onNodeSelect,
-  onToggleExpand,
 }) => {
   const renderNode = (node: ModelConfigItem, path: string[]) => {
-    const nodePath = path.join('-');
-    const nodeState = nodeStates[nodePath] || { isExpanded: false, fields: [] };
-
     return (
-      <div key={nodePath} style={{ marginBottom: 8 }}>
+      <div key={path.join('-')} style={{ marginBottom: 8 }}>
         <TreeNode
           node={node}
-          fields={nodeState.fields}
-          isExpanded={nodeState.isExpanded}
-          onToggleExpand={() => onToggleExpand(nodePath)}
           onSelect={() => onNodeSelect(node, path)}
           isSelected={selectedNode?.path.join('-') === path.join('-')}
           tables={tables}
