@@ -43,7 +43,7 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
     setSelectedNode
   );
 
-  const { tables, nodeStates, parentFields, loadTableFields } = useTableData();
+  const { tables, nodeStates, parentFields, loadTableFields, loadParentFields } = useTableData();
 
   const handleNodeSelect = (node: ModelConfigItem, path: string[]) => {
     setSelectedNode({ node, path });
@@ -53,6 +53,20 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
       if (!nodeStates[nodePath]?.fields) {
         loadTableFields(node.source_id, nodePath);
       }
+    }
+    // 加载父节点的字段
+    if (path.length > 0) {
+      const parentPath = path.slice(0, -1);
+      const parentNode = modelData?.childrens?.find(child => child.source_id.toString() === path[path.length - 1]);
+      if (!parentNode && modelData?.source_id) {
+        // 如果当前节点是根节点的子节点，使用modelData作为父节点
+        loadParentFields(modelData);
+      } else if (parentNode) {
+        loadParentFields(parentNode);
+      }
+    } else if (modelData?.source_id) {
+      // 如果当前节点是根节点，尝试加载父表字段
+      loadParentFields(modelData);
     }
   };
 

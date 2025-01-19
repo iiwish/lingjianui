@@ -67,7 +67,7 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
           tooltip="选择要关联的数据表"
         >
           <TreeSelect
-            value={tables.find(t => t.data?.id.toString() === selectedNode.node.source_id?.toString() || (t.children && t.children.some(child => child.data?.id.toString() === selectedNode.node.source_id?.toString())))?.value}
+            value={tables.flatMap(t => [t, ...(t.children || [])]).find(node => node.data?.id.toString() === selectedNode.node.source_id?.toString())?.value}
             onChange={async (value: string | null) => {
               if (value) {
                 const selectedTable = findTableInTree(tables, value);
@@ -108,7 +108,7 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
 
         {nodeStates[selectedNode.path.join('-')]?.fields && (
           <TableFields
-            fields={nodeStates[selectedNode.path.join('-')].fields}
+            fields={[...nodeStates[selectedNode.path.join('-')].fields].sort((a, b) => (a.sort || 0) - (b.sort || 0))}
           />
         )}
       </Card>
