@@ -67,7 +67,7 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
           tooltip="选择要关联的数据表"
         >
           <TreeSelect
-            value={tables.find(t => t.data?.id === selectedNode.node.source_id || (t.children && t.children.some(child => child.data?.id === selectedNode.node.source_id)))?.value}
+            value={tables.find(t => t.data?.id.toString() === selectedNode.node.source_id?.toString() || (t.children && t.children.some(child => child.data?.id.toString() === selectedNode.node.source_id?.toString())))?.value}
             onChange={async (value: string | null) => {
               if (value) {
                 const selectedTable = findTableInTree(tables, value);
@@ -80,6 +80,7 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
                 const updatedNode = {
                   ...selectedNode.node,
                   table_id: selectedTable.data.source_id,
+                  source_id: selectedTable.data.id,
                   name: selectedTable.data.menu_name,
                 };
                 onNodeUpdate(updatedNode);

@@ -11,6 +11,7 @@ export const useModelOperations = (
   setSelectedNode: (node: { path: string[]; node: ModelConfigItem } | null) => void,
 ) => {
   const dispatch = useAppDispatch();
+
   const handleAddRootNode = () => {
     if (modelData) {
       message.error('根节点已存在');
@@ -55,7 +56,6 @@ export const useModelOperations = (
       const index = parseInt(path[depth]);
       const newChildren = [...(node.childrens || [])];
       
-      // 检查节点是否存在
       if (!newChildren[index]) {
         console.error(`Node at index ${index} does not exist`);
         return node;
@@ -94,36 +94,54 @@ export const useModelOperations = (
           path: string[],
           depth: number
         ): ModelConfigItem | null => {
+          // 处理根节点删除
+          if (path.length === 0) {
+            return null;
+          }
+
           if (depth === path.length - 1) {
-            if (path[depth] === '0' && depth === 0) {
-              return null; // 删除根节点
-            }
+            const index = parseInt(path[depth]);
+            
             const newChildren = [...(node.childrens || [])];
-            newChildren.splice(parseInt(path[depth]), 1);
+            if (index >= 0 && index < newChildren.length) {
+              newChildren.splice(index, 1);
+            }
             return {
               ...node,
-              childrens: newChildren,
+              childrens: newChildren.length > 0 ? newChildren : undefined,
             };
           }
 
           const index = parseInt(path[depth]);
           const newChildren = [...(node.childrens || [])];
+          
+          if (!newChildren[index]) {
+            console.error(`Node at index ${index} does not exist`);
+            return node;
+          }
+          
           const updatedChild = deleteNodeAtPath(
             newChildren[index],
             path,
             depth + 1
           );
-          newChildren[index] = updatedChild!;
+          
+          if (updatedChild === null) {
+            newChildren.splice(index, 1);
+          } else {
+            newChildren[index] = updatedChild;
+          }
 
           return {
             ...node,
-            childrens: newChildren,
+            childrens: newChildren.length > 0 ? newChildren : undefined,
           };
         };
 
         setModelData((prev: ModelConfigItem | null) => {
           if (!prev) return null;
-          return deleteNodeAtPath(prev, selectedNode.path, 0);
+          const result = deleteNodeAtPath(prev, selectedNode.path, 0);
+          return result;
         });
         setSelectedNode(null);
       },
@@ -135,7 +153,6 @@ export const useModelOperations = (
 
     let newModelData: ModelConfigItem;
 
-    // 如果是根节点，直接更新
     if (selectedNode.path.length === 0) {
       newModelData = {
         ...modelData,
@@ -143,7 +160,6 @@ export const useModelOperations = (
         childrens: modelData.childrens || [],
       };
     } else {
-      // 如果是子节点，使用路径更新
       const updateNodeAtPath = (
         node: ModelConfigItem,
         path: string[],
@@ -180,22 +196,18 @@ export const useModelOperations = (
       newModelData = updateNodeAtPath(modelData, selectedNode.path, 0);
     }
 
-    // 更新本地状态
     setModelData(newModelData);
 
-    // 获取更新后的节点
     let updatedSelectedNode = newModelData;
     for (const index of selectedNode.path) {
       updatedSelectedNode = updatedSelectedNode.childrens?.[parseInt(index)] || updatedSelectedNode;
     }
 
-    // 更新选中节点
     setSelectedNode({
       path: selectedNode.path,
       node: updatedSelectedNode,
     });
 
-    // 同步到Redux store
     dispatch(setConfig(newModelData));
   };
 
