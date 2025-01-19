@@ -1,5 +1,5 @@
 import React from 'react';
-import { Form, Select, Button, Space, Card } from 'antd';
+import { Form, Select, Button, Space, Card, TreeSelect } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { ModelConfigItemDim } from '~/types/element_model';
 
@@ -68,49 +68,9 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
             }
           >
             <Space direction="vertical" style={{ width: '100%' }}>
-              <Form.Item
-                label="维度"
-                required
-                tooltip="选择要关联的维度"
-              >
-                <Select
-                  value={dimension.dim_id}
-                  onChange={(value) => handleDimensionChange(index, 'dim_id', value)}
-                  style={{ width: '100%' }}
-                  placeholder="请选择维度"
-                  disabled={disabled}
-                >
-                  {dimensions.map((dim) => (
-                    <Option key={dim.id} value={dim.id}>
-                      {dim.display_name}
-                    </Option>
-                  ))}
-                </Select>
-              </Form.Item>
 
-              <Form.Item
-                label="维度字段"
-                required
-                tooltip="选择维度表中用于关联的字段"
-              >
-                <Select
-                  value={dimension.dim_field}
-                  onChange={(value) => handleDimensionChange(index, 'dim_field', value)}
-                  style={{ width: '100%' }}
-                  placeholder="请选择维度字段"
-                  disabled={disabled}
-                >
-                  {dimension.dim_id && dimensions
-                    .find((d) => d.id === dimension.dim_id)
-                    ?.fields.map((field: any) => (
-                      <Option key={field.name} value={field.name}>
-                        {field.comment || field.name}
-                      </Option>
-                    ))}
-                </Select>
-              </Form.Item>
 
-              <Form.Item
+            <Form.Item
                 label="表格字段"
                 required
                 tooltip="选择当前表中用于关联的字段"
@@ -122,11 +82,67 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
                   placeholder="请选择表格字段"
                   disabled={disabled}
                 >
-                  {fields.map((field) => (
-                    <Option key={field.name} value={field.name}>
-                      {field.comment || field.name}
-                    </Option>
-                  ))}
+                  {fields
+                    .sort((a, b) => (a.sort || 0) - (b.sort || 0))
+                    .map((field) => (
+                      <Option key={field.name} value={field.name}>
+                        {field.comment || field.name}
+                      </Option>
+                    ))}
+                </Select>
+              </Form.Item>
+              
+              <Form.Item
+                label="维度"
+                required
+                tooltip="选择要关联的维度"
+              >
+                <TreeSelect
+                  value={dimension.dim_id}
+                  onChange={(value) => handleDimensionChange(index, 'dim_id', value)}
+                  style={{ width: '100%' }}
+                  placeholder="请选择维度"
+                  disabled={disabled}
+                  allowClear
+                  treeData={dimensions.map(dim => ({
+                    title: dim.name,
+                    value: dim.id,
+                    key: dim.id,
+                    selectable: dim.type === 'dimension',
+                    isLeaf: dim.type === 'dimension',
+                    children: dim.children?.map((child: { name: string; id: number; type: string }) => ({
+                      title: child.name,
+                      value: child.id,
+                      key: child.id,
+                      selectable: child.type === 'dimension',
+                      isLeaf: true
+                    }))
+                  }))}
+                />
+              </Form.Item>
+
+              <Form.Item
+                label="维度字段"
+                required
+                tooltip="选择维度表中用于关联的字段"
+              >
+                <Select
+                  key={dimension.dim_id} // 添加key强制重新渲染
+                  value={dimension.dim_field}
+                  onChange={(value) => handleDimensionChange(index, 'dim_field', value)}
+                  style={{ width: '100%' }}
+                  placeholder="请选择维度字段"
+                  disabled={disabled}
+                >
+                  {dimension.dim_id && dimensions
+                    .find((d) => d.id === dimension.dim_id)
+                    ?.fields
+                    .filter((field: { type: string }) => field.type === 'dimension')
+                    .map((field: { name: string; comment?: string }) => (
+                      <Option key={field.name} value={field.name}>
+                        {field.comment || field.name}
+                      </Option>
+                    ))}
                 </Select>
               </Form.Item>
 
