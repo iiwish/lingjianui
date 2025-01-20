@@ -1,13 +1,17 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { Form, Select, Button, Space, Card, TreeSelect } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { ModelConfigItemDim } from '~/types/element_model';
+import type { TreeSelectNode } from './types';
+import { getDimensionConfig,CustomColumn } from '~/services/element';
+
 
 const { Option } = Select;
 
 interface DimensionConfigProps {
   fields: any[];
   dimensions: any[];
+  tables: TreeSelectNode[];
   value?: ModelConfigItemDim[];
   onChange?: (value: ModelConfigItemDim[]) => void;
   disabled?: boolean;
@@ -15,11 +19,30 @@ interface DimensionConfigProps {
 
 const DimensionConfig: React.FC<DimensionConfigProps> = ({
   fields,
-  dimensions,
+  tables,
   value = [],
   onChange,
   disabled = false,
 }) => {
+  const [customColumns, setCustomColumns] = useState<CustomColumn[]>([]);
+
+  useEffect(() => {
+    const fetchDimensionConfig = async (dimId: number) => {
+      try {
+        const response = await getDimensionConfig(dimId.toString());
+        setCustomColumns(response.data.custom_columns || []);
+      } catch (error) {
+        console.error('Failed to fetch dimension config:', error);
+        setCustomColumns([]);
+      }
+    };
+
+    if (value.length > 0) {
+      const lastDim = value[value.length - 1];
+      fetchDimensionConfig(lastDim.dim_id);
+    }
+  }, [value]);
+
   const handleAddDimension = () => {
     const newDimensions = [
       ...value,
@@ -81,6 +104,7 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
                   style={{ width: '100%' }}
                   placeholder="请选择表格字段"
                   disabled={disabled}
+                  allowClear
                 >
                   {fields
                     .sort((a, b) => (a.sort || 0) - (b.sort || 0))
@@ -93,30 +117,35 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
               </Form.Item>
               
               <Form.Item
-                label="维度"
+                label="关联维度"
                 required
                 tooltip="选择要关联的维度"
               >
                 <TreeSelect
-                  value={dimension.dim_id}
-                  onChange={(value) => handleDimensionChange(index, 'dim_id', value)}
+                  onChange={(value) => {
+                    if (value) {
+                      const selectedDim = tables.find(t => t.data?.id.toString() === value);
+                      handleDimensionChange(index, 'dim_id', selectedDim?.data?.source_id);
+                    }
+                  }}
                   style={{ width: '100%' }}
                   placeholder="请选择维度"
                   disabled={disabled}
                   allowClear
-                  treeData={dimensions.map(dim => ({
-                    title: dim.name,
-                    value: dim.id,
-                    key: dim.id,
-                    selectable: dim.type === 'dimension',
-                    isLeaf: dim.type === 'dimension',
-                    children: dim.children?.map((child: { name: string; id: number; type: string }) => ({
-                      title: child.name,
-                      value: child.id,
-                      key: child.id,
-                      selectable: child.type === 'dimension',
-                      isLeaf: true
-                    }))
+                  treeDefaultExpandAll
+                  treeData={tables.map(table => ({
+                    title: table.title,
+                    value: table.value,
+                    key: table.key,
+                    selectable: table.data?.menu_type === 3,
+                    disabled: table.data?.menu_type !== 3,
+                    children: table.children?.map(child => ({
+                      title: child.title,
+                      value: child.value,
+                      key: child.key,
+                      selectable: child.data?.menu_type === 3,
+                      disabled: child.data?.menu_type !== 3,
+                    })) || []
                   }))}
                 />
               </Form.Item>
@@ -129,20 +158,26 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
                 <Select
                   key={dimension.dim_id} // 添加key强制重新渲染
                   value={dimension.dim_field}
+                  defaultValue={"code"}
                   onChange={(value) => handleDimensionChange(index, 'dim_field', value)}
                   style={{ width: '100%' }}
                   placeholder="请选择维度字段"
                   disabled={disabled}
+                  allowClear
                 >
-                  {dimension.dim_id && dimensions
-                    .find((d) => d.id === dimension.dim_id)
-                    ?.fields
-                    .filter((field: { type: string }) => field.type === 'dimension')
-                    .map((field: { name: string; comment?: string }) => (
-                      <Option key={field.name} value={field.name}>
-                        {field.comment || field.name}
-                      </Option>
-                    ))}
+                  {/* 固定字段 */}
+                  <Option value="node_id">节点ID</Option>
+                  <Option value="parent_id">父节点ID</Option>
+                  <Option value="name">名称</Option>
+                  <Option value="code">编码</Option>
+                  <Option value="description">描述</Option>
+                  
+                  {/* 自定义字段 */}
+                  {customColumns.map((column) => (
+                    <Option key={column.name} value={column.name}>
+                      {column.comment || column.name}
+                    </Option>
+                  ))}
                 </Select>
               </Form.Item>
 

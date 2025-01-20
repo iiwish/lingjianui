@@ -130,6 +130,7 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
       <DimensionConfig
         fields={nodeStates[selectedNode.path.join('-')]?.fields || []}
         dimensions={dimensions}
+        tables={tables}
         value={selectedNode.node.dimensions}
         onChange={(value) =>
           onNodeUpdate({
