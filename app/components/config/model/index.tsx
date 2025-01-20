@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Layout, Button, Spin, App } from 'antd';
+import { Layout, Button, Spin, App, Form, Input } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
 import type { ModelConfigItem } from '~/types/element_model';
 import { useAppSelector } from '~/stores';
@@ -17,8 +17,10 @@ interface Props {
   parentId?: string | null;
 }
 
-const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
+const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId: urlParentId }) => {
   const storeParentId = useAppSelector(state => state.modelConfig.parentId);
+  const parentId = urlParentId || storeParentId;
+  const [form] = Form.useForm();
   const [selectedNode, setSelectedNode] = useState<{
     path: string[];
     node: ModelConfigItem;
@@ -81,11 +83,50 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId }) => {
           alignItems: 'center',
           boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
         }}>
+          <Form
+            form={form}
+            layout="inline"
+            style={{ flex: 1, marginRight: 16 }}
+          >
+            <Form.Item
+              name="display_name"
+              label="名称"
+              rules={[{ required: true, message: '请输入名称' }]}
+            >
+              <Input placeholder="请输入名称" />
+            </Form.Item>
+
+            <Form.Item
+              name="model_code"
+              label="编码"
+              rules={[
+                { required: true, message: '请输入模型编码' },
+                {
+                  pattern: /^[a-zA-Z0-9_-]+$/,
+                  message: '只允许字母、数字、下划线和横线',
+                },
+              ]}
+            >
+              <Input placeholder="请输入模型编码" />
+            </Form.Item>
+
+            <Form.Item
+              name="description"
+              label="描述"
+              rules={[{ required: false, message: '请输入描述' }]}
+            >
+              <Input placeholder="请输入描述" />
+            </Form.Item>
+          </Form>
+
           <Button
             type="primary"
             icon={<SaveOutlined />}
-            onClick={() => handleSave(storeParentId)}
-            style={{ marginLeft: 8 }}
+            onClick={() => {
+              form.validateFields().then(values => {
+                handleSave(storeParentId, values);
+              });
+            }}
           >
             保存
           </Button>

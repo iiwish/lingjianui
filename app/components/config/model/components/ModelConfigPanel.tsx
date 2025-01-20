@@ -67,7 +67,7 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
           tooltip="选择要关联的数据表"
         >
           <TreeSelect
-            value={tables.flatMap(t => [t, ...(t.children || [])]).find(node => node.data?.id.toString() === selectedNode.node.source_id?.toString())?.value}
+            value={tables.flatMap(t => [t, ...(t.children || [])]).find(node => node.data?.source_id.toString() === selectedNode.node.source_id?.toString())?.value}
             onChange={async (value: string | null) => {
               if (value) {
                 const selectedTable = findTableInTree(tables, value);
@@ -79,8 +79,7 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
                 // 更新节点，使用menu_name作为节点名称
                 const updatedNode = {
                   ...selectedNode.node,
-                  table_id: selectedTable.data.source_id,
-                  source_id: selectedTable.data.id,
+                  source_id: selectedTable.data.source_id,
                   name: selectedTable.data.menu_name,
                 };
                 onNodeUpdate(updatedNode);
@@ -91,7 +90,7 @@ const ModelConfigPanel: React.FC<ModelConfigPanelProps> = ({
                 // 更新节点，清空表格相关信息
                 const updatedNode = {
                   ...selectedNode.node,
-                  table_id: 0,
+                  source_id: 0,
                   name: '未选择表格',
                 };
                 onNodeUpdate(updatedNode);

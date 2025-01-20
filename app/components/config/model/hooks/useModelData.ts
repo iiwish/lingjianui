@@ -3,7 +3,7 @@ import { message } from 'antd';
 import { getModel, createModel, updateModel } from '~/services/element_model';
 import { useAppDispatch } from '~/stores';
 import { setParentId, setConfig } from '~/stores/slices/modelConfigSlice';
-import type { ModelConfigItem } from '~/types/element_model';
+import type { ModelConfigItem, CreateModelRequest, UpdateModelRequest } from '~/types/element_model';
 
 interface UseModelDataProps {
   elementId: string;
@@ -40,28 +40,40 @@ export const useModelData = ({ elementId, parentId }: UseModelDataProps) => {
     }
   };
 
-  const handleSave = async (storeParentId: string | null) => {
+  const handleSave = async (storeParentId: string | null, formValues: {
+    model_code: string;
+    display_name: string;
+    description: string;
+  }) => {
     if (!modelData) {
       message.error('请先添加根节点');
       return;
     }
 
     try {
-      const modelConfig = {
-        id: elementId === 'new' ? 0 : parseInt(elementId),
-        model_name: 'model',
-        display_name: 'Model',
-        description: '',
-        status: 1,
-        configuration: modelData,
-        parent_id: storeParentId ? parseInt(storeParentId) : 0,
-      };
-
-      if (elementId === 'new') {
+      const isNew = elementId === 'new';
+      if (isNew) {
+        const modelConfig: CreateModelRequest = {
+          model_code: formValues.model_code,
+          display_name: formValues.display_name,
+          description: formValues.description,
+          status: 1,
+          configuration: modelData,
+          parent_id: parseInt(storeParentId || '0'),
+        };
         await createModel(modelConfig);
       } else {
+        const modelConfig: UpdateModelRequest = {
+          id: parseInt(elementId),
+          model_code: formValues.model_code,
+          display_name: formValues.display_name,
+          description: formValues.description,
+          status: 1,
+          configuration: modelData,
+        };
         await updateModel(elementId, modelConfig);
       }
+
       message.success('保存成功');
     } catch (error) {
       console.error('保存失败:', error);

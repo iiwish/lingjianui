@@ -31,7 +31,7 @@ export interface ModelConfigItem {
 // 模型响应
 export interface ModelResponse {
   id: number;
-  model_name: string;      // 模型名称
+  model_code: string;      // 模型名称
   display_name: string;    // 显示名称
   description: string;     // 描述
   status: number;         // 状态
@@ -40,7 +40,7 @@ export interface ModelResponse {
 
 // 创建模型请求
 export interface CreateModelRequest {
-  model_name: string;
+  model_code: string;
   display_name: string;
   description: string;
   status: number;
@@ -51,7 +51,7 @@ export interface CreateModelRequest {
 // 更新模型请求
 export interface UpdateModelRequest {
   id: number;
-  model_name: string;
+  model_code: string;
   display_name: string;
   description: string;
   status: number;

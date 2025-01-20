@@ -1,5 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import { Form, Select, Button, Space, Card, TreeSelect } from 'antd';
+import { useSelector, useDispatch } from 'react-redux';
+import { setDimensionFields } from '~/stores/slices/modelConfigSlice';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { ModelConfigItemDim } from '~/types/element_model';
 import type { TreeSelectNode } from './types';
@@ -17,6 +19,22 @@ interface DimensionConfigProps {
   disabled?: boolean;
 }
 
+// 递归查找表格
+const findNodeInTree = (tables: TreeSelectNode[], value: string): TreeSelectNode | undefined => {
+  for (const table of tables) {
+    if (table.key === value) {
+      return table;
+    }
+    if (table.children) {
+      const found = findNodeInTree(table.children, value);
+      if (found) {
+        return found;
+      }
+    }
+  }
+  return undefined;
+};
+
 const DimensionConfig: React.FC<DimensionConfigProps> = ({
   fields,
   tables,
@@ -24,24 +42,24 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
   onChange,
   disabled = false,
 }) => {
-  const [customColumns, setCustomColumns] = useState<CustomColumn[]>([]);
+  const dispatch = useDispatch();
+  const dimensionFields = useSelector((state: any) => state.modelConfig.dimensionFields);
 
-  useEffect(() => {
-    const fetchDimensionConfig = async (dimId: number) => {
-      try {
-        const response = await getDimensionConfig(dimId.toString());
-        setCustomColumns(response.data.custom_columns || []);
-      } catch (error) {
-        console.error('Failed to fetch dimension config:', error);
-        setCustomColumns([]);
-      }
-    };
-
-    if (value.length > 0) {
-      const lastDim = value[value.length - 1];
-      fetchDimensionConfig(lastDim.dim_id);
+  const fetchDimensionConfig = async (dimId: number) => {
+    try {
+      const response = await getDimensionConfig(dimId.toString());
+      dispatch(setDimensionFields({
+        dimId,
+        fields: response.data.custom_columns || []
+      }));
+    } catch (error) {
+      console.error('Failed to fetch dimension config:', error);
+      dispatch(setDimensionFields({
+        dimId,
+        fields: []
+      }));
     }
-  }, [value]);
+  };
 
   const handleAddDimension = () => {
     const newDimensions = [
@@ -65,10 +83,17 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
 
   const handleDimensionChange = (index: number, field: string, newValue: any) => {
     const newDimensions = [...value];
+    const oldDimId = newDimensions[index].dim_id;
     newDimensions[index] = {
       ...newDimensions[index],
       [field]: newValue,
     };
+    
+    // 当dim_id变化时请求新的维度配置
+    if (field === 'dim_id' && newValue !== oldDimId) {
+      fetchDimensionConfig(newValue);
+    }
+    
     onChange?.(newDimensions);
   };
 
@@ -124,7 +149,9 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
                 <TreeSelect
                   onChange={(value) => {
                     if (value) {
-                      const selectedDim = tables.find(t => t.data?.id.toString() === value);
+                      console.log('value:', value);
+                      console.log('tables:', tables);
+                      const selectedDim = findNodeInTree(tables, value);
                       handleDimensionChange(index, 'dim_id', selectedDim?.data?.source_id);
                     }
                   }}
@@ -173,7 +200,7 @@ const DimensionConfig: React.FC<DimensionConfigProps> = ({
                   <Option value="description">描述</Option>
                   
                   {/* 自定义字段 */}
-                  {customColumns.map((column) => (
+                  {(dimensionFields[dimension.dim_id] || []).map((column: CustomColumn) => (
                     <Option key={column.name} value={column.name}>
                       {column.comment || column.name}
                     </Option>
