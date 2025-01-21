@@ -1,10 +1,10 @@
 import React from 'react';
 import { Form, Input } from 'antd';
-import type { TabComponentProps } from './types';
+import type { TableTabComponentProps } from '~/types/config/table';
 import { useAppSelector, useAppDispatch } from '~/stores';
-import { setBasicInfoModified } from '~/stores/slices/tableConfigSlice';
+import { setBasicInfoModified } from '~/stores/slices/config/tableConfigSlice';
 
-interface Props extends TabComponentProps {
+interface Props extends TableTabComponentProps {
   isNew?: boolean;
   parentId?: string;
 }

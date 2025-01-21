@@ -4,7 +4,7 @@ import { UserOutlined, LockOutlined, SafetyCertificateOutlined, GithubOutlined }
 import { useNavigate } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { login, fetchUserInfo } from '~/stores/slices/authSlice';
-import type { LoginParams, CaptchaResult } from '~/types/api';
+import type { LoginParams, CaptchaResult } from '~/types/auth';
 import { AuthService } from '~/services';
 import AppFooter from '~/components/common/AppFooter';
 

@@ -7,7 +7,7 @@ import axios, {
 } from 'axios';
 import { store } from '../stores';
 import { logout, setToken } from '../stores/slices/authSlice';
-import type { ApiResponse } from '../types/api';
+import type { ApiResponse } from '../types/common';
 import { AuthService } from '../services/auth';
 import { message } from 'antd';
 

@@ -1,14 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Input, Select, Space } from 'antd';
 import { INDEX_MONTHODS } from './constants';
-import type { TabComponentProps, IndexConfig } from './types';
+import type { TableTabComponentProps, IndexConfig } from '~/types/config/table';
 import { useAppDispatch } from '~/stores';
-import { setIndexesModified } from '~/stores/slices/tableConfigSlice';
+import { setIndexesModified } from '~/stores/slices/config/tableConfigSlice';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
 
-const IndexInfo: React.FC<TabComponentProps> = ({ config }) => {
+const IndexInfo: React.FC<TableTabComponentProps> = ({ config }) => {
   const dispatch = useAppDispatch();
   const [form] = Form.useForm();
   const [editingIndex, setEditingIndex] = useState<IndexConfig | null>(null);

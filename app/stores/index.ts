@@ -2,14 +2,14 @@ import { configureStore } from '@reduxjs/toolkit';
 import type { TypedUseSelectorHook } from 'react-redux';
 import { useDispatch, useSelector } from 'react-redux';
 import { persistStore, persistReducer } from 'redux-persist';
-import storage from './storage';
-import authReducer from './slices/authSlice';
-import appReducer from './slices/appSlice';
-import tabReducer from './slices/tabSlice';
-import menuReducer from './slices/menuSlice';
-import tableConfigReducer from './slices/tableConfigSlice';
-import dimensionConfigReducer from './slices/dimensionConfigSlice';
-import modelConfigReducer from './slices/modelConfigSlice';
+import storage from '~/stores/storage';
+import authReducer from '~/stores/slices/authSlice';
+import appReducer from '~/stores/slices/appSlice';
+import tabReducer from '~/stores/slices/tabSlice';
+import menuReducer from '~/stores/slices/menuSlice';
+import tableConfigReducer from '~/stores/slices/config/tableConfigSlice';
+import dimensionConfigReducer from '~/stores/slices/config/dimensionConfigSlice';
+import modelConfigReducer from '~/stores/slices/config/modelConfigSlice';
 
 // 配置 auth 持久化
 const authPersistConfig = {

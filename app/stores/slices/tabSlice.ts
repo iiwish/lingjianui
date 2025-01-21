@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { Tab, TabState, FolderTabState } from '~/types/tab';
+import type { Tab, TabState, FolderTabState } from '~/types/slice/tab';
 
 const initialState: TabState = {
   tabs: [],

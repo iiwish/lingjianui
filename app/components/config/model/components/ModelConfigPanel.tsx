@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Form, TreeSelect } from 'antd';
-import type { ModelConfigItem } from '~/types/element_model';
+import type { ModelConfigItem } from '~/types/config/model';
 import type { TreeSelectNode } from '../types';
 
 // 递归查找表格

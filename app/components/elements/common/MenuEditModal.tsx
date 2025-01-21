@@ -1,7 +1,7 @@
 import React from 'react';
 import { Modal, Form, Input } from 'antd';
-import { MenuService } from '~/services/element_menu';
-import type { Menu as AppMenu } from '~/types/menu';
+import { MenuService } from '~/services/element/menu';
+import type { Menu as AppMenu } from '~/types/element/menu';
 
 interface Props {
   open: boolean;

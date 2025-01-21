@@ -2,14 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Table as AntTable, Input, Space, message, Button, Modal, Form, Row, Col } from 'antd';
 import FilterArea from './common/FilterArea';
 import type { ColumnsType } from 'antd/es/table';
-import { getTableConfig, getTableData, createTableItems, updateTableItems, deleteTableItems } from '~/services/element_table';
-import {type TableConfig} from '~/types/element_table';
-import type { ElementProps } from '~/types/element';
+import { getTableData, createTableItems, updateTableItems, deleteTableItems } from '~/services/element/table';
+import { getTableConfig } from '~/services/config/table';
+import {type TableConfig} from '~/types/config/table';
+import type { ElementProps } from '~/types/common';
 import { useDispatch } from 'react-redux';
 import { addTab } from '~/stores/slices/tabSlice';
 import { Authorized } from '~/utils/permission';
 import { useNavigate } from '@remix-run/react';
-import { menuTypeToRouteType } from '~/constants/elementType';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 export interface Condition {
@@ -44,7 +44,7 @@ interface DataType {
   [key: string]: any;
 }
 
-const Table: React.FC<ElementProps> = ({ elementId, appCode, elementType }) => {
+const Table: React.FC<ElementProps> = ({ elementId, appCode }) => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<TableConfig | null>(null);
   const [func, setFunc] = useState<TableFunc | null>(null);
@@ -243,7 +243,7 @@ const Table: React.FC<ElementProps> = ({ elementId, appCode, elementType }) => {
   };
 
   const handleConfig = () => {
-    const configPath = `/dashboard/${appCode}/config/${menuTypeToRouteType[elementType]}/${elementId}`;
+    const configPath = `/dashboard/${appCode}/config/table/${elementId}`;
     // 先导航到新的URL
     navigate(configPath);
     // 然后添加和激活tab

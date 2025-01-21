@@ -1,24 +1,3 @@
-// 更新API响应类型定义
-export interface ApiResponse<T = unknown> {
-  code: number;  // 修改为数字类型，值为200表示成功
-  message: string;
-  data: T;
-}
-
-// 分页请求参数
-export interface PaginationQuery {
-  page?: number;
-  pageSize?: number;
-}
-
-// 分页响应数据
-export interface PaginatedData<T> {
-  list: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-}
-
 // 登录请求参数
 export interface LoginParams {
   username: string;

@@ -2,16 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Tabs, Spin, Button, Result, message, Space } from 'antd';
 import type { TabsProps } from 'antd';
 import { useAppDispatch, useAppSelector } from '~/stores';
-import { setConfig, resetModifiedState, setParentId } from '~/stores/slices/tableConfigSlice';
+import { setConfig, resetModifiedState, setParentId } from '~/stores/slices/config/tableConfigSlice';
 import { useNavigate, useLocation } from '@remix-run/react';
 import { 
   getTableConfig,
   createTableConfig,
   updateTableConfig,
-  TableUpdateRequest
-} from '~/services/element_table';
+} from '~/services/config/table';
+import { TableUpdateRequest } from '~/types/config/table';
 
-import { FieldConfig, IndexConfig, TableConfig as ITableConfig, TableData } from '~/types/element_table';
+import { FieldConfig, IndexConfig, TableConfig as ITableConfig } from '~/types/config/table';
 import BasicInfo from './table/BasicInfo';
 import FieldInfo from './table/FieldInfo';
 import IndexInfo from './table/IndexInfo';

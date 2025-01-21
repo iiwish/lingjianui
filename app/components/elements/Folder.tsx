@@ -3,12 +3,6 @@ import ElementCreateModal from './common/ElementCreateModal';
 import { Table, Button, Breadcrumb, Space, Modal, App } from 'antd';
 import type { ColumnsType } from 'antd/es/table';
 import {
-  FolderOpenTwoTone,
-  TableOutlined,
-  DeploymentUnitOutlined,
-  MenuOutlined,
-  PartitionOutlined,
-  SnippetsOutlined,
   EditOutlined,
   FileOutlined,
   ArrowLeftOutlined,
@@ -17,11 +11,11 @@ import {
 import { useNavigate } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { addTab, setActiveTab, updateFolderState } from '~/stores/slices/tabSlice';
-import { MenuService } from '~/services/element_menu';
-import type { Menu as AppMenu } from '~/types/menu';
-import type { BreadcrumbItem } from '~/types/tab';
+import { MenuService } from '~/services/element/menu';
 import { Authorized } from '~/utils/permission';
-import { menuTypeToRouteType } from '~/constants/elementType';
+import { elementTypes, numToType } from '~/types/element/types';
+import type { Menu as AppMenu } from '~/types/element/menu';
+import type { BreadcrumbItem } from '~/types/slice/tab';
 import MenuEditModal from './common/MenuEditModal';
 
 interface Props {
@@ -37,14 +31,13 @@ interface Props {
 }
 
 // 图标映射
-const iconMap: { [key: string]: React.ReactNode } = {
-  'folder': <FolderOpenTwoTone />,
-  'table': <TableOutlined />,
-  'model': <DeploymentUnitOutlined />,
-  'menu': <MenuOutlined />,
-  'dim': <PartitionOutlined />,
-  'form': <SnippetsOutlined />,
-};
+const iconMap: { [key: string]: React.ReactNode } = elementTypes.reduce((map, item) => {
+  const Icon = item.icon;
+  return {
+    ...map,
+    [item.type]: <Icon />
+  };
+}, {});
 
 const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
   const navigate = useNavigate();
@@ -161,7 +154,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
     }
 
     // 构建路由路径
-    const path = `/dashboard/${appCode}/element/${menuTypeToRouteType[record.menu_type]}/${record.source_id}`;
+    const path = `/dashboard/${appCode}/element/${numToType[record.menu_type]}/${record.source_id}`;
 
     // 添加并激活tab
     dispatch(addTab({
@@ -213,7 +206,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
     }
 
     // 构建配置路由路径
-    const path = `/dashboard/${appCode}/config/${menuTypeToRouteType[record.menu_type]}/${record.source_id}`;
+    const path = `/dashboard/${appCode}/config/${numToType[record.menu_type]}/${record.source_id}`;
 
     // 添加并激活tab
     dispatch(addTab({
@@ -258,7 +251,7 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
       key: 'menu_name',
       render: (text: string, record: AppMenu) => (
         <span>
-          {iconMap[menuTypeToRouteType[record.menu_type]] || <FileOutlined />}
+          {iconMap[numToType[record.menu_type]] || <FileOutlined />}
           <span style={{ marginLeft: 8 }}>
             {text}
             <span style={{ marginLeft: 4, color: '#999' }}>

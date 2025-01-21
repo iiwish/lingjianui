@@ -1,8 +1,8 @@
 import React, { Suspense } from 'react';
 import { Result, Spin } from 'antd';
-import { menuTypeToRouteType, routeTypeToMenuType } from '~/constants/elementType';
+import { numToType } from '~/types/element/types';
 import { useAppSelector } from '~/stores';
-import type { FolderTabState } from '~/types/tab';
+import type { FolderTabState } from '~/types/slice/tab';
 
 // 懒加载组件
 const Folder = React.lazy(() => import('~/components/elements/Folder'));
@@ -35,7 +35,7 @@ const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, pa
     appCode,
     elementId,
     elementType,
-    elementTypeCode: menuTypeToRouteType[elementType],
+    elementTypeCode: numToType[elementType],
     type,
     pathname: window.location.pathname
   });
@@ -47,7 +47,7 @@ const TabContent: React.FC<Props> = ({ appCode, elementId, elementType, type, pa
         case '1':
           return <Folder elementId={elementId} appCode={appCode} initialState={tabState || initialState} />;
         case '2':
-          return <Table elementId={elementId} appCode={appCode} elementType={elementType} />;
+          return <Table elementId={elementId} appCode={appCode} />;
         case '3':
           return <Dimension elementId={elementId} appCode={appCode}/>;
         case '4': 

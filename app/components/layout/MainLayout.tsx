@@ -3,25 +3,17 @@ import { Layout, Menu as AntMenu, Button, Avatar, Dropdown, Tabs, Select, Result
 import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
-  AppstoreOutlined,
   UserOutlined,
   LogoutOutlined,
   HomeOutlined,
-  FolderOutlined,
-  TableOutlined,
-  ContainerOutlined,
-  MenuOutlined,
-  DatabaseOutlined,
-  FormOutlined,
 } from '@ant-design/icons';
 import { useNavigate, useLocation } from '@remix-run/react';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { logout } from '~/stores/slices/authSlice';
 import { addTab, removeTab, setActiveTab } from '~/stores/slices/tabSlice';
 import { setMenuList, setCurrentMenuConfig, setMenus, setCurrentMenuGroup, setLoading, setError, fetchMenuList, fetchMenus } from '~/stores/slices/menuSlice';
-import { MenuService } from '~/services/element_menu';
-import type { Menu as AppMenu, MenuItem } from '~/types/menu';
-import type { Tab } from '~/types/tab';
+import type { Menu as AppMenu } from '~/types/element/menu';
+import { elementTypes, numToType } from '~/types/element/types';
 import SidebarFooter from '~/components/common/SidebarFooter';
 import UserProfileModal from '~/components/user/UserProfileModal';
 
@@ -32,6 +24,14 @@ interface MainLayoutProps {
   children: React.ReactNode;
 }
 
+interface MenuItem {
+  key: string;
+  icon: React.ReactNode;
+  label: string;
+  children?: MenuItem[];
+  onClick?: () => void;
+}
+
 interface SystemMenuItem {
   key: string;
   icon: React.ReactNode;
@@ -39,16 +39,13 @@ interface SystemMenuItem {
   onClick?: () => void;
 }
 
-const iconMap: { [key: string]: React.ReactNode } = {
-  1: <FolderOutlined />,
-  2: <TableOutlined />,
-  5: <ContainerOutlined />,
-  4: <MenuOutlined />,
-  3: <DatabaseOutlined />,
-  6: <FormOutlined />,
-};
-
-import { menuTypeToRouteType, routeTypeToMenuType } from '~/constants/elementType';
+const iconMap: { [key: string]: React.ReactNode } = elementTypes.reduce((map, item) => {
+  const Icon = item.icon;
+  return {
+    ...map,
+    [item.code]: <Icon />
+  };
+}, {});
 
 const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
   const [collapsed, setCollapsed] = useState(false);
@@ -80,7 +77,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
     // 对于其他类型，在children中查找
     const findInChildren = (items: AppMenu[]): AppMenu | null => {
       for (const item of items) {
-        if (item.source_id?.toString() === id && menuTypeToRouteType[item.menu_type] === typeCode) {
+        if (item.source_id?.toString() === id && numToType[item.menu_type] === typeCode) {
           return item;
         }
         if (item.children) {
@@ -170,7 +167,7 @@ const MainLayout: React.FC<MainLayoutProps> = ({ children }) => {
       return `/dashboard/${currentApp?.code}/element/folder/${menu.id}`;
     }
     // 根据menu_type决定使用element还是config路由
-    const typeCode = menuTypeToRouteType[menu.menu_type];
+    const typeCode = numToType[menu.menu_type];
     return `/dashboard/${currentApp?.code}/element/${typeCode}/${menu.source_id?.toString()}`;
   };
 

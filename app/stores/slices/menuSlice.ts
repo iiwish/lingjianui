@@ -1,6 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import type { Menu, MenuConfig } from '~/types/menu';
-import { MenuService } from '~/services/element_menu';
+import type { Menu } from '~/types/element/menu';
+import type { MenuConfig } from '~/types/config/menu';
+import { MenuConfigService } from '~/services/config/menu';
+import { MenuService } from '~/services/element/menu';
 
 interface MenuState {
   menuList: MenuConfig[];
@@ -24,7 +26,7 @@ const initialState: MenuState = {
 export const fetchMenuList = createAsyncThunk(
   'menu/fetchMenuList',
   async () => {
-    const response = await MenuService.getMenuList();
+    const response = await MenuConfigService.getMenuList();
     return response;
   }
 );

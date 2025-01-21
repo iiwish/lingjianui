@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { getModel, createModel, updateModel } from '~/services/element_model';
+import { getModel, createModel, updateModel } from '~/services/config/model';
 import { useAppDispatch } from '~/stores';
-import { setParentId, setConfig } from '~/stores/slices/modelConfigSlice';
-import type { ModelConfigItem, CreateModelRequest, UpdateModelRequest } from '~/types/element_model';
+import { setParentId, setConfig } from '~/stores/slices/config/modelConfigSlice';
+import type { ModelConfigItem, CreateModelRequest, UpdateModelRequest } from '~/types/config/model';
 
 interface UseModelDataProps {
   elementId: string;

@@ -1,5 +1,5 @@
-import type { App, CreateAppDto, UpdateAppDto, AppResponse, AppsResponse } from '~/types/app';
 import http from '~/utils/http';
+import type { App, CreateAppDto, UpdateAppDto, AppResponse, AppsResponse } from '~/types/app';
 
 const BASE_URL = '/apps';
 

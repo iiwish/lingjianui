@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { Form, Select, Radio, Space, Card, Row, Col, Switch, Button } from 'antd';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import type { TabComponentProps } from './types';
+import type { TableTabComponentProps } from '~/types/config/table';
 import { useAppDispatch } from '~/stores';
-import { setFuncModified } from '~/stores/slices/tableConfigSlice';
+import { setFuncModified } from '~/stores/slices/config/tableConfigSlice';
 
 const queryTypes = [
   { label: '等于', value: 'eq' },
@@ -133,7 +133,7 @@ const ConditionGroupEditor: React.FC<{
   );
 };
 
-const FuncConfig: React.FC<TabComponentProps> = ({ config }) => {
+const FuncConfig: React.FC<TableTabComponentProps> = ({ config }) => {
   const [form] = Form.useForm();
   const dispatch = useAppDispatch();
 

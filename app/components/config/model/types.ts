@@ -1,4 +1,4 @@
-import type { Menu as AppMenu } from '~/types/menu';
+import type { Menu as AppMenu } from '~/types/element/menu';
 
 export interface TreeSelectNode {
   key: string;

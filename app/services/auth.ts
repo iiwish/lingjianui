@@ -1,13 +1,13 @@
-import { get, put, post } from '../utils/http';
+import { get, put, post } from '~/utils/http';
 import type { 
   LoginParams, 
   LoginResult, 
   UserInfo, 
   CaptchaResult,
   Permission,
-  ApiResponse,
   ChangePasswordParams
-} from '../types/api';
+} from '~/types/auth';
+import { ApiResponse } from '~/types/common';
 
 /**
  * 认证相关API服务

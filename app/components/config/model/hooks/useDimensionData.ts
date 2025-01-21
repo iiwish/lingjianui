@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useModelData } from './useModelData';
-import type { ModelConfigItem } from '~/types/element_model';
+import type { ModelConfigItem } from '~/types/config/model';
 
 interface DimensionItem {
   id: number;

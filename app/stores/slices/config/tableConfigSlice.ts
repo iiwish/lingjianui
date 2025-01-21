@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import type { TableConfig } from '~/services/element';
+import type { TableConfig } from '~/types/config/table';
 
 interface TableConfigState {
   config: TableConfig | null;

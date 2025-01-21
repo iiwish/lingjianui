@@ -1,3 +1,5 @@
+import { ApiResponse } from '~/types/common';
+
 export interface App {
   id: number;
   name: string;
@@ -35,18 +37,9 @@ export interface AppState {
   codeToId: { [key: string]: string }; // code到id的映射
 }
 
-// API响应类型
-export interface AppResponse {
-  code: number;
-  data: App;
-  message: string;
-}
+export type AppResponse = ApiResponse<App>;
 
-export interface AppsResponse {
-  code: number;
-  data: {
-    items: App[];
-    total: number;
-  };
-  message: string;
-}
+export type AppsResponse = ApiResponse<{
+  items: App[];
+  total: number;
+}>;

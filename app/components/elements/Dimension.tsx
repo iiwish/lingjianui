@@ -16,10 +16,11 @@ import {
   updateDimensionSort,
   updateDimensionItem,
   createDimensionItem,
-  deleteDimensionItems,
-  getDimensionConfig
-} from '~/services/element_dim';
-import { DimensionConfig as IDimensionConfig, DimensionItem, CustomColumn } from '~/types/element_dim';
+  deleteDimensionItems
+} from '~/services/element/dim';
+import { getDimensionConfig } from '~/services/config/dim';
+import { DimensionConfig as IDimensionConfig, CustomColumn } from '~/types/config/dim';
+import { DimensionItem } from '~/types/element/dim';
 
 import { PlusOutlined } from '@ant-design/icons';
 

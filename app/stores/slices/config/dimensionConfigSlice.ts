@@ -1,5 +1,5 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { DimensionConfig } from '~/services/element';
+import { DimensionConfig } from '~/types/config/dim';
 
 interface DimensionConfigState {
   config: DimensionConfig | null;

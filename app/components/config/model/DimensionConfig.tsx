@@ -1,12 +1,12 @@
 import React, { useEffect } from 'react';
 import { Form, Select, Button, Space, Card, TreeSelect } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
-import { setDimensionFields } from '~/stores/slices/modelConfigSlice';
+import { setDimensionFields } from '~/stores/slices/config/modelConfigSlice';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import type { ModelConfigItemDim } from '~/types/element_model';
+import type { ModelConfigItemDim } from '~/types/config/model';
 import type { TreeSelectNode } from './types';
-import { getDimensionConfig } from '~/services/element_dim';
-import { CustomColumn } from '~/types/element_dim';
+import { getDimensionConfig } from '~/services/config/dim';
+import { CustomColumn } from '~/types/config/dim';
 
 
 const { Option } = Select;

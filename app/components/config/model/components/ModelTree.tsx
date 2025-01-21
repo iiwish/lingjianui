@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Space } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import type { ModelConfigItem } from '~/types/element_model';
+import type { ModelConfigItem } from '~/types/config/model';
 import TreeNode from '../TreeNode';
 import type { TreeSelectNode } from '../types';
 

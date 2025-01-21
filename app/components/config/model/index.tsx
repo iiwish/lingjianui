@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Layout, Button, Spin, App, Form, Input } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
-import type { ModelConfigItem } from '~/types/element_model';
+import type { ModelConfigItem } from '~/types/config/model';
 import { useAppSelector } from '~/stores';
 import { useModelData } from './hooks/useModelData';
 import { useModelOperations } from './hooks/useModelOperations';

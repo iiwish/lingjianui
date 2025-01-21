@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
-import { MenuService } from '~/services/element_menu';
-import { getTableConfig } from '~/services/element_table';
-import type { Menu as AppMenu } from '~/types/menu';
+import { MenuService } from '~/services/element/menu';
+import { MenuConfigService } from '~/services/config/menu';
+import { getTableConfig } from '~/services/config/table';
+import type { Menu as AppMenu } from '~/types/element/menu';
 
 interface TreeSelectNode {
   key: string;
@@ -46,7 +47,7 @@ export const useTableData = () => {
   const loadTables = async () => {
     try {
       // 获取系统菜单id
-      const sysRes = await MenuService.getSystemMenuId();
+      const sysRes = await MenuConfigService.getSystemMenuId();
       if (sysRes.code === 200 && sysRes.data) {
         // 获取系统菜单树
         const treeRes = await MenuService.getMenus(sysRes.data.id.toString(), 'descendants');

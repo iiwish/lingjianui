@@ -4,9 +4,10 @@ import { useNavigate } from '@remix-run/react';
 import { useAppDispatch, store } from '~/stores';
 import { Provider } from 'react-redux';
 import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
-import { MenuService } from '~/services/element_menu';
-import { routeTypeToMenuType } from '~/constants/elementType';
-import { elementTypes } from '../assets/element-types';
+import { MenuService } from '~/services/element/menu';
+import { MenuConfigService } from '~/services/config/menu';
+import { typeToNum } from '~/types/element/types';
+import { elementTypes } from '~/types/element/types';
 import { createRoot } from 'react-dom/client';
 import DimensionConfig from '~/components/config/DimensionConfig';
 
@@ -109,7 +110,7 @@ const ElementCreateModal: React.FC<Props> = ({
         const params = {
           menu_name: values.name,
           menu_code: values.code,
-          menu_type: Number(routeTypeToMenuType[selectedType]),
+          menu_type: Number(typeToNum[selectedType]),
           parent_id: Number(parentId),
           icon_path: selectedType,
           source_id: 0, // 新建时默认为0
@@ -138,7 +139,7 @@ const ElementCreateModal: React.FC<Props> = ({
         };
 
         // 调用创建菜单项接口
-        const res = await MenuService.createMenu(params);
+        const res = await MenuConfigService.createMenu(params);
         if (res.code === 200) {
           message.success('创建成功');
           onSuccess();

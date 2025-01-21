@@ -1,9 +1,10 @@
 import React, { useEffect } from 'react';
 import { useParams, useLoaderData, useLocation } from '@remix-run/react';
 import TabContent from '~/components/layout/TabContent';
-import { routeTypeToMenuType } from '~/constants/elementType';
-import { MenuService } from '~/services/element_menu';
-import type { Menu as AppMenu } from '~/types/menu';
+import { typeToNum } from '~/types/element/types';
+import { MenuService } from '~/services/element/menu';
+import { MenuConfigService } from '~/services/config/menu';
+import type { Menu as AppMenu } from '~/types/element/menu';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { addTab, setActiveTab, updateFolderState } from '~/stores/slices/tabSlice';
 
@@ -23,7 +24,7 @@ export default function ElementRoute() {
       return;
     }
 
-    const type = routeTypeToMenuType[typeCode];
+    const type = typeToNum[typeCode];
     if (!type) {
       return;
     }
@@ -63,7 +64,7 @@ export default function ElementRoute() {
     return null;
   }
 
-  const type = routeTypeToMenuType[typeCode];
+  const type = typeToNum[typeCode];
   if (!type) {
     return null;
   }
@@ -86,19 +87,19 @@ export async function loader({ params }: { params: { type: string; id: number; a
   try {
     // 如果是folder类型，直接获取对应的菜单配置
     if (params.type === 'folder' && params.id) {
-      const menuConfigResponse = await MenuService.getMenuConfigByID(params.id.toString());
+      const menuConfigResponse = await MenuConfigService.getMenuConfigByID(params.id.toString());
       if (menuConfigResponse.code === 200 && menuConfigResponse.data) {
         return {
           breadcrumbs: [
             { 
               id: 0, 
               name: '目录', 
-              menu_type: Number(routeTypeToMenuType['folder'])
+              menu_type: Number(typeToNum['folder'])
             },
             { 
               id: Number(menuConfigResponse.data.id), 
               name: menuConfigResponse.data.display_name, 
-              menu_type: Number(routeTypeToMenuType['folder'])
+              menu_type: Number(typeToNum['folder'])
             }
           ],
           menuName: menuConfigResponse.data.display_name
@@ -106,7 +107,7 @@ export async function loader({ params }: { params: { type: string; id: number; a
       }
     } else {
       // 先获取菜单列表
-      const menuListResponse = await MenuService.getMenuList();
+      const menuListResponse = await MenuConfigService.getMenuList();
       if (menuListResponse.code === 200) {
         // 对于其他类型，需要遍历菜单列表找到对应的菜单配置
         for (const menuConfig of menuListResponse.data) {

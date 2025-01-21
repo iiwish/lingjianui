@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Modal, Form, Input, Button, Spin, Result, message, Space, Card, InputNumber } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
 import { useAppDispatch, useAppSelector } from '~/stores';
-import { setConfig, resetModifiedState, setParentId } from '~/stores/slices/dimensionConfigSlice';
+import { setConfig, resetModifiedState, setParentId } from '~/stores/slices/config/dimensionConfigSlice';
 import {
   getDimensionConfig,
   createDimensionConfig,
   updateDimensionConfig,
-} from '~/services/element_dim';
-import { DimensionConfig as IDimensionConfig } from '~/types/element_dim';
+} from '~/services/config/dim';
+import { DimensionConfig as IDimensionConfig } from '~/types/config/dim';
 
 interface Props {
   elementId: string;

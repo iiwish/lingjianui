@@ -4,8 +4,9 @@ import { SettingOutlined, PlusOutlined } from '@ant-design/icons';
 import type { TreeProps } from 'antd/es/tree';
 import { Authorized } from '~/utils/permission';
 import MenuEditModal from './common/MenuEditModal';
-import { MenuService } from '~/services/element_menu';
-import type { Menu as AppMenu } from '~/types/menu';
+import { MenuService } from '~/services/element/menu';
+import { MenuConfigService } from '~/services/config/menu';
+import type { Menu as AppMenu } from '~/types/element/menu';
 
 interface DataNode {
   key: string;
@@ -47,7 +48,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
     try {
       setSystemMenuLoading(true);
       // 获取系统菜单id
-      const sysRes = await MenuService.getSystemMenuId();
+      const sysRes = await MenuConfigService.getSystemMenuId();
       if (sysRes.code === 200 && sysRes.data) {
         // 获取系统菜单树
         const treeRes = await MenuService.getMenus(sysRes.data.id.toString(), 'descendants');
@@ -514,7 +515,7 @@ const Menu: React.FC<Props> = ({ elementId, appCode }) => {
       cancelText: '取消',
       onOk: async () => {
         try {
-          await MenuService.deleteMenu(selectedNode.id.toString());
+          await MenuConfigService.deleteMenu(selectedNode.id.toString());
           message.success('删除成功');
           setSelectedNode(null);
           form.resetFields();

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Form, Select, Input, DatePicker, InputNumber, Space, Button, Row, Col } from 'antd';
 import { MinusCircleOutlined, PlusOutlined } from '@ant-design/icons';
-import type { TableConfig } from '~/types/element_table';
+import type { TableConfig } from '~/types/config/table';
 import type { TableFunc } from '../Table';
 
 const queryTypes = [

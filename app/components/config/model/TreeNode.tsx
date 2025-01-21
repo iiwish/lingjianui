@@ -1,7 +1,7 @@
 import React from 'react';
 import { Card, Typography, Space, Tag, Tooltip, Badge } from 'antd';
 import { TableOutlined, DownOutlined, RightOutlined, DatabaseOutlined } from '@ant-design/icons';
-import type { ModelConfigItem } from '~/types/element_model';
+import type { ModelConfigItem } from '~/types/config/model';
 
 const { Text } = Typography;
 

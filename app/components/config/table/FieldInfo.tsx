@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import { Button, Table, Modal, Form, Input, InputNumber, Switch, Select, Space, Row, Col } from 'antd';
 import { FIELD_TYPES } from './constants';
-import type { TabComponentProps, FieldConfig } from './types';
+import type { TableTabComponentProps, FieldConfig } from '~/types/config/table';
 import { useAppDispatch } from '~/stores';
-import { setFieldsModified } from '~/stores/slices/tableConfigSlice';
+import { setFieldsModified } from '~/stores/slices/config/tableConfigSlice';
 import { EditOutlined, DeleteOutlined } from '@ant-design/icons';
 
 const { Option } = Select;
@@ -37,7 +37,7 @@ const NUMBER_TYPES = ['int', 'bigint', 'tinyint', 'smallint', 'mediumint'];
 // 浮点类型列表
 const FLOAT_TYPES = ['float', 'double', 'decimal'];
 
-const FieldInfo: React.FC<TabComponentProps> = ({ elementId, config }) => {
+const FieldInfo: React.FC<TableTabComponentProps> = ({ elementId, config }) => {
   const dispatch = useAppDispatch();
   const [form] = Form.useForm();
   const [editingField, setEditingField] = useState<FieldConfig | null>(null);
