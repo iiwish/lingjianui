@@ -8,11 +8,10 @@ import {
   getTableConfig,
   createTableConfig,
   updateTableConfig,
-  TableConfig as ITableConfig,
-  TableUpdateRequest,
-  FieldConfig,
-  IndexConfig
-} from '~/services/element';
+  TableUpdateRequest
+} from '~/services/element_table';
+
+import { FieldConfig, IndexConfig, TableConfig as ITableConfig, TableData } from '~/types/element_table';
 import BasicInfo from './table/BasicInfo';
 import FieldInfo from './table/FieldInfo';
 import IndexInfo from './table/IndexInfo';

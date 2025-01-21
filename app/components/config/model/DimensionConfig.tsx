@@ -5,7 +5,8 @@ import { setDimensionFields } from '~/stores/slices/modelConfigSlice';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
 import type { ModelConfigItemDim } from '~/types/element_model';
 import type { TreeSelectNode } from './types';
-import { getDimensionConfig,CustomColumn } from '~/services/element';
+import { getDimensionConfig } from '~/services/element_dim';
+import { CustomColumn } from '~/types/element_dim';
 
 
 const { Option } = Select;

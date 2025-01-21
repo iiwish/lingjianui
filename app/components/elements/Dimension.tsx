@@ -17,11 +17,10 @@ import {
   updateDimensionItem,
   createDimensionItem,
   deleteDimensionItems,
-  getDimensionConfig,
-  DimensionItem,
-  DimensionConfig as IDimensionConfig,
-  CustomColumn
-} from '~/services/element';
+  getDimensionConfig
+} from '~/services/element_dim';
+import { DimensionConfig as IDimensionConfig, DimensionItem, CustomColumn } from '~/types/element_dim';
+
 import { PlusOutlined } from '@ant-design/icons';
 
 const { Header, Sider, Content } = Layout;

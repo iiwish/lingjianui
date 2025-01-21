@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { message } from 'antd';
 import { MenuService } from '~/services/element_menu';
-import { getTableConfig } from '~/services/element';
+import { getTableConfig } from '~/services/element_table';
 import type { Menu as AppMenu } from '~/types/menu';
 
 interface TreeSelectNode {

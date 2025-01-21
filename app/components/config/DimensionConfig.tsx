@@ -7,8 +7,8 @@ import {
   getDimensionConfig,
   createDimensionConfig,
   updateDimensionConfig,
-  DimensionConfig as IDimensionConfig
-} from '~/services/element';
+} from '~/services/element_dim';
+import { DimensionConfig as IDimensionConfig } from '~/types/element_dim';
 
 interface Props {
   elementId: string;

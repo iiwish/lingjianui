@@ -1,6 +1,6 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 import type { ModelConfigItem } from '~/types/element_model';
-import type { CustomColumn } from '~/services/element';
+import { CustomColumn } from '~/types/element_dim';
 
 interface DimensionFields {
   [dimId: number]: CustomColumn[];
