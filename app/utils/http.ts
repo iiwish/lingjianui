@@ -107,7 +107,7 @@ http.interceptors.response.use(
 
       if (!refreshToken) {
         handleLogout();
-        return Promise.reject(new Error('登录已过期，请重新登录'));
+        return Promise.reject(new Error('登录已过期，请重新登录。无刷新token'));
       }
 
       isRefreshing = true;
@@ -134,11 +134,11 @@ http.interceptors.response.use(
           return http(config);
         } else {
           handleLogout();
-          return Promise.reject(new Error('登录已过期，请重新登录'));
+          return Promise.reject(new Error('刷新token失败，请重新登录，' + refreshResponse.message));
         }
       } catch (refreshError) {
         handleLogout();
-        return Promise.reject(new Error('登录已过期，请重新登录'));
+        return Promise.reject(new Error('刷新token失败，请重新登录'));
       } finally {
         isRefreshing = false;
       }
