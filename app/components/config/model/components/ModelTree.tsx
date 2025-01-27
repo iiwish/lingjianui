@@ -1,20 +1,8 @@
 import React from 'react';
 import { Button, Space } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import type { ModelConfigItem } from '~/types/config/model';
+import type { ModelConfigItem,ModelTreeProps } from '~/components/config/model/types';
 import TreeNode from '../TreeNode';
-import type { TreeSelectNode } from '../types';
-
-interface ModelTreeProps {
-  loading: boolean;
-  modelData: ModelConfigItem | null;
-  selectedNode: { path: string[]; node: ModelConfigItem } | null;
-  tables: TreeSelectNode[];
-  onAddRootNode: () => void;
-  onAddChildNode: () => void;
-  onDeleteNode: () => void;
-  onNodeSelect: (node: ModelConfigItem, path: string[]) => void;
-}
 
 const ModelTree: React.FC<ModelTreeProps> = ({
   loading,

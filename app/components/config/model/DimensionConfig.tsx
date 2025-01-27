@@ -3,8 +3,7 @@ import { Form, Select, Button, Space, Card, TreeSelect } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
 import { setDimensionFields } from '~/stores/slices/config/modelConfigSlice';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import type { ModelConfigItemDim } from '~/types/config/model';
-import type { TreeSelectNode } from './types';
+import type { ModelConfigItemDim, MenuTreeNode } from '~/components/config/model/types';
 import { getDimensionConfig } from '~/services/config/dim';
 import { CustomColumn } from '~/types/config/dim';
 
@@ -14,14 +13,14 @@ const { Option } = Select;
 interface DimensionConfigProps {
   fields: any[];
   dimensions: any[];
-  tables: TreeSelectNode[];
+  tables: MenuTreeNode[];
   value?: ModelConfigItemDim[];
   onChange?: (value: ModelConfigItemDim[]) => void;
   disabled?: boolean;
 }
 
 // 递归查找表格
-const findNodeInTree = (tables: TreeSelectNode[], value: string): TreeSelectNode | undefined => {
+const findNodeInTree = (tables: MenuTreeNode[], value: string): MenuTreeNode | undefined => {
   for (const table of tables) {
     if (table.key === value) {
       return table;

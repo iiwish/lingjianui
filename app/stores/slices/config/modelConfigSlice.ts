@@ -1,7 +1,7 @@
 // 从 @reduxjs/toolkit 导入 createSlice 和 PayloadAction
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 // 导入 ModelConfigItem 类型
-import type { ModelConfigItem } from '~/types/config/model';
+import type { ModelConfigItem } from '~/components/config/model/types';
 // 导入 CustomColumn 类型
 import { CustomColumn } from '~/types/config/dim';
 

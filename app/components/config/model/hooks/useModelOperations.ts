@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { message, Modal } from 'antd';
-import type { ModelConfigItem } from '~/types/config/model';
+import type { ModelConfigItem } from '~/components/config/model/types';
 import { useAppDispatch } from '~/stores';
 import { setConfig } from '~/stores/slices/config/modelConfigSlice';
 

@@ -1,10 +1,9 @@
 import React from 'react';
 import { Card, Form, TreeSelect } from 'antd';
-import type { ModelConfigItem } from '~/types/config/model';
-import type { TreeSelectNode } from '../types';
+import type { ModelConfigItem, MenuTreeNode } from '~/components/config/model/types';
 
 // 递归查找表格
-const findTableInTree = (tables: TreeSelectNode[], value: string): TreeSelectNode | undefined => {
+const findTableInTree = (tables: MenuTreeNode[], value: string): MenuTreeNode | undefined => {
   for (const table of tables) {
     if (table.value === value) {
       return table;
@@ -24,7 +23,7 @@ import DimensionConfig from '../DimensionConfig';
 
 interface ModelConfigPanelProps {
   selectedNode: { path: string[]; node: ModelConfigItem } | null;
-  tables: TreeSelectNode[];
+  tables: MenuTreeNode[];
   nodeStates: {
     [key: string]: {
       isExpanded: boolean;

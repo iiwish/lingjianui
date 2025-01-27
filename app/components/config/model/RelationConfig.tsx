@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { Form, Select, Button, Space, Card, Tooltip } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
-import type { ModelConfigItemRel, ModelConfigItemRelField } from '~/types/config/model';
+import type { ModelConfigItemRel, ModelConfigItemRelField } from '~/components/config/model/types';
 import FieldSelectorModal from './FieldSelectorModal';
 
 const { Option } = Select;

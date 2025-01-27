@@ -3,7 +3,7 @@ import { message } from 'antd';
 import { getModel, createModel, updateModel } from '~/services/config/model';
 import { useAppDispatch } from '~/stores';
 import { setParentId, setConfig } from '~/stores/slices/config/modelConfigSlice';
-import type { ModelConfigItem, CreateModelRequest, UpdateModelRequest } from '~/types/config/model';
+import type { ModelConfigItem, CreateModelRequest, UpdateModelRequest } from '~/components/config/model/types';
 
 interface UseModelDataProps {
   elementId: string;
