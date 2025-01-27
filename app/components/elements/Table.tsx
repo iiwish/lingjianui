@@ -5,7 +5,7 @@ import type { ColumnsType } from 'antd/es/table';
 import { getTableData, createTableItems, updateTableItems, deleteTableItems } from '~/services/element/table';
 import { getTableConfig } from '~/services/config/table';
 import {type TableConfig} from '~/types/config/table';
-import type { ElementProps } from '~/types/common';
+import type { AppCodeProps } from '~/types/common';
 import { useDispatch } from 'react-redux';
 import { addTab } from '~/stores/slices/tabSlice';
 import { Authorized } from '~/utils/permission';
@@ -44,7 +44,7 @@ interface DataType {
   [key: string]: any;
 }
 
-const Table: React.FC<ElementProps> = ({ elementId, appCode }) => {
+const Table: React.FC<AppCodeProps> = ({ elementId, appCode }) => {
   const [loading, setLoading] = useState(true);
   const [config, setConfig] = useState<TableConfig | null>(null);
   const [func, setFunc] = useState<TableFunc | null>(null);

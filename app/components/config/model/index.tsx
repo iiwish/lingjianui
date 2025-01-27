@@ -1,24 +1,19 @@
 import React, { useState } from 'react';
 import { Layout, Button, Spin, App, Form, Input } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
-import type { ModelConfigItem } from '~/components/config/model/types';
+import type { ModelConfigItem } from '~/components/config/model/modelConfigTypes';
 import { useAppSelector } from '~/stores';
 import { useModelData } from './hooks/useModelData';
 import { useModelOperations } from './hooks/useModelOperations';
 import { useTableData } from './hooks/useTableData';
 import ModelTree from './components/ModelTree';
+import { ElementProps } from '~/types/common'
 import ModelConfigPanel from './components/ModelConfigPanel';
 
 const { Header, Sider, Content } = Layout;
 
-interface Props {
-  elementId: string;
-  appCode: string;
-  parentId?: string | null;
-}
-
-const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId: urlParentId }) => {
-  const storeParentId = useAppSelector(state => state.modelConfig.parentId);
+const ModelConfig: React.FC<ElementProps> = ({ elementId, parentId: urlParentId }) => {
+  const storeParentId = String(useAppSelector(state => state.modelConfig.parent_id));
   const parentId = urlParentId || storeParentId;
   const [form] = Form.useForm();
   const [selectedNode, setSelectedNode] = useState<{
@@ -34,7 +29,6 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId: urlParentI
   });
 
   const { 
-    handleAddRootNode, 
     handleAddChildNode, 
     handleDeleteNode, 
     handleNodeUpdate 
@@ -150,7 +144,6 @@ const ModelConfig: React.FC<Props> = ({ elementId, appCode, parentId: urlParentI
                 modelData={modelData}
                 selectedNode={selectedNode}
                 tables={tables}
-                onAddRootNode={handleAddRootNode}
                 onAddChildNode={handleAddChildNode}
                 onDeleteNode={handleDeleteNode}
                 onNodeSelect={handleNodeSelect}

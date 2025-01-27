@@ -8,8 +8,12 @@ export interface ApiResponse<T = unknown> {
 
 export interface ElementProps {
     elementId: string;
+    parentId?: string;
+}
+
+export interface AppCodeProps {
+    elementId: string;
     appCode: string;
-    parentId?: string | null;
 }
 
 export interface OneID {

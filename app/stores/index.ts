@@ -9,7 +9,7 @@ import tabReducer from '~/stores/slices/tabSlice';
 import menuReducer from '~/stores/slices/menuSlice';
 import tableConfigReducer from '~/stores/slices/config/tableConfigSlice';
 import dimensionConfigReducer from '~/stores/slices/config/dimensionConfigSlice';
-import modelConfigReducer from '~/stores/slices/config/modelConfigSlice';
+import modelConfigReducer from '~/components/config/model/modelConfigSlice';
 
 // 配置 auth 持久化
 const authPersistConfig = {

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Button, Space } from 'antd';
 import { PlusOutlined, DeleteOutlined } from '@ant-design/icons';
-import type { ModelConfigItem,ModelTreeProps } from '~/components/config/model/types';
+import type { ModelConfigItem,ModelTreeProps } from '~/components/config/model/modelConfigTypes';
 import TreeNode from '../TreeNode';
 
 const ModelTree: React.FC<ModelTreeProps> = ({
@@ -9,7 +9,6 @@ const ModelTree: React.FC<ModelTreeProps> = ({
   modelData,
   selectedNode,
   tables,
-  onAddRootNode,
   onAddChildNode,
   onDeleteNode,
   onNodeSelect,
@@ -35,15 +34,6 @@ const ModelTree: React.FC<ModelTreeProps> = ({
   return (
     <div style={{ padding: '16px' }}>
       <div style={{ marginBottom: 16, display: 'flex', gap: 8 }}>
-        {!modelData && (
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={onAddRootNode}
-          >
-            添加根节点
-          </Button>
-        )}
         {modelData && (
           <Button
             icon={<PlusOutlined />}

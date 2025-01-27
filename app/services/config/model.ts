@@ -1,6 +1,6 @@
 import { get, post, put, del } from '~/utils/http';
 import type { ApiResponse } from '~/types/common';
-import type { CreateModelRequest, UpdateModelRequest, ModelResponse } from '~/components/config/model/types';
+import type { CreateModelRequest, UpdateModelRequest, ModelResponse } from '~/components/config/model/modelConfigTypes';
 
 const baseUrl = '/config/models';
 

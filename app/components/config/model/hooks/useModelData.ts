@@ -1,19 +1,16 @@
 import { useState, useEffect } from 'react';
+import { useSelector } from 'react-redux';
 import { message } from 'antd';
 import { getModel, createModel, updateModel } from '~/services/config/model';
-import { useAppDispatch } from '~/stores';
-import { setParentId, setConfig } from '~/stores/slices/config/modelConfigSlice';
-import type { ModelConfigItem, CreateModelRequest, UpdateModelRequest } from '~/components/config/model/types';
+import { useAppDispatch, RootState } from '~/stores';
+import { setModelData, setParentId } from '~/components/config/model/modelConfigSlice';
+import type { ModelData, CreateModelRequest, UpdateModelRequest } from '~/components/config/model/modelConfigTypes';
+import { ElementProps } from '~/types/common'
 
-interface UseModelDataProps {
-  elementId: string;
-  parentId?: string | null;
-}
-
-export const useModelData = ({ elementId, parentId }: UseModelDataProps) => {
+export const useModelData = ({ elementId, parentId }: ElementProps) => {
   const dispatch = useAppDispatch();
   const [loading, setLoading] = useState(false);
-  const [modelData, setModelData] = useState<ModelConfigItem | null>(null);
+  const modelData = useSelector((state: RootState) => state.modelConfig);
 
   useEffect(() => {
     if (parentId) {
@@ -29,8 +26,8 @@ export const useModelData = ({ elementId, parentId }: UseModelDataProps) => {
       setLoading(true);
       const res = await getModel(elementId);
       if (res.code === 200 && res.data) {
-        setModelData(res.data.configuration);
-        dispatch(setConfig(res.data.configuration));
+        dispatch(setModelData(res.data));
+        setModelData(res.data);
       }
     } catch (error) {
       console.error('加载模型数据失败:', error);
@@ -45,10 +42,6 @@ export const useModelData = ({ elementId, parentId }: UseModelDataProps) => {
     display_name: string;
     description: string;
   }) => {
-    if (!modelData) {
-      message.error('请先添加根节点');
-      return;
-    }
 
     try {
       const isNew = elementId === 'new';
@@ -58,7 +51,7 @@ export const useModelData = ({ elementId, parentId }: UseModelDataProps) => {
           display_name: formValues.display_name,
           description: formValues.description,
           status: 1,
-          configuration: modelData,
+          configuration: modelData.configuration,
           parent_id: parseInt(storeParentId || '0'),
         };
         await createModel(modelConfig);
@@ -69,7 +62,7 @@ export const useModelData = ({ elementId, parentId }: UseModelDataProps) => {
           display_name: formValues.display_name,
           description: formValues.description,
           status: 1,
-          configuration: modelData,
+          configuration: modelData.configuration,
         };
         await updateModel(elementId, modelConfig);
       }
@@ -83,8 +76,6 @@ export const useModelData = ({ elementId, parentId }: UseModelDataProps) => {
 
   return {
     loading,
-    modelData,
-    setModelData,
     handleSave,
   };
 };

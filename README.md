@@ -1,11 +1,11 @@
 # 灵简前端项目
 
-基于Remix + React + Ant Design的低代码平台前端项目。
+灵简低代码平台项目的前端部分，基于Remix + React + Ant Design
 
 ## 技术栈
 
+- React: 前端框架
 - Remix: Web应用框架
-- React: UI库
 - Ant Design 5: UI组件库
 - Redux Toolkit: 状态管理
 - TypeScript: 类型系统

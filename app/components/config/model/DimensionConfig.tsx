@@ -1,9 +1,9 @@
 import React, { useEffect } from 'react';
 import { Form, Select, Button, Space, Card, TreeSelect } from 'antd';
 import { useSelector, useDispatch } from 'react-redux';
-import { setDimensionFields } from '~/stores/slices/config/modelConfigSlice';
+import { setDimensionFields } from '~/components/config/model/modelConfigSlice';
 import { PlusOutlined, MinusCircleOutlined } from '@ant-design/icons';
-import type { ModelConfigItemDim, MenuTreeNode } from '~/components/config/model/types';
+import type { ModelConfigItemDim, MenuTreeNode } from '~/components/config/model/modelConfigTypes';
 import { getDimensionConfig } from '~/services/config/dim';
 import { CustomColumn } from '~/types/config/dim';
 

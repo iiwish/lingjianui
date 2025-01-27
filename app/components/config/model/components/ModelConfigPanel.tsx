@@ -1,6 +1,6 @@
 import React from 'react';
 import { Card, Form, TreeSelect } from 'antd';
-import type { ModelConfigItem, MenuTreeNode } from '~/components/config/model/types';
+import type { ModelConfigItem, MenuTreeNode } from '~/components/config/model/modelConfigTypes';
 
 // 递归查找表格
 const findTableInTree = (tables: MenuTreeNode[], value: string): MenuTreeNode | undefined => {

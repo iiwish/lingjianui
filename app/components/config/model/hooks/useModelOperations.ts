@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { message, Modal } from 'antd';
-import type { ModelConfigItem } from '~/components/config/model/types';
+import type { ModelConfigItem } from '~/components/config/model/modelConfigTypes';
 import { useAppDispatch } from '~/stores';
-import { setConfig } from '~/stores/slices/config/modelConfigSlice';
+import { setConfig } from '~/components/config/model/modelConfigSlice';
 
 export const useModelOperations = (
   modelData: ModelConfigItem | null,
