@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Layout, Button, Spin, App, Form, Input } from 'antd';
 import { SaveOutlined } from '@ant-design/icons';
 import type { ModelConfigItem } from '~/components/config/model/modelConfigTypes';
@@ -16,6 +16,7 @@ const ModelConfig: React.FC<ElementProps> = ({ elementId, parentId: urlParentId 
   const storeParentId = String(useAppSelector(state => state.modelConfig.parent_id));
   const parentId = urlParentId || storeParentId;
   const [form] = Form.useForm();
+  const [configData, setConfigData] = useState<ModelConfigItem | null>(null);
   const [selectedNode, setSelectedNode] = useState<{
     path: string[];
     node: ModelConfigItem;
@@ -23,18 +24,24 @@ const ModelConfig: React.FC<ElementProps> = ({ elementId, parentId: urlParentId 
   const [dimensions] = useState<any[]>([]); // 维度数据，根据需要加载
 
   // 使用自定义hooks
-  const { loading, modelData, setModelData, handleSave } = useModelData({ 
-    elementId, 
-    parentId 
+  const { loading, modelData, handleSave } = useModelData({
+    elementId,
+    parentId
   });
 
-  const { 
-    handleAddChildNode, 
-    handleDeleteNode, 
-    handleNodeUpdate 
+  useEffect(() => {
+    if (modelData?.configuration) {
+      setConfigData(modelData.configuration);
+    }
+  }, [modelData?.configuration]);
+
+  const {
+    handleAddChildNode,
+    handleDeleteNode,
+    handleNodeUpdate
   } = useModelOperations(
-    modelData,
-    setModelData,
+    configData,
+    setConfigData,
     selectedNode,
     setSelectedNode
   );
@@ -53,16 +60,16 @@ const ModelConfig: React.FC<ElementProps> = ({ elementId, parentId: urlParentId 
     // 加载父节点的字段
     if (path.length > 0) {
       const parentPath = path.slice(0, -1);
-      const parentNode = modelData?.childrens?.find(child => child.source_id.toString() === path[path.length - 1]);
-      if (!parentNode && modelData?.source_id) {
-        // 如果当前节点是根节点的子节点，使用modelData作为父节点
-        loadParentFields(modelData);
+      const parentNode = configData?.childrens?.find(child => child.source_id.toString() === path[path.length - 1]);
+      if (!parentNode && configData?.source_id) {
+        // 如果当前节点是根节点的子节点，使用configData作为父节点
+        loadParentFields(configData);
       } else if (parentNode) {
         loadParentFields(parentNode);
       }
-    } else if (modelData?.source_id) {
+    } else if (configData?.source_id) {
       // 如果当前节点是根节点，尝试加载父表字段
-      loadParentFields(modelData);
+      loadParentFields(configData);
     }
   };
 
@@ -141,7 +148,7 @@ const ModelConfig: React.FC<ElementProps> = ({ elementId, parentId: urlParentId 
             ) : (
               <ModelTree
                 loading={loading}
-                modelData={modelData}
+                modelData={configData}
                 selectedNode={selectedNode}
                 tables={tables}
                 onAddChildNode={handleAddChildNode}

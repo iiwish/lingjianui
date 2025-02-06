@@ -1,17 +1,36 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { Form, Select, Button, Space, Card, Tooltip } from 'antd';
 import { PlusOutlined, MinusCircleOutlined, QuestionCircleOutlined } from '@ant-design/icons';
 import type { ModelConfigItemRel, ModelConfigItemRelField } from '~/components/config/model/modelConfigTypes';
+import { FieldConfig } from '~/types/config/table';
 import FieldSelectorModal from './FieldSelectorModal';
 
 const { Option } = Select;
 
+// 常量定义
+const RELATION_TYPES = [
+  { value: '1:1', label: '一对一' },
+  { value: '1:n', label: '一对多' },
+] as const;
+
+// 类型定义
 interface RelationConfigProps {
-  fields: any[];
-  parentFields?: any[];
+  fields: FieldConfig[];
+  parentFields?: FieldConfig[];
   value?: ModelConfigItemRel;
   onChange?: (value: ModelConfigItemRel) => void;
   disabled?: boolean;
+}
+
+interface SelectedFields {
+  left?: string;
+  right?: string;
+}
+
+interface Field {
+  name: string;
+  type: string;
+  comment?: string;
 }
 
 const RelationConfig: React.FC<RelationConfigProps> = ({
@@ -24,7 +43,24 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
   const [modalVisible, setModalVisible] = useState(false);
   const [editingIndex, setEditingIndex] = useState<number | null>(null);
 
-  const handleModalOk = (selected: { left?: string; right?: string }) => {
+  // 转换字段格式以适配FieldSelectorModal的要求
+  const convertedFields = useMemo((): Field[] => 
+    fields.map(field => ({
+      name: field.name,
+      type: field.column_type,
+      comment: field.comment,
+    })), [fields]
+  );
+
+  const convertedParentFields = useMemo((): Field[] => 
+    parentFields.map(field => ({
+      name: field.name,
+      type: field.column_type,
+      comment: field.comment,
+    })), [parentFields]
+  );
+
+  const handleModalOk = (selected: SelectedFields) => {
     if (editingIndex !== null) {
       // 编辑现有字段
       const newFields = [...(value?.fields || [])];
@@ -32,7 +68,10 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
         fromField: selected.right || '',
         toField: selected.left || '',
       };
-      onChange?.({ ...value, fields: newFields } as ModelConfigItemRel);
+      onChange?.({
+        type: value?.type || '1:1',
+        fields: newFields,
+      });
     } else {
       // 添加新字段
       const newFields = [
@@ -42,23 +81,45 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
           toField: selected.left || '',
         },
       ];
-      onChange?.({ ...value, fields: newFields } as ModelConfigItemRel);
+      onChange?.({
+        type: value?.type || '1:1',
+        fields: newFields,
+      });
     }
     setModalVisible(false);
   };
+
   const handleAddField = () => {
     const newFields = [...(value?.fields || []), { fromField: '', toField: '' }];
-    onChange?.({ 
-      ...value, 
+    onChange?.({
+      type: value?.type || '1:1',
       fields: newFields,
-      type: value?.type || '1:1' // 设置默认关联类型
-    } as ModelConfigItemRel);
+    });
   };
 
   const handleRemoveField = (index: number) => {
     const newFields = [...(value?.fields || [])];
     newFields.splice(index, 1);
-    onChange?.({ ...value, fields: newFields } as ModelConfigItemRel);
+    onChange?.({
+      type: value?.type || '1:1',
+      fields: newFields,
+    });
+  };
+
+  const handleTypeChange = (type: '1:1' | '1:n') => {
+    onChange?.({
+      type,
+      fields: value?.fields || [],
+    });
+  };
+
+  const handleFieldChange = (index: number, fieldType: 'fromField' | 'toField', fieldValue: string) => {
+    const newFields = [...(value?.fields || [])];
+    newFields[index] = { ...newFields[index], [fieldType]: fieldValue };
+    onChange?.({
+      type: value?.type || '1:1',
+      fields: newFields,
+    });
   };
 
   return (
@@ -67,18 +128,19 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
         label="关联类型"
         required
         tooltip="选择与父节点的关联类型"
+        style={{ marginBottom: '24px' }}
       >
         <Select
           value={value?.type}
-          onChange={(type) => onChange?.({ ...value, fields: value?.fields || [], type } as ModelConfigItemRel)}
+          onChange={handleTypeChange}
           style={{ width: '100%' }}
           disabled={disabled}
         >
-          <Option value="1:1">一对一</Option>
-          <Option value="1:n">一对多</Option>
+          {RELATION_TYPES.map(({ value, label }) => (
+            <Option key={value} value={value}>{label}</Option>
+          ))}
         </Select>
       </Form.Item>
-
       <Form.Item
         label={
           <span>
@@ -88,13 +150,14 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
             </Tooltip>
           </span>
         }
+        style={{ marginBottom: '24px' }}
         rules={[
           {
-            validator: (_, value: ModelConfigItemRelField[]) => {
-              if (!value || value.length === 0) {
+            validator: (_, fields: ModelConfigItemRelField[]) => {
+              if (!fields?.length) {
                 return Promise.reject(new Error('至少需要配置一个字段映射'));
               }
-              const hasEmptyField = value.some((field: ModelConfigItemRelField) => !field.fromField || !field.toField);
+              const hasEmptyField = fields.some(field => !field.fromField || !field.toField);
               if (hasEmptyField) {
                 return Promise.reject(new Error('所有字段映射必须完整'));
               }
@@ -103,17 +166,13 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
           }
         ]}
       >
-        <Space direction="vertical" style={{ width: '100%' }}>
+        <Space direction="vertical" size="middle" style={{ width: '100%', display: 'flex' }}>
           {value?.fields?.map((field, index) => (
-            <Space key={index} align="baseline" style={{ width: '100%', justifyContent: 'space-between' }}>
+            <Space key={index} align="start" wrap style={{ width: '100%', gap: '16px', marginBottom: '16px' }}>
               <Select
                 value={field.toField}
-                onChange={(toField) => {
-                  const newFields = [...(value?.fields || [])];
-                  newFields[index] = { ...field, toField };
-                  onChange?.({ ...value, fields: newFields } as ModelConfigItemRel);
-                }}
-                style={{ width: 180 }}
+                onChange={(fieldValue) => handleFieldChange(index, 'toField', fieldValue)}
+                style={{ width: 200, minWidth: 200 }}
                 placeholder="选择父表字段"
                 disabled={disabled}
               >
@@ -126,15 +185,11 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
                     </Option>
                   ))}
               </Select>
-              <span style={{ margin: '0 8px' }}>→</span>
+              <span style={{ margin: '8px 16px' }}>→</span>
               <Select
                 value={field.fromField}
-                onChange={(fromField) => {
-                  const newFields = [...(value?.fields || [])];
-                  newFields[index] = { ...field, fromField };
-                  onChange?.({ ...value, fields: newFields } as ModelConfigItemRel);
-                }}
-                style={{ width: 180 }}
+                onChange={(fieldValue) => handleFieldChange(index, 'fromField', fieldValue)}
+                style={{ width: 200, minWidth: 200 }}
                 placeholder="选择当前表字段"
                 disabled={disabled}
               >
@@ -169,8 +224,8 @@ const RelationConfig: React.FC<RelationConfigProps> = ({
 
       <FieldSelectorModal
         visible={modalVisible}
-        leftFields={parentFields}
-        rightFields={fields}
+        leftFields={convertedParentFields}
+        rightFields={convertedFields}
         selectedFields={{
           left: editingIndex !== null ? value?.fields[editingIndex]?.toField : undefined,
           right: editingIndex !== null ? value?.fields[editingIndex]?.fromField : undefined,

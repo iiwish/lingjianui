@@ -1,6 +1,5 @@
 // 从 @reduxjs/toolkit 导入 createSlice 和 PayloadAction
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
-import { s } from 'node_modules/vite/dist/node/types.d-aGj9QkWt';
 // 导入 ModelConfigItem 类型
 import type { ModelData, ModelItem, ModelConfigItem, MenuTreeNode } from '~/components/config/model/modelConfigTypes';
 // 导入 CustomColumn 类型

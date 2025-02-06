@@ -5,7 +5,22 @@ import { getModel, createModel, updateModel } from '~/services/config/model';
 import { useAppDispatch, RootState } from '~/stores';
 import { setModelData, setParentId } from '~/components/config/model/modelConfigSlice';
 import type { ModelData, CreateModelRequest, UpdateModelRequest } from '~/components/config/model/modelConfigTypes';
-import { ElementProps } from '~/types/common'
+import { ElementProps } from '~/types/common';
+
+// 类型定义
+interface ModelFormValues {
+  model_code: string;
+  display_name: string;
+  description: string;
+}
+
+interface SaveModelConfig {
+  model_code: string;
+  display_name: string;
+  description: string;
+  status: number;
+  configuration: ModelData['configuration'];
+}
 
 export const useModelData = ({ elementId, parentId }: ElementProps) => {
   const dispatch = useAppDispatch();
@@ -16,7 +31,27 @@ export const useModelData = ({ elementId, parentId }: ElementProps) => {
     if (parentId) {
       dispatch(setParentId(parentId));
     }
-    if (elementId !== 'new') {
+    if (elementId === 'new') {
+      // 初始化新模型数据
+      dispatch(setModelData({
+        id: 0,
+        parent_id: parseInt(parentId || '0'),
+        model_code: '',
+        display_name: '',
+        description: '',
+        status: 1,
+        configuration: {
+          source_id: 0,
+          name: '',
+          relationships: {
+            type: '1:1',
+            fields: []
+          },
+          dimensions: [],
+          childrens: []
+        }
+      }));
+    } else {
       loadModelData();
     }
   }, [elementId, parentId]);
@@ -26,8 +61,8 @@ export const useModelData = ({ elementId, parentId }: ElementProps) => {
       setLoading(true);
       const res = await getModel(elementId);
       if (res.code === 200 && res.data) {
+        // 只需调用一次 dispatch，Redux 会处理状态更新
         dispatch(setModelData(res.data));
-        setModelData(res.data);
       }
     } catch (error) {
       console.error('加载模型数据失败:', error);
@@ -37,32 +72,29 @@ export const useModelData = ({ elementId, parentId }: ElementProps) => {
     }
   };
 
-  const handleSave = async (storeParentId: string | null, formValues: {
-    model_code: string;
-    display_name: string;
-    description: string;
-  }) => {
+  const createBaseModelConfig = (formValues: ModelFormValues): SaveModelConfig => ({
+    model_code: formValues.model_code,
+    display_name: formValues.display_name,
+    description: formValues.description,
+    status: 1,
+    configuration: modelData.configuration,
+  });
 
+  const handleSave = async (parentId: string, formValues: ModelFormValues) => {
     try {
+      const baseConfig = createBaseModelConfig(formValues);
       const isNew = elementId === 'new';
+
       if (isNew) {
         const modelConfig: CreateModelRequest = {
-          model_code: formValues.model_code,
-          display_name: formValues.display_name,
-          description: formValues.description,
-          status: 1,
-          configuration: modelData.configuration,
-          parent_id: parseInt(storeParentId || '0'),
+          ...baseConfig,
+          parent_id: parseInt(parentId || '0'),
         };
         await createModel(modelConfig);
       } else {
         const modelConfig: UpdateModelRequest = {
+          ...baseConfig,
           id: parseInt(elementId),
-          model_code: formValues.model_code,
-          display_name: formValues.display_name,
-          description: formValues.description,
-          status: 1,
-          configuration: modelData.configuration,
         };
         await updateModel(elementId, modelConfig);
       }
@@ -77,5 +109,6 @@ export const useModelData = ({ elementId, parentId }: ElementProps) => {
   return {
     loading,
     handleSave,
+    modelData: modelData,
   };
 };

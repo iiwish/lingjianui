@@ -1,8 +1,8 @@
 import { useState } from 'react';
 import { message, Modal } from 'antd';
-import type { ModelConfigItem } from '~/components/config/model/modelConfigTypes';
+import type { ModelConfigItem, ModelData } from '~/components/config/model/modelConfigTypes';
 import { useAppDispatch } from '~/stores';
-import { setConfig } from '~/components/config/model/modelConfigSlice';
+import { setModelData } from '~/components/config/model/modelConfigSlice';
 
 export const useModelOperations = (
   modelData: ModelConfigItem | null,
@@ -13,13 +13,17 @@ export const useModelOperations = (
   const dispatch = useAppDispatch();
 
   const handleAddRootNode = () => {
-    if (modelData) {
+    if (modelData && modelData.source_id !== 0) {
       message.error('根节点已存在');
       return;
     }
     setModelData({
       source_id: 0,
-      relationships: undefined,
+      name: '',
+      relationships: {
+        type: '1:1',
+        fields: []
+      },
       dimensions: [],
       childrens: [],
     });
@@ -208,7 +212,7 @@ export const useModelOperations = (
       node: updatedSelectedNode,
     });
 
-    dispatch(setConfig(newModelData));
+    setModelData(newModelData);
   };
 
   return {
