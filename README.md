@@ -6,6 +6,8 @@
 
 灵简低代码平台项目的前端部分，基于Remix + React + Ant Design
 
+后端项目链接：https://github.com/iiwish/lingjian
+
 The frontend part of LingJian Low-Code Platform, built with Remix + React + Ant Design.
 
 ---
