@@ -1,3 +1,7 @@
+> ⚠️ **警示**: 该项目目前处于开发阶段，此版本仅用于求职展示。项目完成后此警示将被移除。
+> 
+> ⚠️ **Warning**: This project is under development. Current version is for job seeking purpose only. This warning will be removed once the project is completed.
+
 # 灵简前端项目 (LingJian Frontend)
 
 灵简低代码平台项目的前端部分，基于Remix + React + Ant Design
@@ -263,4 +267,4 @@ http://localhost:3000/login
 
 ## 版权许可 (License)
 
-本项目采用 MIT 许可证 - 查看 [LICENSE](LICENSE) 文件了解详细信息
+本项目采用 Apache-2.0 许可证 - 查看 [LICENSE](LICENSE) 文件了解详细信息
