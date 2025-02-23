@@ -23,6 +23,8 @@ const ModelConfig: React.FC<ElementProps> = ({ elementId, parentId: urlParentId 
   } | null>(null);
   const [dimensions] = useState<any[]>([]); // 维度数据，根据需要加载
 
+  const { tables, nodeStates, parentFields, loadTableFields, loadParentFields } = useTableData();
+
   // 使用自定义hooks
   const { loading, modelData, handleSave } = useModelData({
     elementId,
@@ -32,8 +34,39 @@ const ModelConfig: React.FC<ElementProps> = ({ elementId, parentId: urlParentId 
   useEffect(() => {
     if (modelData?.configuration) {
       setConfigData(modelData.configuration);
+      
+      // 如果有source_id，加载根节点的表格字段
+      if (modelData.configuration.source_id) {
+        loadTableFields(modelData.configuration.source_id, '');
+      }
+
+      // 递归加载所有子节点的表格字段
+      const loadChildrenFields = (children: ModelConfigItem[], parentPath: string[] = []) => {
+        children.forEach((child, index) => {
+          if (child.source_id) {
+            const path = [...parentPath, child.source_id.toString()];
+            loadTableFields(child.source_id, path.join('-'));
+          }
+          if (child.childrens?.length) {
+            loadChildrenFields(child.childrens, [...parentPath, child.source_id.toString()]);
+          }
+        });
+      };
+
+      if (modelData.configuration.childrens?.length) {
+        loadChildrenFields(modelData.configuration.childrens);
+      }
     }
-  }, [modelData?.configuration]);
+    
+    // 如果不是新建模式，则设置表单的值
+    if (elementId !== 'new' && modelData) {
+      form.setFieldsValue({
+        display_name: modelData.display_name,
+        model_code: modelData.model_code,
+        description: modelData.description,
+      });
+    }
+  }, [modelData, elementId, form, loadTableFields]);
 
   const {
     handleAddChildNode,
@@ -45,8 +78,6 @@ const ModelConfig: React.FC<ElementProps> = ({ elementId, parentId: urlParentId 
     selectedNode,
     setSelectedNode
   );
-
-  const { tables, nodeStates, parentFields, loadTableFields, loadParentFields } = useTableData();
 
   const handleNodeSelect = (node: ModelConfigItem, path: string[]) => {
     setSelectedNode({ node, path });

@@ -154,7 +154,12 @@ const Folder: React.FC<Props> = ({ elementId, appCode, initialState }) => {
     }
 
     // 构建路由路径
-    const path = `/dashboard/${appCode}/element/${numToType[record.menu_type]}/${record.source_id}`;
+    var path: string = '';
+    if (record.menu_type === 5) {
+      path = `/dashboard/${appCode}/config/${numToType[record.menu_type]}/${record.source_id}`;
+    } else {
+      path = `/dashboard/${appCode}/element/${numToType[record.menu_type]}/${record.source_id}`;
+    }
 
     // 添加并激活tab
     dispatch(addTab({

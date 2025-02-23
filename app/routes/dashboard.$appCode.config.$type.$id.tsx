@@ -1,10 +1,9 @@
 import React, { useEffect } from 'react';
 import { useParams, useLocation, useSearchParams } from '@remix-run/react';
 import TabContent from '~/components/layout/TabContent';
-import { typeToNum } from '~/types/element/types';
 import { useAppDispatch, useAppSelector } from '~/stores';
 import { addTab, setActiveTab } from '~/stores/slices/tabSlice';
-import { elementTypes } from '~/types/element/types';
+import { elementTypes, typeToNum } from '~/types/element/types';
 
 export default function ConfigRoute() {
   const params = useParams();
